@@ -51,7 +51,8 @@ void draw() {
     userInput(sdt);
   textSize(32); 
   fill(0, 0, 0);
-  text("FPS:"+int(frameRate)+"; \nparticles: " +pcount, -1000, 1000);
+  text("FPS:"+int(frameRate)+" \nparticles: " +pcount +
+  " \nmode: " + emitterMode, -1000, 1000);
   camera(
     eye.x, eye.y, eye.z, 
     eye.x + forward.x, eye.y + forward.y, eye.z + forward.z, 
