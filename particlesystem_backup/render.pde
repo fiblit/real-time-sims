@@ -1,7 +1,28 @@
+void renderLighting() {
+  directionalLight(255, 255, 255, -0.5, 1, 0);
+}
+
+void renderObjects() {
+  beginShape(QUAD);
+  fill(0);
+  vertex(1000,floor,1000);
+  vertex(1000,floor,-1000);
+  vertex(-1000,floor,-1000);
+  vertex(-1000,floor,1000);
+  endShape();
+  
+  pushMatrix();  
+  translate(450,400,-450);
+  fill(0,0,255,255);
+  sphere(500);
+  popMatrix();
+}
 
 void render(int i) {
   //fill marginally hurts FPS. Maybe a few K less @ 30FPS
+  
   fill(clr[i].x, clr[i].y, clr[i].z, clr[i].w);
+  //tint(255, clr[i].w);
 
   //float hry = radius ;//* pos[i].y / (0.75 * height);
   //triangle(0, -hry*hry*0.4330127, 

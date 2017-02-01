@@ -13,10 +13,12 @@ void setup() {
   regen();
   noStroke();
   frameNow = millis();
+  smooth(2);
+  //noSmooth();
 }  
 
 void draw() {
-  background(255, 255, 255);
+  background(255, 255, 255, 0);
   tick();
   
   if (keyPressed)
@@ -26,12 +28,13 @@ void draw() {
     eye.x, eye.y, eye.z, 
     eye.x + forward.x, eye.y + forward.y, eye.z + forward.z, 
     0, 1, 0);
-
-  float sdt = sdt();
-
   p_gen(sdt);
 
-  //gives a reasonable performance boost. (Roughly 5 to 10K, never got an exact count)
+  /* the ordering of objects and particles is very specific */
+  renderLighting();
+  renderObjects();
+  noLights();
+  //gives a reasonable performance boost over old method. (Roughly 5 to 10K, never got an exact count)
   beginShape(TRIANGLES);
   for (int i = 0; i < pcount; i++) {
     computePhysics(sdt, i);
@@ -42,10 +45,4 @@ void draw() {
       i--;
   }
   endShape();
-  pushMatrix();  
-  directionalLight(255, 255, 255, -0.5, 1, 0);
-  translate(450,400,-450);
-  fill(0,0,255);
-  sphere(500);
-  popMatrix();
 }

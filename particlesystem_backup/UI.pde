@@ -37,8 +37,7 @@ void userInput() {
       sin(pitch*PI/180),
       sin((yaw+90)*PI/180)*cos(pitch*PI/180));
   }
-  
-  /* no apparent lag */
+   
   if (key == KEYstrafeFront) {
     eye.x += forward.x * camspeed;
     eye.y += forward.y * camspeed;

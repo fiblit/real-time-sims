@@ -1,5 +1,6 @@
 vector4 a = new vector4(255, 195, 0, 255);
 vector4 b = new vector4(199, 0, 57, 190);
+
 void simuAttrs(float dt, int i) {
   /* causing surprising amount of K-loss. Roughly 8K */
   /* the issues is not a color instantiation... */
@@ -31,16 +32,20 @@ void checkForCollisions(int i) {
   float mag = sqrt(toS.dot(toS));
   if (mag < 500) {
     vector3 toSNorm = new vector3(toS.x / mag, toS.y / mag, toS.z / mag );
-    float co = 2*vel[i].dot(toSNorm);
+    float alpha = 1;// (0,1] 
+    float co = (1+alpha)*vel[i].dot(toSNorm);
     vel[i] = new vector3(
       (vel[i].x - co * toSNorm.x) * .95,
       (vel[i].y - co * toSNorm.y) * .95,
       (vel[i].z - co * toSNorm.z) * .95);
+    pos[i] = new vector3(
+      (450  + toSNorm.x * (500+radius)),
+      (400  + toSNorm.y * (500+radius)),
+      (-450 + toSNorm.z * (500+radius)));
   }
   
   if (pos[i].y + radius >= floor) {
     pos[i].y = floor - radius - .95*(pos[i].y -floor);
     vel[i].y *= -.95;
-  }
-  
+  } 
 }

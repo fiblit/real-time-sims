@@ -7,9 +7,11 @@ float sdt() {
 
 float lastFrame;
 float frameNow;
+float sdt;
 //float clock = 0;
 
 void tick() {
   lastFrame = frameNow;
   frameNow = millis();
+  sdt = sdt();
 }
