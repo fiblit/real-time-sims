@@ -13,7 +13,6 @@ class emitter {
   float time;
   
   public emitter(int mode, vector3 pos) {
-    
     /* 0 : ball bouncing */
     /* 1 : water fountain */
     /* 2 : fire (ball) */
@@ -105,7 +104,7 @@ class emitter {
       random(ax[0],ax[1]),
       random(ay[0],ay[1]),
       random(az[0],az[1]));
-   mass[i] = random(m[0], m[1]);
+   mass[i] = random(mss[0], mss[1]);
   }
 }
 

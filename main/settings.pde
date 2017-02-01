@@ -14,6 +14,7 @@ char KEYyawLeft     = 'q'; char KEYyawRight     = 'e';
 char KEYstrafeLeft  = 'a'; char KEYstrafeRight  = 'd';
 char KEYstrafeFront = 'w'; char KEYstrafeBack   = 's';
 char KEYstrafeUp    = 'z'; char KEYstrafeDown   = 'c';
+char KEYmodeUP      = 'y'; char KEYmodeDOWN    = 't';
 // TODO: add keys to interact
   // TODO: arrow keys (directional) to manipulate "paddle"
   // TODO: number key menu to spawn stuff (probably with default emitter modes)
@@ -28,6 +29,7 @@ float padX = width/2; float padY = 50; float padZ = -width/2; float padR = 300;
 char KEYregen = 'g';
       
 /***** REAL-TIME INTERACTION *****/
+int emitterMode = 0;
 
 /***** SIMULATION *****/
 int   maxcount   = 200000;       //maximum number of particles

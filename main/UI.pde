@@ -89,6 +89,16 @@ void userInput(float dt) {
   if (key == KEYpaddleZN) {
     padZ += padSpeed * dt;
   }
+  if (key == KEYmodeUP) {
+    emitterMode++;
+    if (emitterMode >= 7)
+      emitterMode = 0;
+  }
+  if (key == KEYmodeDOWN) {
+    emitterMode--;
+    if (emitterMode < 0)
+      emitterMode = 0;
+  }
 }
 
 void keyPressed() {
