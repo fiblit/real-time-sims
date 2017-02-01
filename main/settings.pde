@@ -35,7 +35,8 @@ int emitterMode = 0;
 int   maxcount   = 200000;       //maximum number of particles
 
 /***** EMITTERS *****/
-emitter[] emitters = {
+int maxemitters  = 100;
+emitter[] emitters = {  /* make larger than it actually is */
   new emitter(
     0, 2*PI,   0, width/2, //radius theta (around y-axis)
     width/2,   0, 100,   -width/2, //x y z

@@ -26,6 +26,7 @@ class emitter {
     switch (mode) {
     case 0:
       println("spawn balls for ball bouncing at pos.");
+      
       break;
     case 1:
       println("spawn balls for water fountain.");
