@@ -6,16 +6,60 @@ class emitter {
   float[] vx, vy, vz;
   float[] l; //add maxlife?
   float[] r, g, b, a;
+  float[] ax, ay, az;
+  float[] mss;
   
   float genRate;
   float time;
   
+  public emitter(int mode, vector3 pos) {
+    
+    /* 0 : ball bouncing */
+    /* 1 : water fountain */
+    /* 2 : fire (ball) */
+    /* 3 : magic / fireworks */
+    
+    /* 4 : 100K benchmark of spout */
+    
+    /* 4 : Tree Of Life */
+    /* 5 : snow */
+    /* 6 : smoke */
+    switch (mode) {
+    case 0:
+      println("spawn balls for ball bouncing at pos.");
+      break;
+    case 1:
+      println("spawn balls for water fountain.");
+      break;
+    case 2:
+      println("spawn balls for fireball.");
+      break;
+    case 3:
+      println("spawn balls magic and/or games.");
+      break;
+    case 4:
+      println("benchmark @ 100 K");
+      break;
+    case 6:
+      println("spawn tree of life");
+      break;
+    case 7:
+      println("spawn snow");
+      break;
+    case 8:
+      println("spawn smoke");
+      break;
+    }
+  }
+  
   public emitter(
       float angle, float angle2,   float radius, float radius2,
-      float px,   float pz,   float py, float py2,
+      float px,   float py, float py2,   float pz,   
       float vx, float vx2,   float vy, float vy2,   float vz, float vz2,
       float l, float l2,
       float r, float r2,   float g, float g2,   float b, float b2,   float a, float a2,
+      float ax, float ax2, float ay, float ay2, float az, float az2,
+      float m, float m2,
       float genRate,
       float time) {
     this.angle = new float[2]; this.radius = new float[2];
@@ -30,6 +74,11 @@ class emitter {
     this.l[0] = l; this.l[1] = l2;
     this.r = new float[2]; this.g = new float[2]; this.b = new float[2]; this.a = new float[2];
     this.r[0] = r; this.r[1] = r2; this.g[0] = g; this.g[1] = g2; this.b[0] = b; this.a[1] = a;
+    
+    this.ax = new float[2]; this.ay = new float[2]; this.az = new float[2];
+    this.mss = new float[2];
+    this.ax[0] = ax; this.ax[1] = ax2; this.ay[0] = ay; this.ay[1] = ay2;  this.az[0] = az; this.az[1] = az2;  
+    this.mss[0] = m; this.mss[1] = m2;
     
     this.genRate = genRate;
     this.time = time;
@@ -46,25 +95,29 @@ class emitter {
       random(vx[0],vx[1]),
       random(vy[0],vy[1]),
       random(vz[0],vz[1]));
-    life[i] = random(l[0],l[1]);
+    maxlife[i] = random(l[0],l[1]); life[i] = 0;
     clr[i] = new vector4(
       random(r[0],r[1]),
       random(g[0],g[1]),
       random(b[0],b[1]),
       random(a[0],a[1]));
+    acc[i] = new vector3(
+      random(ax[0],ax[1]),
+      random(ay[0],ay[1]),
+      random(az[0],az[1]));
+   mass[i] = random(m[0], m[1]);
   }
 }
 
 void regen() {
-  //gonna be slow AF at gen.
-  pcount = rgpcount;
   pos = new vector3[maxcount];//I might want to be smarter about storage?
   vel = new vector3[maxcount];
   life = new float[maxcount];
+  maxlife = new float[maxcount];
   clr = new vector4[maxcount];
-  for (int i = 0; i < rgpcount; i ++ ) {
-    genRandAttrs(i);
-  }
+  acc = new vector3[maxcount];
+  mass = new float[maxcount];
+  pcount = 0;
 }
 
 void genRandAttrs(int i) {
@@ -78,7 +131,7 @@ void genRandAttrs(int i) {
   float vz = random(100, 100);
   pos[i] = new vector3(x, y, z);
   vel[i] = new vector3(vx, vy, vz);
-  life[i] = random(2, 6);
+  maxlife[i] = random(2, 6); life[i] = 0;
   clr[i] = new vector4(255, 195, 0, 255);
 }
 
@@ -100,10 +153,12 @@ void p_gen(float dt) {
   }
 }
 
-void swapParticles(int a, int b) {
+void moveBtoA(int a, int b) {
   float t = life[b];
   life[b] = life[a];
   life[a] = t;
+  
+  t = maxlife[b];
 
   vector3 tv = vel[b];
   vel[b] = vel[a];
@@ -112,15 +167,19 @@ void swapParticles(int a, int b) {
   tv = pos[b];
   pos[b] = pos[a];
   pos[a] = tv;
+  
+  vector4 tc = clr[b];
+  clr[b] = clr[a];
+  clr[a] = tc;
 }
 
 boolean p_kill(float dt, int i) {
-  if (life[i] <= 0) {
-    swapParticles(i, pcount - 1);
+  if (life[i] >= maxlife[i]) {
+    moveBtoA(i, pcount - 1);
     pcount -= 1;
     return true;
   } else {
-    life[i] -= dt;
+    life[i] += dt;
     return false;
   }
 }
