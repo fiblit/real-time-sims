@@ -64,7 +64,7 @@ class emitter {
       println("fire!!!");
       setAll(
         true,
-        new range(1, 3), new range(1, 1),
+        new range(9, 11), new range(1, 1),
         new rangeVec4(new vector4(255,195,0,255),
                       new vector4(255,195,0,255)),
         new range(0, 2*PI), new range(0, width/2),
@@ -74,7 +74,7 @@ class emitter {
                       new vector3(15,-10,15)),
         new rangeVec3(new vector3(80,-160,80),
                       new vector3(80,-160,80)),
-        9000, -1);
+        10000, -1);
       break;
     case 3:
       println("spawn balls magic and/or games.");
@@ -183,7 +183,7 @@ void buildMode() {
     default:
     case 2://fire
       pos = new vector3(0, 0, 0);
-      //eye = new vector3(-15*width, 1100, 15*width);
+      eye = new vector3(-1300, 1100, 1300);
       yaw = 315; pitch = -25;
       break;
   }
@@ -210,16 +210,17 @@ void genRandAttrs(int i) {
 
 void p_gen(float dt) {
   for (int e = 0; e < emitters.size(); e++) {
-    if (emitters.get(e).genRate * dt > 1) {
-      for (int i = 0; i < emitters.get(e).genRate * dt; i++) {
+    emitter emit = emitters.get(e);
+    if (emit.genRate * dt > 1) {
+      for (int i = 0; i < emit.genRate * dt; i++) {
         if (pcount < maxcount) {
-          emitters.get(e).genRandParticle(pcount);
+          emit.genRandParticle(pcount);
           pcount++;
         }
       }
-    } else if (random(1) <= emitters.get(e).genRate * dt) {
+    } else if (random(1) <= emit.genRate * dt) {
       if (pcount < maxcount) {
-        emitters.get(e).genRandParticle(pcount);
+        emit.genRandParticle(pcount);
         pcount++;
       }
     }

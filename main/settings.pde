@@ -5,7 +5,8 @@ float yawspeed   = 75;
 
 float yaw = 315;
 float pitch = -25;
-vector3 eye = new vector3(-15*width, 1100, 15*width);
+vector3 eye;
+//vector3 eye = new vector3(-15*width, 1100, 15*width);
 // TODO: add propersettings for camera init
 
 /***** KEY BINDINGS *****/
@@ -44,7 +45,7 @@ emitter[] initEmitters = {  /* make larger than it actually is */
 
 /***** PARTICLES *****/
 float radius     = 10;           //particle size
-boolean pFaceCam = true;
+boolean pFaceCam = false;
 //float hry = radius ;//* pos[i].y / (0.75 * height);
 //triangle(0, -hry*hry*0.4330127, 
 //radius/2, hry*hry*0.4330127,

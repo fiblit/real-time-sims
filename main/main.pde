@@ -7,13 +7,14 @@ float floor;
 int pcount;
 
 void setup() {
-  size(800, 600, P3D);
+  size(1200, 1000, P3D);
   noStroke();
   smooth(2);
   gen();
   
   //cannot be moved to settings. Height is init before setup.
-  floor = 2*height;
+  floor = 1200;
+  eye = new vector3(-1300, 1100, 1300);
   frameNow = millis();
   
   vpp = new float[pMesh.length][3];
