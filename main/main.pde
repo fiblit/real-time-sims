@@ -3,44 +3,27 @@ vector3[] pos, vel, acc;
 float[] life, maxlife;
 float[] mass;
 vector4[] clr;
-float[][] vTri = new float[3][3];
-
-int pcount; 
 float floor;
+int pcount;
 
 void setup() {
-  size(1200, 1000, P3D);
-  floor = 2*height;
-  regen();
+  size(800, 600, P3D);
   noStroke();
-  frameNow = millis();
   smooth(2);
-  //noSmooth();
-
-  //float hry = radius ;//* pos[i].y / (0.75 * height);
-  //triangle(0, -hry*hry*0.4330127, 
-  //radius/2, hry*hry*0.4330127,
-  //-radius/2, hry*hry*0.4330127);
-  //init
-  vTri[0][0] = 0        ; vTri[0][1] = -radius/2; vTri[0][2] = 0;
-  vTri[1][0] = -radius/2; vTri[1][1] = radius/2 ; vTri[1][2] = 0;
-  vTri[2][0] =  radius/2; vTri[2][1] = radius/2 ; vTri[2][2] = 0;
+  gen();
   
-  if (pFaceCam) {
-    faceCam();
+  //cannot be moved to settings. Height is init before setup.
+  floor = 2*height;
+  frameNow = millis();
+  
+  vpp = new float[pMesh.length][3];
+  v = new float[pMesh.length][3];
+  
+  cameraCalc();
+    
+  for (emitter e: initEmitters) {
+    emitters.add(e);
   }
-  else {
-    noFace();
-  }
-
-  forward = new vector3(
-    cos(yaw*PI/180)*cos(pitch*PI/180),
-    sin(pitch*PI/180),
-    sin(yaw*PI/180)*cos(pitch*PI/180));
-  right = new vector3(
-    cos((yaw+90)*PI/180)*cos(pitch*PI/180),
-    sin(pitch*PI/180),
-    sin((yaw+90)*PI/180)*cos(pitch*PI/180)); 
 }  
 
 void draw() {
@@ -51,7 +34,7 @@ void draw() {
     userInput(sdt);
   textSize(32); 
   fill(0, 0, 0);
-  text("FPS:"+int(frameRate)+" \nparticles: " +pcount +
+  text("FPS:"+frameRate+" \nparticles: " +pcount +
   " \nmode: " + emitterMode, -1000, 1000);
   camera(
     eye.x, eye.y, eye.z, 

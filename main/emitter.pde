@@ -1,38 +1,80 @@
+class range {
+  float l, h;
+  public range(float low, float high) {
+    l = low; h = high;
+  }
+  public float sample() {
+    return random(l,h);
+  }
+}
+class rangeVec3 {
+  vector3 l, h;
+  public rangeVec3(vector3 low, vector3 high) {
+    l = low; h = high;
+  }
+  public vector3 sample() {
+    return new vector3(random(l.x,h.x), random(l.y,h.y), random(l.z,h.z));
+  }
+}
+class rangeVec4 {
+  vector4 l, h;
+  public rangeVec4(vector4 low, vector4 high) {
+    l = low; h = high;
+  }
+  public vector4 sample() {
+    return new vector4(random(l.x,h.x), random(l.y,h.y), random(l.z,h.z), random(l.w,h.w));
+  }
+}
+
 class emitter {
-  float[] angle;
-  float[] radius;
-  float px, pz;
-  float[] py;
-  float[] vx, vy, vz;
-  float[] l; //add maxlife?
-  float[] r, g, b, a;
-  float[] ax, ay, az;
-  float[] mss;
-  
+  boolean diskSampleXZ;
+  range angR, radR, pLifeR, massR;
+  rangeVec3 posR, velR, accR;
+  rangeVec4 clrR;
   float genRate;
-  float time;
+  float eLife;
+  
+  //there HAS to be a better way to do this... :/ Looks ugly AF.
+  public void setAll(
+      //disk sample XZ (true) / box sample XYZ (false)
+       //uses low value range on pos.x/z and ang/rad to create the disk
+      boolean diskSampleXZ,
+      range pLifeR, range massR, rangeVec4 clrR,
+      range angR, range radR, 
+      rangeVec3 posR, rangeVec3 velR, rangeVec3 accR,
+      float genRate,
+      float eLife) {
+    this.diskSampleXZ = diskSampleXZ;
+    this.pLifeR = pLifeR; this.massR = massR; this.clrR = clrR;
+    this.angR = angR; this.radR = radR;
+    this.posR = posR; this.velR = velR; this.accR = accR;
+    this.genRate = genRate;
+    this.eLife = eLife;
+  }
   
   public emitter(int mode, vector3 pos) {
-    /* 0 : ball bouncing */
-    /* 1 : water fountain */
-    /* 2 : fire (ball) */
-    /* 3 : magic / fireworks */
-    
-    /* 4 : 100K benchmark of spout */
-    
-    /* 4 : Tree Of Life */
-    /* 5 : snow */
-    /* 6 : smoke */
     switch (mode) {
     case 0:
-      println("spawn balls for ball bouncing at pos.");
-      
+      println("spawn balls for ball bouncing at pos.");      
       break;
     case 1:
       println("spawn balls for water fountain.");
       break;
     case 2:
-      println("spawn balls for fireball.");
+      println("fire!!!");
+      setAll(
+        true,
+        new range(1, 3), new range(1, 1),
+        new rangeVec4(new vector4(255,195,0,255),
+                      new vector4(255,195,0,255)),
+        new range(0, 2*PI), new range(0, width/2),
+        new rangeVec3(new vector3(pos.x+0,pos.y-50,pos.z+0),
+                      new vector3(pos.x+0,pos.y+50,pos.z+0)),
+        new rangeVec3(new vector3(-15,-10,-15),
+                      new vector3(15,-10,15)),
+        new rangeVec3(new vector3(80,-160,80),
+                      new vector3(80,-160,80)),
+        9000, -1);
       break;
     case 3:
       println("spawn balls magic and/or games.");
@@ -53,63 +95,34 @@ class emitter {
   }
   
   public emitter(
-      float angle, float angle2,   float radius, float radius2,
-      float px,   float py, float py2,   float pz,   
-      float vx, float vx2,   float vy, float vy2,   float vz, float vz2,
-      float l, float l2,
-      float r, float r2,   float g, float g2,   float b, float b2,   float a, float a2,
-      float ax, float ax2, float ay, float ay2, float az, float az2,
-      float m, float m2,
+      //disk sample XZ (true) / box sample XYZ (false)
+      //uses low value range on pos.x/z and ang/rad to create the disk
+      boolean diskSampleXZ,
+      range angR, range radR, range pLifeR, range massR,
+      rangeVec4 clrR,
+      rangeVec3 posR, rangeVec3 velR, rangeVec3 accR,
       float genRate,
-      float time) {
-    this.angle = new float[2]; this.radius = new float[2];
-    this.angle[0] = angle; this.angle[1] = angle2; this.radius[0] = radius; this.radius[1] = radius2;
-    this.px = px;
-    this.pz = pz;
-    this.py = new float[2];
-    this.py[0] = py; this.py[1] = py2;
-    this.vx = new float[2]; this.vy = new float[2]; this.vz = new float[2];
-    this.vx[0] = vx; this.vx[1] = vx2; this.vy[0] = vy; this.vy[1] = vy2; this.vz[0] = vz; this.vz[1] = vz2;
-    this.l = new float[2];
-    this.l[0] = l; this.l[1] = l2;
-    this.r = new float[2]; this.g = new float[2]; this.b = new float[2]; this.a = new float[2];
-    this.r[0] = r; this.r[1] = r2; this.g[0] = g; this.g[1] = g2; this.b[0] = b; this.a[1] = a;
-    
-    this.ax = new float[2]; this.ay = new float[2]; this.az = new float[2];
-    this.mss = new float[2];
-    this.ax[0] = ax; this.ax[1] = ax2; this.ay[0] = ay; this.ay[1] = ay2;  this.az[0] = az; this.az[1] = az2;  
-    this.mss[0] = m; this.mss[1] = m2;
-    
-    this.genRate = genRate;
-    this.time = time;
+      float eLife) {
+    setAll(diskSampleXZ, pLifeR, massR, clrR, angR, radR, posR, velR, accR, genRate, eLife);
   }
   
-  public void genRandParticle(int i) {//at index i
-    float ang = random(angle[0], angle[1]);
-    float rad = radius[0] + sqrt(random(0,1))*(radius[1]-radius[0]);
-    pos[i] = new vector3(
-      px + rad*cos(ang),//I think I forgot to correct the bias
-      random(py[0],py[1]),
-      pz + rad*sin(ang));
-    vel[i] = new vector3(
-      random(vx[0],vx[1]),
-      random(vy[0],vy[1]),
-      random(vz[0],vz[1]));
-    maxlife[i] = random(l[0],l[1]); life[i] = 0;
-    clr[i] = new vector4(
-      random(r[0],r[1]),
-      random(g[0],g[1]),
-      random(b[0],b[1]),
-      random(a[0],a[1]));
-    acc[i] = new vector3(
-      random(ax[0],ax[1]),
-      random(ay[0],ay[1]),
-      random(az[0],az[1]));
-   mass[i] = random(mss[0], mss[1]);
+  public void genRandParticle(int i) {//at global index i
+    float a = angR.sample();
+    float r = radR.l + sqrt(random(0,1))*(radR.h-radR.l);
+    if (diskSampleXZ)
+      pos[i] = new vector3(
+        posR.l.x + r*cos(a),
+        random(posR.l.y,posR.h.y),
+        posR.l.z + r*sin(a));
+    vel[i] = velR.sample();
+    acc[i] = accR.sample();
+    maxlife[i] = pLifeR.sample(); life[i] = 0;
+    clr[i] = clrR.sample();
+    mass[i] = massR.sample();
   }
 }
 
-void regen() {
+void gen() {
   pos = new vector3[maxcount];//I might want to be smarter about storage?
   vel = new vector3[maxcount];
   life = new float[maxcount];
@@ -117,8 +130,68 @@ void regen() {
   clr = new vector4[maxcount];
   acc = new vector3[maxcount];
   mass = new float[maxcount];
+  emitters = new ArrayList<emitter>();
   pcount = 0;
 }
+
+void regen() {
+  println("start gen");
+  gen();
+  println("finish gen");
+  buildMode();
+  println("finish build");
+}
+
+void buildMode() {
+  vector3 pos;
+  switch (emitterMode) {
+    case 0://ball bounce
+      pos = new vector3(0,0,0);
+      eye = new vector3(0,0,100);
+      yaw = 270; pitch = 0;
+      break;
+    case 1://water fountain
+      pos = new vector3(0,0,0);
+      eye = new vector3(0,0,100);
+      yaw = 270; pitch = 0;
+      break;
+    case 3://magic
+      pos = new vector3(0,0,0);
+      eye = new vector3(0,0,100);
+      yaw = 270; pitch = 0;
+      break;
+    case 4://bench
+      pos = new vector3(0,0,0);
+      eye = new vector3(0,0,100);
+      yaw = 270; pitch = 0;
+      break;
+    case 5://tree
+      pos = new vector3(0,0,0);
+      eye = new vector3(0,0,100);
+      yaw = 270; pitch = 0;
+      break;
+    case 6://snow
+      pos = new vector3(0,0,0);
+      eye = new vector3(0,0,100);
+      yaw = 270; pitch = 0;
+      break;
+    case 7://smoke
+      pos = new vector3(0,0,0);
+      eye = new vector3(0,0,100);
+      yaw = 270; pitch = 0;
+      break;
+    default:
+    case 2://fire
+      pos = new vector3(0, 0, 0);
+      //eye = new vector3(-15*width, 1100, 15*width);
+      yaw = 315; pitch = -25;
+      break;
+  }
+  emitters.add(new emitter(2, new vector3(width/2, 50, -width/2)));
+  cameraCalc();
+}
+
+ArrayList<emitter> emitters;
 
 void genRandAttrs(int i) {
   float a = random(0, 2*PI);
@@ -136,17 +209,17 @@ void genRandAttrs(int i) {
 }
 
 void p_gen(float dt) {
-  for (int e = 0; e < emitters.length; e++) {
-    if (emitters[e].genRate * dt > 1) {
-      for (int i = 0; i < emitters[e].genRate * dt; i++) {
+  for (int e = 0; e < emitters.size(); e++) {
+    if (emitters.get(e).genRate * dt > 1) {
+      for (int i = 0; i < emitters.get(e).genRate * dt; i++) {
         if (pcount < maxcount) {
-          emitters[e].genRandParticle(pcount);
+          emitters.get(e).genRandParticle(pcount);
           pcount++;
         }
       }
-    } else if (random(1) <= emitters[e].genRate * dt) {
+    } else if (random(1) <= emitters.get(e).genRate * dt) {
       if (pcount < maxcount) {
-        emitters[e].genRandParticle(pcount);
+        emitters.get(e).genRandParticle(pcount);
         pcount++;
       }
     }

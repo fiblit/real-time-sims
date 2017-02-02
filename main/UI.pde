@@ -27,18 +27,8 @@ void userInput(float dt) {
       if (yaw > 360)
         yaw -= 360;
     }
-    forward = new vector3(
-      cos(yaw*PI/180)*cos(pitch*PI/180),
-      sin(pitch*PI/180),
-      sin(yaw*PI/180)*cos(pitch*PI/180));
-    right = new vector3(
-      cos((yaw+90)*PI/180)*cos(pitch*PI/180),
-      sin(pitch*PI/180),
-      sin((yaw+90)*PI/180)*cos(pitch*PI/180));
     
-    if (pFaceCam) {
-      faceCam();
-    }
+    cameraCalc();
   }
    
   //cam strafe
@@ -89,21 +79,39 @@ void userInput(float dt) {
   if (key == KEYpaddleZN) {
     padZ += padSpeed * dt;
   }
+}
+
+void cameraCalc() {
+  if (pFaceCam) {
+    faceCam();
+  }
+  else {
+    noFace();
+  }
+
+  forward = new vector3(
+    cos(yaw*PI/180)*cos(pitch*PI/180),
+    sin(pitch*PI/180),
+    sin(yaw*PI/180)*cos(pitch*PI/180));
+  right = new vector3(
+    cos((yaw+90)*PI/180)*cos(pitch*PI/180),
+    sin(pitch*PI/180),
+    sin((yaw+90)*PI/180)*cos(pitch*PI/180));
+}
+
+void keyPressed() {
+  if (key == KEYspawnEmitter)
+    println("spawn!"); 
   if (key == KEYmodeUP) {
     emitterMode++;
-    if (emitterMode >= 7)
+    if (emitterMode > 7)
       emitterMode = 0;
   }
   if (key == KEYmodeDOWN) {
     emitterMode--;
     if (emitterMode < 0)
-      emitterMode = 0;
+      emitterMode = 7;
   }
-}
-
-void keyPressed() {
-  if (key == KEYspawnEmitter)
-    println("spawn!");
   if (key == KEYregen) { // broken
     regen();
   }

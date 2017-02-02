@@ -4,7 +4,7 @@ float pitchspeed = 50;
 float yawspeed   = 75;
 
 float yaw = 315;
-float pitch = -30;
+float pitch = -25;
 vector3 eye = new vector3(-15*width, 1100, 15*width);
 // TODO: add propersettings for camera init
 
@@ -29,34 +29,27 @@ float padX = width/2; float padY = 50; float padZ = -width/2; float padR = 300;
 char KEYregen = 'g';
       
 /***** REAL-TIME INTERACTION *****/
-int emitterMode = 0;
+int emitterMode = 2;
 
 /***** SIMULATION *****/
 int   maxcount   = 200000;       //maximum number of particles
 
+/***** STATIC COLLIDERS ****/
+
 /***** EMITTERS *****/
 int maxemitters  = 100;
-emitter[] emitters = {  /* make larger than it actually is */
-  new emitter(
-    0, 2*PI,   0, width/2, //radius theta (around y-axis)
-    width/2,   0, 100,   -width/2, //x y z
-    -15, 15,   -10, -10,   -15, 15, //vx vy vz
-    10, 20, //life
-    255, 255,   195, 195,   0, 0,   255, 255, //r g b a
-    0, 0, -25, -25, 0, 0, // acc x/y/z
-    1, 1,                  //mass
-    1000, -1),            //genrate/second
-  new emitter(
-    0, 2*PI,   0, width/2, //radius theta (around y-axis)
-    width/2,   0, 100,   -width/2, //x y z
-    -15, 15,   -10, -10,   -15, 15, //vx vy vz
-    9, 11, //life
-    255, 255,   195, 195,   0, 0,   255, 255, //r g b a
-    0, 0, -25, -25, 0, 0,
-    1, 1,
-    5000, -1)
+emitter[] initEmitters = {  /* make larger than it actually is */
+  new emitter(2, new vector3(width/2, 50, -width/2))
 };
 
 /***** PARTICLES *****/
 float radius     = 10;           //particle size
 boolean pFaceCam = true;
+//float hry = radius ;//* pos[i].y / (0.75 * height);
+//triangle(0, -hry*hry*0.4330127, 
+//radius/2, hry*hry*0.4330127,
+//-radius/2, hry*hry*0.4330127);
+float[][] pMesh = { //init "mesh"
+  {0,-radius/2,0},
+  {-radius/2,radius/2,0},
+  {radius/2,radius/2,0}};

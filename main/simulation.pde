@@ -10,14 +10,18 @@ void simuAttrs(float dt, int i) {
 }
   
 /* currently causing little to no K-loss */
-void computePhysics(float dt, int i) { 
-  //float tx = padX;
-  //float tz = padZ;
-  //float dx = (pos[i].x - tx);
-  //float dz = (pos[i].z - tz);
-  //vel[i].x = vel[i].x - dx/3 * dt;
-  //(width*width/4 - distToPull2)/2000 * dt;
-  //vel[i].z = vel[i].z - dz/3 * dt;
+void computePhysics(float dt, int i) {
+
+  /*
+  if (eRef[i].isPlume)//do not use index for eRef if you do it.
+    float dx = (pos[i].x - eref[i].x);
+    float dz = (pos[i].z - eref[i].z);
+    acc[i].x = - dx/3;
+    float rad = eRef[i].radius[1] - eRef[i].radius[0];
+    acc[i].y = (rad*rad - dx*dx + dz * dz)/2000;
+    acc[i].z = - dz/3;
+  }
+  */
   
   //eulerian
   vel[i].x = vel[i].x + acc[i].x * dt;
@@ -31,11 +35,10 @@ void computePhysics(float dt, int i) {
 }
 
 void checkForCollisions(int i) {
-  //my sphere
-  
+  //paddle
   vector3 toS = new vector3(pos[i].x - padX, pos[i].y - padY, pos[i].z - padZ);
   float mag2 = toS.dot(toS);
-  if (mag2 < padR*padR) {
+  if (mag2 < (padR+radius)*(padR+radius)) {
     float mag  = sqrt(mag2);
     vector3 toSNorm = new vector3(toS.x / mag, toS.y / mag, toS.z / mag );
     float alpha = 0.95;// (0,1] 
@@ -49,7 +52,6 @@ void checkForCollisions(int i) {
       (padY  + toSNorm.y * (padR+radius)),
       (padZ + toSNorm.z * (padR+radius)));
   }
-  
   
   //floor
   if (pos[i].y + radius >= floor) {
