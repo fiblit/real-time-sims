@@ -1,27 +1,14 @@
-vector4 a = new vector4(255, 195, 0, 255);
-vector4 b = new vector4(199, 0, 57, 190);
-
 void simuAttrs(float dt, int i) {
   /* causing surprising amount of K-loss. Roughly 8K */
   /* the issues is not a color instantiation... */
   /* the issue is the color primitive. switching to "vector4" (mine), 
      mitigates the loss to roughly 3K. Still significant for what lerp is */
-  clr[i] = lerp(a, b, life[i]/maxlife[i]);//(pos[i].y)/(0.25*height));//
+  clr[i] = lerp(clrRange[i].l, clrRange[i].h, life[i]/maxlife[i]);//(pos[i].y)/(0.25*height));//
 }
   
 /* currently causing little to no K-loss */
 void computePhysics(float dt, int i) {
-
-  /*
-  if (eRef[i].isPlume)//do not use index for eRef if you do it.
-    float dx = (pos[i].x - eref[i].x);
-    float dz = (pos[i].z - eref[i].z);
-    acc[i].x = - dx/3;
-    float rad = eRef[i].radius[1] - eRef[i].radius[0];
-    acc[i].y = (rad*rad - dx*dx + dz * dz)/2000;
-    acc[i].z = - dz/3;
-  }
-  */
+  calculateForces(i);
   
   //eulerian
   vel[i].x = vel[i].x + acc[i].x * dt;
@@ -32,6 +19,20 @@ void computePhysics(float dt, int i) {
   pos[i].z = pos[i].z + vel[i].z * dt;
   
   checkForCollisions(i);
+}
+
+void calculateForces(int i) {
+  //update acc[i]  
+  /*
+  if (eRef[i].isPlume)//do not use index for eRef if you do it.
+    float dx = (pos[i].x - eref[i].x);
+    float dz = (pos[i].z - eref[i].z);
+    acc[i].x = - dx/3;
+    float rad = eRef[i].radius[1] - eRef[i].radius[0];
+    acc[i].y = (rad*rad - dx*dx + dz * dz)/2000;
+    acc[i].z = - dz/3;
+  }
+  */
 }
 
 void checkForCollisions(int i) {
@@ -54,7 +55,7 @@ void checkForCollisions(int i) {
   }
   
   //floor
-  if (pos[i].y + radius >= floor) {
+  if (pos[i].y + radius*1.01 >= floor) {
     pos[i].y = floor - radius - .95*(pos[i].y -floor);
     vel[i].y *= -.95;
   } 

@@ -3,6 +3,9 @@ vector3[] pos, vel, acc;
 float[] life, maxlife;
 float[] mass;
 vector4[] clr;
+rangeVec4[] clrRange;
+boolean[] isBall;
+
 float floor;
 int pcount;
 
@@ -11,6 +14,11 @@ void setup() {
   noStroke();
   smooth(2);
   gen();
+  
+  //smoke = loadImage("smoke.png");
+  //smoke.mask(loadImage("smokemask.png"));
+  //image(smoke,0,0);
+  //textureMode(NORMAL);
   
   //cannot be moved to settings. Height is init before setup.
   floor = 1200;
@@ -25,7 +33,25 @@ void setup() {
   for (emitter e: initEmitters) {
     emitters.add(e);
   }
+  
+  regen();// I shouldn't NEED this but there was a bug.
 }  
+
+String getModeName() {
+  String s = new Integer(emitterMode).toString() + ": ";
+  switch(emitterMode) {
+    case 0: s += "Bouncy Ball (might need to wait for one to spawn)"; break;
+    case 1: s += "Spout of WATER!"; break;
+    case 2: s += "Heh. Fire."; break;
+    case 3: s += "Magic Missle!"; break;
+    case 4: s += "Fireball. 100k@30FPS bench attempt"; break;
+    case 5: s += "Fireball. 90K@30+FPS bench"; break;
+    case 6: s += "Cool Flaming \"Tree\". (unreimplemented)"; break; 
+    case 7: s += "Snow!(unimplemented)"; break;
+    case 8: s += "Blank Canvas"; break;
+  }
+  return s;
+}
 
 void draw() {
   background(255, 255, 255, 0);
@@ -33,10 +59,6 @@ void draw() {
   
   if (keyPressed)
     userInput(sdt);
-  textSize(32); 
-  fill(0, 0, 0);
-  text("FPS:"+frameRate+" \nparticles: " +pcount +
-  " \nmode: " + emitterMode, -1000, 1000);
   camera(
     eye.x, eye.y, eye.z, 
     eye.x + forward.x, eye.y + forward.y, eye.z + forward.z, 
@@ -45,8 +67,11 @@ void draw() {
 
   /* the ordering of objects and particles is very specific */
   renderLighting();
+  //sphereDetail(30);
   renderObjects();
   noLights();
+  
+  //sphereDetail(5);
   //gives a reasonable performance boost over old method. (Roughly 5 to 10K, never got an exact count)
   beginShape(TRIANGLES);
   for (int i = 0; i < pcount; i++) {
@@ -57,5 +82,12 @@ void draw() {
       //since we swapped from the end. We need to process what was at the end.
       i--;
   }
-  endShape();
+  endShape();  
+  
+  textSize(32); 
+  fill(255);
+  text("--- BUILD: DEBUG ---\nFPS: "+frameRate+"\nparticles: " +pcount +
+  " \n\nmode:\n    " + getModeName() +
+  "\nB to build that scene; X to spawn that emitter \nTG to change mode" +
+  "\n\nWASD to strafe \nZC to move up&down \nQERF to pan camera \nIJKLUO to move paddle\nGo away ;_;", -1000, 600);
 }

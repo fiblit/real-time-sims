@@ -100,19 +100,25 @@ void cameraCalc() {
 }
 
 void keyPressed() {
-  if (key == KEYspawnEmitter)
-    println("spawn!"); 
+  if (key == KEYspawnEmitter) {
+    if (emitterMode != 8)
+      if (emitterMode == 3)
+        //for (int i = 0; i < random(8,12); i++)
+          emitters.add(new emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
+      else      
+        emitters.add(new emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
+  }
   if (key == KEYmodeUP) {
     emitterMode++;
-    if (emitterMode > 7)
+    if (emitterMode > 8)
       emitterMode = 0;
   }
   if (key == KEYmodeDOWN) {
     emitterMode--;
     if (emitterMode < 0)
-      emitterMode = 7;
+      emitterMode = 8;
   }
-  if (key == KEYregen) { // broken
+  if (key == KEYregen) {
     regen();
   }
 }
