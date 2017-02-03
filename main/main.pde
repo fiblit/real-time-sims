@@ -46,9 +46,8 @@ String getModeName() {
     case 3: s += "Magic Missle!"; break;
     case 4: s += "Fireball. 100k@30FPS bench attempt"; break;
     case 5: s += "Fireball. 90K@30+FPS bench"; break;
-    case 6: s += "Cool Flaming \"Tree\". (unreimplemented)"; break; 
-    case 7: s += "Snow!(unimplemented)"; break;
-    case 8: s += "Blank Canvas"; break;
+    case 6: s += "Snow!"; break;
+    case 7: s += "Blank Canvas"; break;
   }
   return s;
 }

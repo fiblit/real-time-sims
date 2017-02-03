@@ -164,9 +164,6 @@ class emitter {
         false);
       break;
     case 6:
-      println("spawn tree of life (maybe)");
-      break;
-    case 7:
       println("spawn snow (please)");
       break;
     }
@@ -249,19 +246,16 @@ void buildMode() {
       pos = new vector3(500,500,500);
       break;
     default:
-    case 4://fireball / bench 100K@30FPS (usually only 100K@26~31FPS)
+    case 4://meteor 100k
       pos = new vector3(50, 50, -50);
       break;
-    case 5://tree
+    case 5://meteor 90k
       pos = new vector3(50, 50, -50);
       break;
     case 6://snow
       pos = new vector3(0,0,0);
       break;
-    case 7://smoke
-      pos = new vector3(0,0,0);
-      break;
-    case 8://canvas
+    case 7://canvas
       howmany = 0;
       break;
   }

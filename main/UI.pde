@@ -110,13 +110,13 @@ void keyPressed() {
   }
   if (key == KEYmodeUP) {
     emitterMode++;
-    if (emitterMode > 8)
+    if (emitterMode > 7)
       emitterMode = 0;
   }
   if (key == KEYmodeDOWN) {
     emitterMode--;
     if (emitterMode < 0)
-      emitterMode = 8;
+      emitterMode = 7;
   }
   if (key == KEYregen) {
     regen();
