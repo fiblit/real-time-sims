@@ -1,4 +1,4 @@
-class emitter {
+class Emitter {
   boolean diskSampleXZ;
   range angR, radR, pLifeR, massR;
   rangeVec3 posR, velR, accR;
@@ -27,10 +27,10 @@ class emitter {
     this.eBall = eBall;
   }
   
-  public emitter(int mode, vector3 pos) {
-    println(pos.x,pos.y,pos.z);    
+  public Emitter(int mode, vector3 pos) {
+    //println(pos.x,pos.y,pos.z);    
     pos.y = min(pos.y, floor-15);
-    println(pos.x,pos.y,pos.z);
+    //println(pos.x,pos.y,pos.z);
     switch (mode) {
     case 0:
       println("ball bouncing at pos.");
@@ -141,7 +141,7 @@ class emitter {
     }
   }
   
-  public emitter(
+  public Emitter (
       //disk sample XZ (true) / box sample XYZ (false)
       //uses low value range on pos.x/z and ang/rad to create the disk
       boolean diskSampleXZ,
@@ -158,31 +158,28 @@ class emitter {
     float a = angR.sample();
     float r = radR.l + sqrt(random(0,1))*(radR.h-radR.l);
     if (diskSampleXZ)
-      pos[i] = new vector3(
+      ps[i].pos = new vector3(
         posR.l.x + r*cos(a),
         random(posR.l.y,posR.h.y),
         posR.l.z + r*sin(a));
-    vel[i] = velR.sample();
-    acc[i] = accR.sample();
-    maxlife[i] = pLifeR.sample(); life[i] = 0;
-    clr[i] = clrR.l;//.sample();
-    clrRange[i] = clrR;
-    mass[i] = massR.sample();
-    isBall[i] = eBall;
+    ps[i].vel = velR.sample();
+    ps[i].acc = accR.sample();
+    ps[i].life = 0;
+    ps[i].maxlife = pLifeR.sample();
+    ps[i].clr = clrR.l;//.sample();
+    ps[i].clrRange = clrR;
+    ps[i].mass = massR.sample();
+    ps[i].isBall = eBall;
+    ps[i].eParent = this;
   }
 }
 
 void gen() {
-  pos = new vector3[maxcount];//I might want to be smarter about storage?
-  vel = new vector3[maxcount];
-  life = new float[maxcount];
-  maxlife = new float[maxcount];
-  clr = new vector4[maxcount];
-  clrRange = new rangeVec4[maxcount];
-  acc = new vector3[maxcount];
-  mass = new float[maxcount];
-  emitters = new ArrayList<emitter>();
-  isBall = new boolean[maxcount];
+  ps = new Particle[maxcount];
+  for (int i = 0; i < maxcount; i++) {
+    ps[i] = new Particle();
+  }
+  emitters = new ArrayList<Emitter>();
   pcount = 0;
 }
 
@@ -232,31 +229,15 @@ void buildMode() {
       break;
   }
   for (int i = 0; i < howmany; i ++)
-    emitters.add(new emitter(emitterMode, pos));
+    emitters.add(new Emitter(emitterMode, pos));
   cameraCalc();
 }
 
-ArrayList<emitter> emitters;
-
-//deprecated
-void genRandAttrs(int i) {
-  float a = random(0, 2*PI);
-  float r = random(0, width/8);
-  float x = width/2+r*cos(a);//random(radius,width-radius); 
-  float y = random(-300, -500);
-  float z = -(width/2+r*sin(a)); //random(-1000, -100);
-  float vx = random(100, 100);
-  float vy = random(100, 100);
-  float vz = random(100, 100);
-  pos[i] = new vector3(x, y, z);
-  vel[i] = new vector3(vx, vy, vz);
-  maxlife[i] = random(2, 6); life[i] = 0;
-  clr[i] = new vector4(255, 195, 0, 255);
-}
+ArrayList<Emitter> emitters;
 
 void p_gen(float dt) {
   for (int e = 0; e < emitters.size(); e++) {
-    emitter emit = emitters.get(e);
+    Emitter emit = emitters.get(e);
     if (emit.genRate * dt > 1) {
       for (int i = 0; i < emit.genRate * dt; i++) {
         if (pcount < maxcount) {
@@ -274,24 +255,18 @@ void p_gen(float dt) {
 }
 
 void moveBtoA(int a, int b) {
-  life[a] = life[b];  
-  maxlife[a] = maxlife[b];
-  mass[a] = mass[b];
-  acc[a] = acc[b];
-  vel[a] = vel[b];
-  pos[a] = pos[b];
-  clr[a] = clr[b];
-  clrRange[a] = clrRange[b];
-  isBall[a] = isBall[b];
+  Particle t = ps[a];
+  ps[a] = ps[b];
+  ps[b] = t;
 }
 
 boolean p_kill(float dt, int i) {
-  if (life[i] >= maxlife[i]) {
+  if (ps[i].life >= ps[i].maxlife) {
     moveBtoA(i, pcount - 1);
     pcount -= 1;
     return true;
   } else {
-    life[i] += dt;
+    ps[i].life += dt;
     return false;
   }
 }

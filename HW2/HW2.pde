@@ -1,14 +1,3 @@
-/** particle attributes **/
-vector3[] pos, vel, acc; 
-float[] life, maxlife;
-float[] mass;
-vector4[] clr;
-rangeVec4[] clrRange;
-boolean[] isBall;
-
-float floor;
-int pcount;
-
 void setup() {
   size(1200, 1000, P3D);
   noStroke();
@@ -21,7 +10,6 @@ void setup() {
   //textureMode(NORMAL);
   
   //cannot be moved to settings. Height is init before setup.
-  floor = 1200;
   eye = new vector3(-1300, 1100, 1300);
   frameNow = millis();
   
@@ -30,7 +18,7 @@ void setup() {
   
   cameraCalc();
     
-  for (emitter e: initEmitters) {
+  for (Emitter e: initEmitters) {
     emitters.add(e);
   }
   
@@ -70,8 +58,6 @@ void draw() {
   renderObjects();
   noLights();
   
-  //sphereDetail(5);
-  //gives a reasonable performance boost over old method. (Roughly 5 to 10K, never got an exact count)
   beginShape(TRIANGLES);
   for (int i = 0; i < pcount; i++) {
     computePhysics(sdt, i);
@@ -85,7 +71,7 @@ void draw() {
   
   textSize(32); 
   fill(255);
-  text("--- BUILD: DEBUG ---\nFPS: "+frameRate+"\nparticles: " +pcount +
+  text("--- BUILD: DEBUG ---\nFPS: "+frameRate+"\nparticles: " + pcount +
   " \n\nmode:\n    " + getModeName() +
   "\nB to build that scene; X to spawn that emitter \nTG to change mode" +
   "\n\nWASD to strafe \nZC to move up&down \nQERF to pan camera \nIJKLUO to move paddle\nGo away ;_;", -1000, 600);

@@ -104,9 +104,9 @@ void keyPressed() {
     if (emitterMode != 8)
       if (emitterMode == 3)
         //for (int i = 0; i < random(8,12); i++)
-          emitters.add(new emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
+          emitters.add(new Emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
       else      
-        emitters.add(new emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
+        emitters.add(new Emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
   }
   if (key == KEYmodeUP) {
     emitterMode++;

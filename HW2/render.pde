@@ -30,12 +30,12 @@ float[][] vpp;// = new float[3][3];
 float[][] v;// = new float[3][3];
 /* TODO: test if manual unrolling has difference */
 void render(int i) {
-  fill(clr[i].x, clr[i].y, clr[i].z, clr[i].w);
+  fill(ps[i].clr.x, ps[i].clr.y, ps[i].clr.z, ps[i].clr.w);
   
-  if (isBall[i]) {
+  if (ps[i].isBall) {
     endShape();
     pushMatrix();
-    translate(pos[i].x, pos[i].y, pos[i].z);
+    translate(ps[i].pos.x, ps[i].pos.y, ps[i].pos.z);
     sphere(radius);
     popMatrix();
     beginShape(TRIANGLES);
@@ -43,9 +43,9 @@ void render(int i) {
   else {
     for (int p = 0; p < vpp.length; p++) {
   
-        v[p][0] = vpp[p][0] + pos[i].x;
-        v[p][1] = vpp[p][1] + pos[i].y;
-        v[p][2] = vpp[p][2] + pos[i].z;
+        v[p][0] = vpp[p][0] + ps[i].pos.x;
+        v[p][1] = vpp[p][1] + ps[i].pos.y;
+        v[p][2] = vpp[p][2] + ps[i].pos.z;
       //obviously the biggest FPS culprit
       vertex(v[p][0],v[p][1],v[p][2]);
     }

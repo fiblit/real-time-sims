@@ -1,17 +1,18 @@
-float mdt() {
+private float mdt() {
   return frameNow - lastFrame;
 }
-float sdt() {
-  return mdt()/1000;
+private float sdt() {
+  return mdt/1000;
 }
 
-float lastFrame;
-float frameNow;
+private float lastFrame;
+private float frameNow;
 float sdt;
-//float clock = 0;
+float mdt;
 
 void tick() {
   lastFrame = frameNow;
   frameNow = millis();
+  mdt = mdt();
   sdt = sdt();
 }
