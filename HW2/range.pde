@@ -8,20 +8,20 @@ class range {
   }
 }
 class rangeVec3 {
-  vector3 l, h;
-  public rangeVec3(vector3 low, vector3 high) {
+  Vec3 l, h;
+  public rangeVec3(Vec3 low, Vec3 high) {
     l = low; h = high;
   }
-  public vector3 sample() {
-    return new vector3(random(l.x,h.x), random(l.y,h.y), random(l.z,h.z));
+  public Vec3 sample() {
+    return new Vec3(random(l.x,h.x), random(l.y,h.y), random(l.z,h.z));
   }
 }
 class rangeVec4 {
-  vector4 l, h;
-  public rangeVec4(vector4 low, vector4 high) {
+  Vec4 l, h;
+  public rangeVec4(Vec4 low, Vec4 high) {
     l = low; h = high;
   }
-  public vector4 sample() {
-    return new vector4(random(l.x,h.x), random(l.y,h.y), random(l.z,h.z), random(l.w,h.w));
+  public Vec4 sample() {
+    return new Vec4(random(l.x,h.x), random(l.y,h.y), random(l.z,h.z), random(l.w,h.w));
   }
 }

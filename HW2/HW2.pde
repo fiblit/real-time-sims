@@ -1,3 +1,4 @@
+Cloth myCloth;
 void setup() {
   size(1200, 1000, P3D);
   noStroke();
@@ -10,7 +11,7 @@ void setup() {
   //textureMode(NORMAL);
   
   //cannot be moved to settings. Height is init before setup.
-  eye = new vector3(-1300, 1100, 1300);
+  eye = new Vec3(-1300, 1100, 1300);
   frameNow = millis();
   
   vpp = new float[pMesh.length][3];
@@ -22,7 +23,12 @@ void setup() {
     emitters.add(e);
   }
   
-  regen();// I shouldn't NEED this but there was a bug.
+  myCloth = new Cloth(
+    10, 10, 
+    new Vec3(1000,0,0), 
+    new Vec3(50,0,0), 
+    new Vec3(0,50,0), 
+    5, 1, 5);
 }  
 
 String getModeName() {
@@ -41,33 +47,41 @@ String getModeName() {
 }
 
 void draw() {
-  background(255, 255, 255, 0);
   tick();
   
   if (keyPressed)
     userInput(sdt);
+    
   camera(
     eye.x, eye.y, eye.z, 
     eye.x + forward.x, eye.y + forward.y, eye.z + forward.z, 
     0, 1, 0);
+
   p_gen(sdt);
 
   /* the ordering of objects and particles is very specific */
+  background(255, 255, 255, 0);
   renderLighting();
   //sphereDetail(30);
   renderObjects();
   noLights();
   
+  fill(255,0,0);
+  myCloth.computePhysics(sdt);
+  myCloth.render();
+  
   beginShape(TRIANGLES);
   for (int i = 0; i < pcount; i++) {
-    computePhysics(sdt, i);
-    simuAttrs(sdt, i);
-    render(i);
+    p_computePhysics(sdt, i);
+    p_simuAttrs(sdt, i);
+    p_render(i);
     if (p_kill(sdt, i))
       //since we swapped from the end. We need to process what was at the end.
       i--;
   }
   endShape();  
+  
+  e_kill(sdt);
   
   textSize(32); 
   fill(255);

@@ -1,10 +1,10 @@
 //basically a struct
 class Particle {
   Emitter eParent;
-  vector3 pos, vel, acc; 
   float life, maxlife;
+  Vec3 pos, vel, acc; 
   float mass;
-  vector4 clr;
+  Vec4 clr;
   rangeVec4 clrRange;
   
   //should be enum renderMode;

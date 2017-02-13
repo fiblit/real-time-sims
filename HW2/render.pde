@@ -29,7 +29,7 @@ float cY, sY, cP, sP;
 float[][] vpp;// = new float[3][3];
 float[][] v;// = new float[3][3];
 /* TODO: test if manual unrolling has difference */
-void render(int i) {
+void p_render(int i) {
   fill(ps[i].clr.x, ps[i].clr.y, ps[i].clr.z, ps[i].clr.w);
   
   if (ps[i].isBall) {

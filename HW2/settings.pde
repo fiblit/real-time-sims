@@ -5,7 +5,7 @@ float yawspeed   = 75;
 
 float yaw = 315;
 float pitch = -25;
-vector3 eye;
+Vec3 eye;
 
 /***** KEY BINDINGS *****/
 char KEYpitchUp     = 'r'; char KEYpitchDown    = 'f';
@@ -29,7 +29,7 @@ char KEYregen = 'b';// "rebuild"
 //TODO: Extract from emitter
 
 /***** REAL-TIME INTERACTION *****/
-int emitterMode = 4;
+int emitterMode = 7;
 
 /***** SIMULATION *****/
 int   maxcount   = 200000;       //maximum number of particles
@@ -38,8 +38,8 @@ int   maxcount   = 200000;       //maximum number of particles
 float floor = 1200;
 
 /***** EMITTERS *****/
-Emitter[] initEmitters = {  /* make larger than it actually is */
-  new Emitter(4, new vector3(50, 50, -50))
+Emitter[] initEmitters = {
+  //new Emitter(4, new Vec3(50, 50, -50))
 };
 float spawnDist = 500;
 

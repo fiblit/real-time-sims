@@ -1,5 +1,5 @@
-vector3 forward = new vector3(0, 0, -1);
-vector3 right = new vector3(1, 0, 0);
+Vec3 forward = new Vec3(0, 0, -1);
+Vec3 right = new Vec3(1, 0, 0);
 
 boolean isCam(int k) {
   return 
@@ -89,11 +89,11 @@ void cameraCalc() {
     noFace();
   }
 
-  forward = new vector3(
+  forward = new Vec3(
     cos(yaw*PI/180)*cos(pitch*PI/180),
     sin(pitch*PI/180),
     sin(yaw*PI/180)*cos(pitch*PI/180));
-  right = new vector3(
+  right = new Vec3(
     cos((yaw+90)*PI/180)*cos(pitch*PI/180),
     sin(pitch*PI/180),
     sin((yaw+90)*PI/180)*cos(pitch*PI/180));
@@ -104,9 +104,9 @@ void keyPressed() {
     if (emitterMode != 8)
       if (emitterMode == 3)
         //for (int i = 0; i < random(8,12); i++)
-          emitters.add(new Emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
+          emitters.add(new Emitter(emitterMode, new Vec3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
       else      
-        emitters.add(new Emitter(emitterMode, new vector3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
+        emitters.add(new Emitter(emitterMode, new Vec3(eye.x+forward.x*spawnDist, eye.y+forward.y*spawnDist, eye.z+forward.z*spawnDist)));
   }
   if (key == KEYmodeUP) {
     emitterMode++;
