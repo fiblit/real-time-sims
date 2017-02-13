@@ -23,12 +23,13 @@ void setup() {
     emitters.add(e);
   }
   
+  int res = 45;
   myCloth = new Cloth(
-    10, 10, 
-    new Vec3(1000,0,0), 
-    new Vec3(50,0,0), 
-    new Vec3(0,50,0), 
-    5, 1, 5);
+    res, res, 
+    new Vec3(0,0,0), 
+    new Vec3(500,0,0), 
+    new Vec3(0,0,500), 
+    1000000, 1000000, 500/res);
 }  
 
 String getModeName() {
@@ -64,10 +65,17 @@ void draw() {
   renderLighting();
   //sphereDetail(30);
   renderObjects();
-  noLights();
+  //noLights();
   
   fill(255,0,0);
-  myCloth.computePhysics(sdt);
+  //println(sdt);
+  float targetDT = 0.0001;//.1ms
+  for (float currDT = sdt; currDT > targetDT; currDT -= targetDT) {
+  //for (int calcs = 0; calcs < 1000; calcs++) {
+    if (currDT > 0.01) currDT= 0.01 - targetDT;
+    myCloth.computePhysics(targetDT);
+    myCloth.checkCollisions();
+  }  
   myCloth.render();
   
   beginShape(TRIANGLES);

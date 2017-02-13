@@ -21,7 +21,7 @@ char KEYpaddleYP = 'u'; char KEYpaddleYN = 'o';
 char KEYpaddleXP = 'l'; char KEYpaddleXN = 'j';
 char KEYpaddleZP = 'i'; char KEYpaddleZN = 'k';
 float padSpeed = 500;
-float padX = 50; float padY = 50; float padZ = -50; float padR = 300;
+float padX = 200; float padY = 250; float padZ = 200; float padR = 200;
 
 char KEYregen = 'b';// "rebuild"
 

@@ -1,5 +1,6 @@
 void renderLighting() {
-  directionalLight(255, 255, 255, -0.5, 1, -0.5);
+  //directionalLight(128, 128, 128, -0.5, 1, -0.5);
+  pointLight(255, 255, 255, eye.x, eye.y, eye.z);
 }
 
 void renderObjects() {
