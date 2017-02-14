@@ -23,7 +23,7 @@ void setup() {
     emitters.add(e);
   }
   
-  int res = 45;
+  int res = 35;
   myCloth = new Cloth(
     res, res, 
     new Vec3(0,0,0), 

@@ -22,6 +22,9 @@ class Spring {
       float v2 = e.dot(b.vel);
       
       float f = -ks*(l0 - l) - kd*(v1 - v2);
+      //println(f," ",ks,l0,l,kd,v1,v2," ",dt," ",a.mass);
+      //-10^6*(-.0417) -10^6*(0.09)
+      //
       if (a.isKinematic)
         a.acc = a.acc.add(e.mul(f*dt/a.mass));
       if (b.isKinematic)

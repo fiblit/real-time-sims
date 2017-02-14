@@ -21,7 +21,7 @@ class Cloth {
           new Vec3(0,0,0),
           new Vec3(0,0,0),
           0.04,
-          (j!=0&&i!=0)//hacked in frozen top row
+          (j!=0)//hacked in frozen top row
         );       
       }
     }
