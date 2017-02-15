@@ -1,6 +1,6 @@
 Cloth myCloth;
 void setup() {
-  size(1200, 1000, P3D);
+  size(800, 600, P3D);
   noStroke();
   smooth(2);
   gen();
@@ -23,13 +23,16 @@ void setup() {
     emitters.add(e);
   }
   
-  int res = 35;
+  int res = 30;
   myCloth = new Cloth(
     res, res, 
     new Vec3(0,0,0), 
     new Vec3(500,0,0), 
-    new Vec3(0,0,500), 
+    new Vec3(0,50,500), 
     1000000, 1000000, 500/res);
+    
+    textureMode(NORMAL);
+    img = loadImage("BabyPanda.JPG");
 }  
 
 String getModeName() {
@@ -71,7 +74,7 @@ void draw() {
   //println(sdt);
   float targetDT = 0.0001;//.1ms
   for (float currDT = sdt; currDT > targetDT; currDT -= targetDT) {
-  //for (int calcs = 0; calcs < 1000; calcs++) {
+  //for (int calcs = 0; calcs < 100; calcs++) {
     if (currDT > 0.01) currDT= 0.01 - targetDT;
     myCloth.computePhysics(targetDT);
     myCloth.checkCollisions();

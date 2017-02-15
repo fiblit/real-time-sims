@@ -57,3 +57,4 @@ float[][] pMesh = { //init "mesh"
   
 /**** TEXTURES *****/
 //PImage smoke;
+PImage img;
