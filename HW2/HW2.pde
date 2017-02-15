@@ -1,6 +1,7 @@
 Cloth myCloth;
 void setup() {
   size(800, 600, P3D);
+  //fullScreen(P3D);
   noStroke();
   smooth(2);
   gen();
