@@ -3,8 +3,8 @@ float camspeed   = 500;
 float pitchspeed = 50;
 float yawspeed   = 75;
 
-float yaw = 315;
-float pitch = -25;
+float yaw = 270;
+float pitch = 0;
 Vec3 eye;
 
 /***** KEY BINDINGS *****/

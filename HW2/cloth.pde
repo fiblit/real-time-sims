@@ -86,24 +86,24 @@ class Cloth {
           triIDs[box][1] = tr;
           triIDs[box][2] = tl;
           triIDs[box][3] = 0; //MAGIC ID VALUE
-          triIDs[box][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
+          triIDs[box][4] = 3; //MAGIC VALUE -> means both middlepoint splits are there
           triIDs[box+boxes][0] = tr;
           triIDs[box+boxes][1] = bl;
           triIDs[box+boxes][2] = br;
           triIDs[box+boxes][3] = 1; //MAGIC ID VALUE
-          triIDs[box+boxes][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
+          triIDs[box+boxes][4] = 3; //MAGIC VALUE -> means both middlepoint splits are there
         }
         else {
           triIDs[box][0] = tl;
           triIDs[box][1] = br;
           triIDs[box][2] = tr;
           triIDs[box][3] = 2; //MAGIC ID VALUE
-          triIDs[box][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
+          triIDs[box][4] = 3; //MAGIC VALUE -> means both middlepoint splits are there
           triIDs[box+boxes][0] = br;
           triIDs[box+boxes][1] = tl;
           triIDs[box+boxes][2] = bl;
           triIDs[box+boxes][3] = 3; //MAGIC ID VALUE
-          triIDs[box+boxes][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
+          triIDs[box+boxes][4] = 3; //MAGIC VALUE -> means both middlepoint splits are there
         }
       }
     }
@@ -133,22 +133,17 @@ class Cloth {
       v[3] = (v[0] + v[1])/2.0;
       
       
+      //println(triIDs[i][4]);
       if (triIDs[i][4] == 2 || triIDs[i][4] == 3) {//magic #'s 032: 2 / even
         vertex(p[0].x, p[0].y, p[0].z, u[0], v[0]);
         vertex(p[3].x, p[3].y, p[3].z, u[3], v[3]);
         vertex(p[2].x, p[2].y, p[2].z, u[2], v[2]);
-        //line(p[0].x+6,p[0].y-3,p[0].z+6,p[3].x+6,p[3].y-3,p[3].z+6);
-        //line(p[3].x+6,p[3].y-3,p[3].z+6,p[2].x+6,p[2].y-3,p[2].z+6);
-        //line(p[2].x+6,p[2].y-3,p[2].z+6,p[0].x+6,p[0].y-3,p[0].z+6);
       }
 
       if (triIDs[i][4] == 1 || triIDs[i][4] == 3) {//magic #'s 312: 1 / odd
         vertex(p[3].x, p[3].y, p[3].z, u[3], v[3]);
         vertex(p[1].x, p[1].y, p[1].z, u[1], v[1]);
         vertex(p[2].x, p[2].y, p[2].z, u[2], v[2]);
-        //line(p[3].x+6,p[3].y-3,p[3].z+6,p[1].x+6,p[1].y-3,p[1].z+6);
-        //line(p[1].x+6,p[1].y-3,p[1].z+6,p[2].x+6,p[2].y-3,p[2].z+6);
-        //line(p[2].x+6,p[2].y-3,p[2].z+6,p[3].x+6,p[3].y-3,p[3].z+6);
       }
     }
     endShape();
@@ -252,8 +247,8 @@ class Cloth {
         if (foundB == 0 && v == b)
           foundB = i;
       }
+      //println(foundA, foundB, t, c, s.isVert);
       if (foundA != 0 && foundB != 0) {
-        //println(foundA, foundB, t, c, s.isVert);
         ret[c] = t;
         c++;
       }
@@ -297,21 +292,25 @@ class Cloth {
         
         //not even gonna try to explain twhis, it required a lot of pictures to get right
         if (springs[i].isVert) {
-          if (id[0] == 2 || id[0] == 3) {
+          if (id[0] != 0) println(id[0]);
+          if (id[0] == 0 || id[0] == 1 ) {
+            //println(adj[0], adj[1]);
+            //adj always 0,0 for vert??
              triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
              triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
           }
-          if(id[0] == 0 || id[0] == 1) {
+          if(id[0] == 2|| id[0] == 3) {
+            //println("!!2!");
              triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
              triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
           }
         }
         else if (!springs[i].isVert) {
-          if (id[0] == 2 || id[0] == 3) {
+          if (id[1] == 0 || id[1] == 1 ) { //|| id[1] == 2 || id[1] == 3) {
              triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
              triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
           }
-          if(id[0] == 0 || id[0] == 1) {
+          if (id[1] == 2 || id[1] == 3) {
              triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
              triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
           }

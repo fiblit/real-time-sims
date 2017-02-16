@@ -12,7 +12,7 @@ void setup() {
   //textureMode(NORMAL);
   
   //cannot be moved to settings. Height is init before setup.
-  eye = new Vec3(-1300, 1100, 1300);
+  eye = new Vec3(0, 0, 1300);
   frameNow = millis();
   
   vpp = new float[pMesh.length][3];
