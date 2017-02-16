@@ -5,6 +5,7 @@ class Cloth {
   Vec3 O, H, V;
   S_Particle[] parts;
   int[][] triIDs;
+  int[][] boxMidpntIDs;
   float[][] tex;
   Spring[] springs;
   int numSprings;
@@ -29,11 +30,39 @@ class Cloth {
     }
     
     //midpoint tesselation
-    triIDs = new int[2*boxes][3];
+    triIDs = new int[2*boxes][5];
     tex = new float[w*h][2];
     //simple square (& diag) connections
     numSprings = edges;
     springs = new Spring[edges];//+2*boxes];
+    
+    
+    //vert edges
+    for (int i = 0; i < w; i++) {
+      for (int j = 0; j < h -1; j++) {
+        int edge = i+w*j;
+        springs[edge] = new Spring(parts[edge], parts[edge+w], ks, kd, l0);
+        springs[edge].isVert = true;
+      }
+    }
+    //horiz edges
+    for (int j = 0; j < h; j++) {
+      for (int i = 0; i < w - 1; i++) {
+        int edge = w*(h-1) + i+j*(w-1);
+        springs[edge] = new Spring(parts[i+j*w], parts[i+1+j*w], ks, kd, l0);
+        springs[edge].isVert = false;
+      }
+    }
+    /*
+    //diags
+    for (int j = 0; j < h - 1; j++) {
+      for (int i = 0; i < w - 1; i++) {
+        int b = i + j *(w-1);
+        springs[edges + b] = new Spring(parts[i+j*w], parts[i+1+(j+1)*w], ks, kd, l0/sqrt(2));
+        springs[edges + boxes+ b] = new Spring(parts[i+(j+1)*w], parts[i+1+j*w], ks, kd, l0/sqrt(2));
+      }
+    }
+    */
     
     for (int i = 0; i < w - 1; i++) {
       for (int j = 0; j < h - 1; j++) {
@@ -50,81 +79,80 @@ class Cloth {
         tex[bl][1] = (j+1)/((float)h);
         tex[br][0] = (i+1)/((float)w);
         tex[br][1] = (j+1)/((float)h);
-        if (j%2 == 0) {
-          triIDs[box][0] = tl;
-          triIDs[box][1] = bl;
-          triIDs[box][2] = tr;
+        
+        //exact order matters for midpoint tesselation in the rendering step
+        if (true) {
+          triIDs[box][0] = bl;
+          triIDs[box][1] = tr;
+          triIDs[box][2] = tl;
+          triIDs[box][3] = 0; //MAGIC ID VALUE
+          triIDs[box][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
           triIDs[box+boxes][0] = tr;
           triIDs[box+boxes][1] = bl;
           triIDs[box+boxes][2] = br;
+          triIDs[box+boxes][3] = 1; //MAGIC ID VALUE
+          triIDs[box+boxes][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
         }
         else {
           triIDs[box][0] = tl;
           triIDs[box][1] = br;
           triIDs[box][2] = tr;
-          triIDs[box+boxes][0] = tl;
-          triIDs[box+boxes][1] = bl;
-          triIDs[box+boxes][2] = br;
+          triIDs[box][3] = 2; //MAGIC ID VALUE
+          triIDs[box][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
+          triIDs[box+boxes][0] = br;
+          triIDs[box+boxes][1] = tl;
+          triIDs[box+boxes][2] = bl;
+          triIDs[box+boxes][3] = 3; //MAGIC ID VALUE
+          triIDs[box+boxes][4] = 2; //MAGIC VALUE -> means both middlepoint splits are there
         }
       }
     }
-    
-    //vert edges
-    for (int i = 0; i < w; i++) {
-      for (int j = 0; j < h -1; j++) {
-        int edge = i+w*j;
-        springs[edge] = new Spring(parts[edge], parts[edge+w], ks, kd, l0);
-      }
-    }
-    //horiz edges
-    for (int j = 0; j < h; j++) {
-      for (int i = 0; i < w - 1; i++) {
-        int edge = w*(h-1) + i+j*(w-1);
-        springs[edge] = new Spring(parts[i+j*w], parts[i+1+j*w], ks, kd, l0);
-      }
-    }
-    /*
-    //diags
-    for (int j = 0; j < h - 1; j++) {
-      for (int i = 0; i < w - 1; i++) {
-        int b = i + j *(w-1);
-        springs[edges + b] = new Spring(parts[i+j*w], parts[i+1+(j+1)*w], ks, kd, l0/sqrt(2));
-        springs[edges + boxes+ b] = new Spring(parts[i+(j+1)*w], parts[i+1+j*w], ks, kd, l0/sqrt(2));
-      }
-    }
-    */
   }
   
   public void render() {
+    stroke(0,0,255);
     beginShape(TRIANGLES);
     texture(img);
     for (int i = 0; i < triIDs.length; i++) {
-      Vec3 v0 = parts[triIDs[i][0]].pos;
-      float u = tex[triIDs[i][0]][0];
-      float v = tex[triIDs[i][0]][1];
-      vertex(v0.x, v0.y, v0.z, u, v);
-      Vec3 v1 = parts[triIDs[i][1]].pos;
-      u = tex[triIDs[i][1]][0];
-      v = tex[triIDs[i][1]][1];
-      vertex(v1.x, v1.y, v1.z, u, v);
-      Vec3 v2 = parts[triIDs[i][2]].pos;
-      u = tex[triIDs[i][2]][0];
-      v = tex[triIDs[i][2]][1];
-      vertex(v2.x, v2.y, v2.z, u, v);
+      Vec3[] p = new Vec3[4];
+      float[] u = new float[4];
+      float[] v = new float[4];
+      p[0] = parts[triIDs[i][0]].pos;
+      u[0] = tex[triIDs[i][0]][0];
+      v[0] = tex[triIDs[i][0]][1];
+      p[1] = parts[triIDs[i][1]].pos;
+      u[1] = tex[triIDs[i][1]][0];
+      v[1] = tex[triIDs[i][1]][1];
+      p[2] = parts[triIDs[i][2]].pos;
+      u[2] = tex[triIDs[i][2]][0];
+      v[2] = tex[triIDs[i][2]][1];
+
+      //midpoint between 0 & 1
+      p[3] = p[1].add(p[0]).div(2.0);
+      u[3] = (u[0] + u[1])/2.0;
+      v[3] = (v[0] + v[1])/2.0;
+      
+      
+      if (triIDs[i][4] == 2 || triIDs[i][4] == 3) {//magic #'s 032: 2 / even
+        vertex(p[0].x, p[0].y, p[0].z, u[0], v[0]);
+        vertex(p[3].x, p[3].y, p[3].z, u[3], v[3]);
+        vertex(p[2].x, p[2].y, p[2].z, u[2], v[2]);
+        //line(p[0].x+6,p[0].y-3,p[0].z+6,p[3].x+6,p[3].y-3,p[3].z+6);
+        //line(p[3].x+6,p[3].y-3,p[3].z+6,p[2].x+6,p[2].y-3,p[2].z+6);
+        //line(p[2].x+6,p[2].y-3,p[2].z+6,p[0].x+6,p[0].y-3,p[0].z+6);
+      }
+
+      if (triIDs[i][4] == 1 || triIDs[i][4] == 3) {//magic #'s 312: 1 / odd
+        vertex(p[3].x, p[3].y, p[3].z, u[3], v[3]);
+        vertex(p[1].x, p[1].y, p[1].z, u[1], v[1]);
+        vertex(p[2].x, p[2].y, p[2].z, u[2], v[2]);
+        //line(p[3].x+6,p[3].y-3,p[3].z+6,p[1].x+6,p[1].y-3,p[1].z+6);
+        //line(p[1].x+6,p[1].y-3,p[1].z+6,p[2].x+6,p[2].y-3,p[2].z+6);
+        //line(p[2].x+6,p[2].y-3,p[2].z+6,p[3].x+6,p[3].y-3,p[3].z+6);
+      }
     }
     endShape();
-    /*
-    stroke(0,0,255);
-    for (int i = 0; i < triIDs.length; i++) {
-      Vec3 v0 = parts[triIDs[i][0]].pos;
-      Vec3 v1 = parts[triIDs[i][1]].pos;
-      Vec3 v2 = parts[triIDs[i][2]].pos;
-      line(v0.x+6,v0.y-3,v0.z+6,v1.x+6,v1.y-3,v1.z+6);
-      line(v0.x+6,v0.y-3,v0.z+6,v2.x+6,v2.y-3,v2.z+6);
-      line(v1.x+6,v1.y-3,v1.z+6,v2.x+6,v2.y-3,v2.z+6);
-    }
-    */
-    
+    //noStroke();
     /*
     fill(0,255,0);
     sphereDetail(3);
@@ -136,15 +164,18 @@ class Cloth {
     }
     sphereDetail(50);
     */
-    /*
-    stroke(0,255,0);
-    for (int i = 0; i < springs.length; i++) {
+    
+    
+    for (int i = 0; i < numSprings; i++) {      
+      stroke(0,255,0);
+      if (springs[i].torn)
+        stroke(255,0,0);
       line(
-        springs[i].a.pos.x + 5, springs[i].a.pos.y - 3, springs[i].a.pos.z + 5, 
-        springs[i].b.pos.x + 5, springs[i].b.pos.y - 3, springs[i].b.pos.z + 5);
+        springs[i].a.pos.x + 1, springs[i].a.pos.y + 1, springs[i].a.pos.z + 1, 
+        springs[i].b.pos.x + 1, springs[i].b.pos.y + 1, springs[i].b.pos.z + 1);
     }
     noStroke();
-    */
+    
     
   }
   
@@ -205,35 +236,119 @@ class Cloth {
     }
   }
 
+  public int[] spring2AdjTris(Spring s) {
+    S_Particle a = s.a;
+    S_Particle b = s.b;
+    int[] ret = new int[2];
+    int c = 0;
+    
+    for (int t = 0; t < triIDs.length; t++) {
+      int foundA = 0;
+      int foundB = 0;
+      for (int i = 0; i < 3; i++) {
+        S_Particle v = parts[triIDs[t][i]];
+        if (foundA == 0 && v == a)
+          foundA = i;
+        if (foundB == 0 && v == b)
+          foundB = i;
+      }
+      if (foundA != 0 && foundB != 0) {
+        //println(foundA, foundB, t, c, s.isVert);
+        ret[c] = t;
+        c++;
+      }
+    }
+    
+    //println(ret[0]);
+    //println(ret[1]);
+    //println();
+    return ret;
+  }
+
+  public int triSpringTear(int before, int tear) {
+    //println(before, tear);
+    if (before == 3)
+      return before - tear;
+    else if(before == 2 && tear == 2)
+      return 0;
+    else if(before == 1 && tear == 1)
+      return 0;
+    else
+      return before;
+  }
+
   public void ApplyForces(float dt) {    
     for(int i = 0; i < parts.length; i++) {
       parts[i].acc = new Vec3(0,980,0);
     }
-    for(int i = 0; i < springs.length; i++) {
+    
+    /* spring force */
+    for(int i = 0; i < numSprings; i++) {
       springs[i].ApplyForce(dt);
+    
+      if (springs[i].torn) {
+        int[] adj = spring2AdjTris(springs[i]);
+        
+        int[] id = new int[2];
+        id[0] = triIDs[adj[0]][3];
+        id[1] = triIDs[adj[1]][3];
+        
+        //println(triIDs[adj[0]][4]);
+        
+        //not even gonna try to explain twhis, it required a lot of pictures to get right
+        if (springs[i].isVert) {
+          if (id[0] == 2 || id[0] == 3) {
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
+          }
+          if(id[0] == 0 || id[0] == 1) {
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
+          }
+        }
+        else if (!springs[i].isVert) {
+          if (id[0] == 2 || id[0] == 3) {
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
+          }
+          if(id[0] == 0 || id[0] == 1) {
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
+          }
+        }
+        //println(triIDs[adj[0]][4], triIDs[adj[1]][4]);
+        
+        //springs[i] = springs[numSprings - 1];
+        //numSprings--;
+        //i--;
+      }
     }
     
+    /* drag force */
     for(int i = 0; i < triIDs.length; i++) {
-      S_Particle s0 = parts[triIDs[i][0]];
-      S_Particle s1 = parts[triIDs[i][1]];
-      S_Particle s2 = parts[triIDs[i][2]];
-     
-      //f_aero = -1/2 (density) |v^2| c_d * a * norm
-      //1/2 ||(s1 - s0)x( s2-s0 )||
-      float a_0 = 0.5 *(s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos))).mag();
-      //(s1-s0)x(s2-s0))/||(s1 - s0)x( s2-s0 )||
-      Vec3 norm = s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos)).div(2*a_0);
-      //( s0 + s1 + s2 ) / 3
-      Vec3 v = s0.vel.add(s1.vel).add(s2.vel).div(3); 
-      float vmag = v.mag();
-      float a = a_0 * v.dot(norm);
-      float density = 0.001;
-      float c_d = 0.001;
-      Vec3 f_aero = norm.mul(-0.5 * density * vmag*vmag * c_d * a/ 3);
-
-      s0.acc = s0.acc.add(f_aero.mul(dt/s0.mass));
-      s1.acc = s1.acc.add(f_aero.mul(dt/s1.mass));
-      s2.acc = s2.acc.add(f_aero.mul(dt/s2.mass));
+      if (triIDs[i][4] > 0) {
+        S_Particle s0 = parts[triIDs[i][0]];
+        S_Particle s1 = parts[triIDs[i][1]];
+        S_Particle s2 = parts[triIDs[i][2]];
+       
+        //f_aero = -1/2 (density) |v^2| c_d * a * norm
+        //1/2 ||(s1 - s0)x( s2-s0 )||
+        float a_0 = 0.5 *(s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos))).mag();
+        //(s1-s0)x(s2-s0))/||(s1 - s0)x( s2-s0 )||
+        Vec3 norm = s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos)).div(2*a_0);
+        //( s0 + s1 + s2 ) / 3
+        Vec3 v = s0.vel.add(s1.vel).add(s2.vel).div(3); 
+        float vmag = v.mag();
+        float a = a_0 * v.dot(norm);
+        float density = 0.01;
+        float c_d = 0.01;
+        Vec3 f_aero = norm.mul(-0.5 * density * vmag*vmag * c_d * a/ 3);
+  
+        s0.acc = s0.acc.add(f_aero.mul(dt/s0.mass).mul(triIDs[i][4] == 1 ? 0 : 1));
+        s1.acc = s1.acc.add(f_aero.mul(dt/s1.mass).mul(triIDs[i][4] == 2 ? 0 : 1));
+        s2.acc = s2.acc.add(f_aero.mul(dt/s2.mass));
+      }
     }
+    /**/
   }
 }

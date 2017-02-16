@@ -3,7 +3,12 @@ class Spring {
   float kd;//damping
   float l0;//rest length
   
-  S_Particle a, b;
+  public S_Particle a, b;
+  
+  boolean isVert;
+  
+  boolean torn;
+  float threshold;
   
   public Spring(S_Particle a, S_Particle b, float ks, float kd, float l0) {
     this.ks = ks;
@@ -11,6 +16,7 @@ class Spring {
     this.l0 = l0;
     this.a = a;
     this.b = b;
+    threshold = 100000;
   }
   
   public void ApplyForce(float dt) {
@@ -25,6 +31,7 @@ class Spring {
       //println(f," ",ks,l0,l,kd,v1,v2," ",dt," ",a.mass);
       //-10^6*(-.0417) -10^6*(0.09)
       //
+      torn = torn || (f*dt/a.mass > threshold || f*dt/b.mass > threshold);
       if (a.isKinematic)
         a.acc = a.acc.add(e.mul(f*dt/a.mass));
       if (b.isKinematic)

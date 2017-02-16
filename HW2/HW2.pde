@@ -24,12 +24,12 @@ void setup() {
     emitters.add(e);
   }
   
-  int res = 15;
+  int res = 31;
   myCloth = new Cloth(
     res, res, 
     new Vec3(0,0,0), 
     new Vec3(500,0,0), 
-    new Vec3(0,50,500), 
+    new Vec3(0,0,500), 
     1000000, 1000000, 500/res);
     
     textureMode(NORMAL);
