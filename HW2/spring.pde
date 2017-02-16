@@ -32,6 +32,18 @@ class Spring {
       //-10^6*(-.0417) -10^6*(0.09)
       //
       torn = torn || (f*dt/a.mass > threshold || f*dt/b.mass > threshold);
+      if (torn) {
+        Emitter emit = new Emitter();
+        emit.setAll(
+        true,
+        new range(0.2, 1), new range(1,1), new rangeVec4(new Vec4(255,60,0,255), new Vec4(200,120,0,127)),
+        new range(0, 2*PI), new range(l,l), 
+        new rangeVec3(new Vec3(a.pos.x,a.pos.y,a.pos.z),new Vec3(b.pos.x,b.pos.y,b.pos.z)), new rangeVec3(new Vec3(),new Vec3()), new rangeVec3(new Vec3(0,-98,0),new Vec3(0,-98,0)),
+        100,
+        0.3,
+        false);
+        emitters.add(emit);
+      }
       if (a.isKinematic)
         a.acc = a.acc.add(e.mul(f*dt/a.mass));
       if (b.isKinematic)

@@ -11,12 +11,8 @@ void p_computePhysics(float dt, int i) {
   p_calculateForces(i);
   
   //eulerian
-  ps[i].vel.x = ps[i].vel.x + ps[i].acc.x * dt;
-  ps[i].vel.y = ps[i].vel.y + ps[i].acc.y * dt;
-  ps[i].vel.z = ps[i].vel.z + ps[i].acc.z * dt;
-  ps[i].pos.x = ps[i].pos.x + ps[i].vel.x * dt;
-  ps[i].pos.y = ps[i].pos.y + ps[i].vel.y * dt;
-  ps[i].pos.z = ps[i].pos.z + ps[i].vel.z * dt;
+  ps[i].vel = ps[i].vel.add(ps[i].acc.mul(dt));
+  ps[i].pos = ps[i].pos.add(ps[i].vel.mul(dt)).add(ps[i].acc.mul(0.5*dt*dt));
   
   p_checkForCollisions(i);
 }

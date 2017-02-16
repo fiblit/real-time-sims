@@ -29,6 +29,9 @@ class Emitter {
     this.eBall = eBall;
   }
   
+  public Emitter() {
+  }
+  
   public Emitter(int mode, Vec3 pos) {
     //println(pos.x,pos.y,pos.z);    
     pos.y = min(pos.y, floor-15);

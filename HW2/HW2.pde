@@ -25,7 +25,7 @@ void setup() {
     emitters.add(e);
   }
   
-  int res = 31;
+  int res = 10;
   myCloth = new Cloth(
     res, res, 
     new Vec3(0,0,0), 
@@ -79,15 +79,11 @@ void draw() {
   int simpf = 0;
   if (currDT > 1/60.0) currDT = 1/60.0;
   while(currDT > 0) {
-  //for (float currDT = sdt; currDT > targetDT; currDT -= millis()-frameNow) {
-  //for (int calcs = 0; calcs < 100; calcs++) {
-    
     float beforeP = millis();
     myCloth.computePhysics(targetDT);
     myCloth.checkCollisions();
     currDT -= max((millis()-beforeP)/1000, targetDT);
     simpf++;
-    //println(currDT, (millis()-beforeP)/1000, targetDT);
   }  
   myCloth.render();
   

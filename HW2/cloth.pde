@@ -298,7 +298,7 @@ class Cloth {
         
         //println(triIDs[adj[0]][4]);
         
-        //not even gonna try to explain twhis, Literally magic that it works
+        //not even gonna try to explain this, Literally magic that it works
         if (springs[i].isVert) {
           if (id[0] == 0 || id[0] == 1) {
              triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//2
