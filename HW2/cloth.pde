@@ -161,7 +161,7 @@ class Cloth {
     
     
     for (int i = 0; i < numSprings; i++) {      
-      stroke(64,64,64);
+      stroke(64,64,64,64);
       if (springs[i].torn)
         stroke(255,0,0);
       line(

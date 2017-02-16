@@ -12,12 +12,15 @@ void renderObjects() {
   popMatrix();
   
   beginShape(QUAD);
-  fill(100,100,100);
-  vertex(2000,floor,2000);
-  vertex(2000,floor,-2000);
-  vertex(-2000,floor,-2000);
-  vertex(-2000,floor,2000);
+  //texture(ground);
+  fill(255,255,255,120);
+  vertex(2000,floor,2000,0,0);
+  vertex(2000,floor,-2000,0,1);
+  vertex(-2000,floor,-2000,1,1);
+  vertex(-2000,floor,2000,1,0);
+  endShape();
   
+  beginShape(QUAD);
   fill(120,120,120,230);//???
   vertex(-1200,500,-10);
   vertex(-1200,1200,-10);

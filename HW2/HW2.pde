@@ -108,7 +108,7 @@ void draw() {
   fill(255);
   DecimalFormat df = new DecimalFormat();
   df.setMaximumFractionDigits(5);
-  text("--- BUILD: DEBUG ---\nFPS: "+df.format(frameRate)+"\ntarget-dt:"+df.format(targetDT*1000)+"ms Physics Sim/frame:"+simpf+"\nparticles: " + pcount +
+  text("--- BUILD: DEBUG ---\nFPS: "+df.format(frameRate)+"\ntarget-dt:"+df.format(targetDT*1000)+"ms Cloth Physics Sim/frame:"+simpf+"\nparticles: " + pcount +
   " \n\nmode:\n    " + getModeName() +
   "\nB to build that scene; X to spawn that emitter \nTG to change mode" +
   "\n\nWASD to strafe \nZC to move up&down \nQERF to pan camera \nIJKLUO to move paddle\nGo away ;_;", -1000, 550);
