@@ -18,11 +18,11 @@ void renderObjects() {
   vertex(-2000,floor,-2000);
   vertex(-2000,floor,2000);
   
-  fill(120,120,120,120);//???
-  vertex(-1200,550,-10);
+  fill(120,120,120,230);//???
+  vertex(-1200,500,-10);
   vertex(-1200,1200,-10);
   vertex(-200,1200,-10);
-  vertex(-200,550,-10);
+  vertex(-200,500,-10);
   endShape();
 }
 

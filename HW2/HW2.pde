@@ -1,3 +1,4 @@
+import java.text.DecimalFormat;
 Cloth myCloth;
 void setup() {
   size(800, 600, P3D);
@@ -75,6 +76,7 @@ void draw() {
   //println(sdt);
   float targetDT = 0.0001;//.1ms
   float currDT = sdt;
+  int simpf = 0;
   if (currDT > 1/60.0) currDT = 1/60.0;
   while(currDT > 0) {
   //for (float currDT = sdt; currDT > targetDT; currDT -= millis()-frameNow) {
@@ -84,6 +86,7 @@ void draw() {
     myCloth.computePhysics(targetDT);
     myCloth.checkCollisions();
     currDT -= max((millis()-beforeP)/1000, targetDT);
+    simpf++;
     //println(currDT, (millis()-beforeP)/1000, targetDT);
   }  
   myCloth.render();
@@ -103,8 +106,10 @@ void draw() {
   
   textSize(32); 
   fill(255);
-  text("--- BUILD: DEBUG ---\nFPS: "+frameRate+"\nparticles: " + pcount +
+  DecimalFormat df = new DecimalFormat();
+  df.setMaximumFractionDigits(5);
+  text("--- BUILD: DEBUG ---\nFPS: "+df.format(frameRate)+"\ntarget-dt:"+df.format(targetDT*1000)+"ms Physics Sim/frame:"+simpf+"\nparticles: " + pcount +
   " \n\nmode:\n    " + getModeName() +
   "\nB to build that scene; X to spawn that emitter \nTG to change mode" +
-  "\n\nWASD to strafe \nZC to move up&down \nQERF to pan camera \nIJKLUO to move paddle\nGo away ;_;", -1000, 600);
+  "\n\nWASD to strafe \nZC to move up&down \nQERF to pan camera \nIJKLUO to move paddle\nGo away ;_;", -1000, 550);
 }

@@ -109,7 +109,7 @@ class Cloth {
   }
   
   public void render() {
-    stroke(0,0,255);
+    //stroke(0,0,255);
     beginShape(TRIANGLES);
     texture(img);
     for (int i = 0; i < triIDs.length; i++) {
@@ -161,7 +161,7 @@ class Cloth {
     
     
     for (int i = 0; i < numSprings; i++) {      
-      stroke(0,255,0);
+      stroke(64,64,64);
       if (springs[i].torn)
         stroke(255,0,0);
       line(
@@ -277,10 +277,16 @@ class Cloth {
     }
     
     /* spring force */
-    for(int i = 0; i < numSprings; i++) {
-      springs[i].ApplyForce(dt);
+    for(int i = 0; i < springs.length; i++) {
+      if (i < numSprings)
+        springs[i].ApplyForce(dt);
     
       if (springs[i].torn) {
+        //stroke(255,0,0);
+      //line(
+        //springs[i].a.pos.x + 1, springs[i].a.pos.y + 1, springs[i].a.pos.z + 1, 
+        //springs[i].b.pos.x + 1, springs[i].b.pos.y + 1, springs[i].b.pos.z + 1);
+        //noStroke();
         int[] adj = spring2AdjTris(springs[i]);
         if (adj[0] == 0) {
           //println(adj[0], adj[1], springs[i].a, springs[i].b);
@@ -295,29 +301,31 @@ class Cloth {
         //not even gonna try to explain twhis, Literally magic that it works
         if (springs[i].isVert) {
           if (id[0] == 0 || id[0] == 1) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//2
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//2
           }
           if (id[1] == 2 || id[1] == 3) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//1
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//1
           }
         }
         if (!springs[i].isVert) {
           if (id[0] == 0 || id[0] == 1) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//1
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//1
           }
           if (id[1] == 2 || id[1] == 3) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//2
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//2
           }
         }
-        Spring t = springs[i];
-        springs[i] = springs[numSprings - 1];
-        springs[numSprings - 1] = t;
-        numSprings--;
-        i--;
+        if (i < numSprings) {
+          Spring t = springs[i];
+          springs[i] = springs[numSprings - 1];
+          springs[numSprings - 1] = t;
+          numSprings--;
+          i--;
+        }
       }
     }
     
