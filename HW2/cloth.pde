@@ -5,7 +5,6 @@ class Cloth {
   Vec3 O, H, V;
   S_Particle[] parts;
   int[][] triIDs;
-  int[][] boxMidpntIDs;
   float[][] tex;
   Spring[] springs;
   int numSprings;
@@ -172,6 +171,7 @@ class Cloth {
     noStroke();
     
     
+    
   }
   
   public void computePhysics(float dt) {
@@ -237,26 +237,25 @@ class Cloth {
     int[] ret = new int[2];
     int c = 0;
     
+    boolean f = false;
     for (int t = 0; t < triIDs.length; t++) {
-      int foundA = 0;
-      int foundB = 0;
+      int foundA = -1;
+      int foundB = -1;
       for (int i = 0; i < 3; i++) {
         S_Particle v = parts[triIDs[t][i]];
-        if (foundA == 0 && v == a)
+        
+        if (foundA == -1 && v == a)
           foundA = i;
-        if (foundB == 0 && v == b)
+        if (foundB == -1 && v == b)
           foundB = i;
       }
-      //println(foundA, foundB, t, c, s.isVert);
-      if (foundA != 0 && foundB != 0) {
+      f = true;
+      if (foundA != -1 && foundB != -1) {
         ret[c] = t;
         c++;
       }
     }
-    
-    //println(ret[0]);
-    //println(ret[1]);
-    //println();
+
     return ret;
   }
 
@@ -283,6 +282,9 @@ class Cloth {
     
       if (springs[i].torn) {
         int[] adj = spring2AdjTris(springs[i]);
+        if (adj[0] == 0) {
+          //println(adj[0], adj[1], springs[i].a, springs[i].b);
+        }
         
         int[] id = new int[2];
         id[0] = triIDs[adj[0]][3];
@@ -290,23 +292,9 @@ class Cloth {
         
         //println(triIDs[adj[0]][4]);
         
-        //not even gonna try to explain twhis, it required a lot of pictures to get right
+        //not even gonna try to explain twhis, Literally magic that it works
         if (springs[i].isVert) {
-          if (id[0] != 0) println(id[0]);
-          if (id[0] == 0 || id[0] == 1 ) {
-            //println(adj[0], adj[1]);
-            //adj always 0,0 for vert??
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
-          }
-          if(id[0] == 2|| id[0] == 3) {
-            //println("!!2!");
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
-          }
-        }
-        else if (!springs[i].isVert) {
-          if (id[1] == 0 || id[1] == 1 ) { //|| id[1] == 2 || id[1] == 3) {
+          if (id[0] == 0 || id[0] == 1) {
              triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
              triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
           }
@@ -315,11 +303,21 @@ class Cloth {
              triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
           }
         }
-        //println(triIDs[adj[0]][4], triIDs[adj[1]][4]);
-        
-        //springs[i] = springs[numSprings - 1];
-        //numSprings--;
-        //i--;
+        if (!springs[i].isVert) {
+          if (id[0] == 0 || id[0] == 1) {
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 1);
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 1);
+          }
+          if (id[1] == 2 || id[1] == 3) {
+             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 2);
+             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 2);
+          }
+        }
+        Spring t = springs[i];
+        springs[i] = springs[numSprings - 1];
+        springs[numSprings - 1] = t;
+        numSprings--;
+        i--;
       }
     }
     
