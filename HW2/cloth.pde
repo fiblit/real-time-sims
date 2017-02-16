@@ -7,6 +7,7 @@ class Cloth {
   int[][] triIDs;
   float[][] tex;
   Spring[] springs;
+  int numSprings;
   
   public Cloth(int w, int h, Vec3 O, Vec3 H, Vec3 V, float ks, float kd, float l0) {
     resW = w;
@@ -22,7 +23,7 @@ class Cloth {
           new Vec3(0,0,0),
           new Vec3(0,0,0),
           0.04,
-          true//(j!=0)//hacked in frozen top row
+          (j!=0)//hacked in frozen top row
         );       
       }
     }
@@ -31,6 +32,7 @@ class Cloth {
     triIDs = new int[2*boxes][3];
     tex = new float[w*h][2];
     //simple square (& diag) connections
+    numSprings = edges;
     springs = new Spring[edges];//+2*boxes];
     
     for (int i = 0; i < w - 1; i++) {
@@ -202,7 +204,7 @@ class Cloth {
       }
     }
   }
-  
+
   public void ApplyForces(float dt) {    
     for(int i = 0; i < parts.length; i++) {
       parts[i].acc = new Vec3(0,980,0);
@@ -215,6 +217,7 @@ class Cloth {
       S_Particle s0 = parts[triIDs[i][0]];
       S_Particle s1 = parts[triIDs[i][1]];
       S_Particle s2 = parts[triIDs[i][2]];
+     
       //f_aero = -1/2 (density) |v^2| c_d * a * norm
       //1/2 ||(s1 - s0)x( s2-s0 )||
       float a_0 = 0.5 *(s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos))).mag();
@@ -224,10 +227,10 @@ class Cloth {
       Vec3 v = s0.vel.add(s1.vel).add(s2.vel).div(3); 
       float vmag = v.mag();
       float a = a_0 * v.dot(norm);
-      float density = 0.5;
-      float c_d = 0.0001;
+      float density = 0.001;
+      float c_d = 0.001;
       Vec3 f_aero = norm.mul(-0.5 * density * vmag*vmag * c_d * a/ 3);
-      //println(f_aero);
+
       s0.acc = s0.acc.add(f_aero.mul(dt/s0.mass));
       s1.acc = s1.acc.add(f_aero.mul(dt/s1.mass));
       s2.acc = s2.acc.add(f_aero.mul(dt/s2.mass));

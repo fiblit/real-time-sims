@@ -10,6 +10,10 @@ private float frameNow;
 float sdt;
 float mdt;
 
+float time() {
+  return frameNow;
+}
+
 void tick() {
   lastFrame = frameNow;
   frameNow = millis();

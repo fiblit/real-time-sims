@@ -7,7 +7,7 @@ void renderObjects() {
   
   pushMatrix();  
   translate(padX,padY,padZ);
-  fill(0,0,0,255);
+  fill(128,128,128,255);
   sphere(padR);
   popMatrix();
   
