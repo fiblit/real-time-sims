@@ -190,7 +190,7 @@ class Cloth {
   }
   
   public void checkCollisions() {
-    float buffer = 10;//helps avoid face-clipping
+    float buffer = 7;//helps avoid face-clipping
     for (int i = 0; i < parts.length; i++) {
       /*
       for (int j = 0; j < parts.length; j++) {
@@ -290,32 +290,9 @@ class Cloth {
         id[0] = triIDs[adj[0]][3];
         id[1] = triIDs[adj[1]][3];
         
-        
-         triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);
-         triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);
-        //not even gonna try to explain this, Literally magic that it works
-        /*
-        if (springs[i].isVert) {
-          if (id[0] == 0 || id[0] == 1) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//2
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//2
-          }
-          if (id[1] == 2 || id[1] == 3) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//1
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//1
-          }
-        }
-        if (!springs[i].isVert) {
-          if (id[0] == 0 || id[0] == 1) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//1
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//1
-          }
-          if (id[1] == 2 || id[1] == 3) {
-             triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//2
-             triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//2
-          }
-        }
-        */
+        triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);
+        triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);
+
         if (i < numSprings) {
           Spring t = springs[i];
           springs[i] = springs[numSprings - 1];
@@ -327,7 +304,6 @@ class Cloth {
     }
     
     /* drag force */
-    
     for(int i = 0; i < triIDs.length; i++) {
       if (triIDs[i][4] > 0) {
         S_Particle s0 = parts[triIDs[i][0]];
@@ -336,17 +312,17 @@ class Cloth {
        
         //f_aero = -1/2 (density) |v^2| c_d * a * norm
         //1/2 ||(s1 - s0)x( s2-s0 )||
-        float a_0 = 0.5 *(s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos))).mag();
+        Vec3 cross = s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos));
+        float a_0 = 0.5 * (cross).mag();
         //(s1-s0)x(s2-s0))/||(s1 - s0)x( s2-s0 )||
-        Vec3 norm = s1.pos.sub(s0.pos).cross(s2.pos.sub(s0.pos)).div(2*a_0);
+        Vec3 norm = cross.div(2*a_0);
         //( s0 + s1 + s2 ) / 3
         Vec3 v = s0.vel.add(s1.vel).add(s2.vel).div(3); 
-        float vmag = v.mag();
         float a = a_0 * v.dot(norm);
         float density = 0.01;
         float c_d = 0.01;
-        Vec3 f_aero = norm.mul(-0.5 * density * vmag*vmag * c_d * a/ 3);
-  
+        Vec3 f_aero = norm.mul(-0.5 * density * v.dot(v) * c_d * a/ 3);
+        
         s0.acc = s0.acc.add(f_aero.mul(dt/s0.mass).mul(triIDs[i][4] == 1 ? 0 : 1));
         s1.acc = s1.acc.add(f_aero.mul(dt/s1.mass).mul(triIDs[i][4] == 2 ? 0 : 1));
         s2.acc = s2.acc.add(f_aero.mul(dt/s2.mass));
