@@ -38,14 +38,21 @@ class Spring {
         /* fiery */
         if (clothTearType == 0) {
           emit = new Emitter();
+          Vec3 pos = a.pos.add(b.pos).div(2);
           emit.setAll(
-          true,
-          new range(0.2, 1), new range(1,1), new rangeVec4(new Vec4(255,60,0,255), new Vec4(200,120,0,127)),
-          new range(0, 2*PI), new range(0,l), 
-          new rangeVec3(new Vec3(a.pos.x,a.pos.y,a.pos.z),new Vec3(b.pos.x,b.pos.y,b.pos.z)), new rangeVec3(new Vec3(),new Vec3()), new rangeVec3(new Vec3(0,-98,0),new Vec3(0,-98,0)),
-          100,
-          0.3,
-          false);
+            true,
+            new range(1, 2), new range(1, 1),
+            new rangeVec4(new Vec4(random(255,255), random(0,255), random(0,255), 255),
+                          new Vec4(random(255,255), random(0,255), random(0,255), 0)),
+            new range(0, 2*PI), new range(0, 5),
+            new rangeVec3(new Vec3(pos.x+0,pos.y-5,pos.z+0),
+                          new Vec3(pos.x+0,pos.y+5,pos.z+0)),
+            new rangeVec3(new Vec3(-75,-100,-170),
+                          new Vec3(75,-300,-200)),
+            new rangeVec3(new Vec3(-200,-200,-200),
+                          new Vec3(200,200,200)),
+            250, -1,
+            false);
           emitters.add(emit);
         }
         /* sparkles */

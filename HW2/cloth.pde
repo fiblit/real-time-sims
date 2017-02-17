@@ -183,8 +183,8 @@ class Cloth {
       if (parts[i].isKinematic) {
         //eulerian
         /*
-                
-        
+        parts[i].pos = parts[i].pos.add(parts[i].vel.mul(dt));
+        parts[i].vel = parts[i].vel.add(parts[i].acc.mul(dt));
         */
         //midpoint
         /**/
@@ -310,6 +310,7 @@ class Cloth {
     }
     
     /* drag force */
+    
     for(int i = 0; i < triIDs.length; i++) {
       if (triIDs[i][4] > 0) {
         S_Particle s0 = parts[triIDs[i][0]];
