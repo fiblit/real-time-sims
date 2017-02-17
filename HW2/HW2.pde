@@ -3,15 +3,11 @@ Cloth myCloth;
 void setup() {
   size(800, 600, P3D);
   //fullScreen(P3D);
+  
   noStroke();
   smooth(2);
   gen();
-  
-  //smoke = loadImage("smoke.png");
-  //smoke.mask(loadImage("smokemask.png"));
-  //image(smoke,0,0);
-  //textureMode(NORMAL);
-  
+
   //cannot be moved to settings. Height is init before setup.
   eye = new Vec3(0, 0, 1300);
   frameNow = millis();
@@ -25,32 +21,17 @@ void setup() {
     emitters.add(e);
   }
   
-  int res = 10;
+  int res = 60;
   myCloth = new Cloth(
     res, res, 
-    new Vec3(0,0,0), 
-    new Vec3(500,0,0), 
-    new Vec3(0,0,500), 
-    1000000, 1000000, 500/res);
+    new Vec3(0,-500,0), 
+    new Vec3(1000,0,0), 
+    new Vec3(0,0,1000), 
+    1000000, 1000000, 1000/res);
     
-    textureMode(NORMAL);
-    img = loadImage("BabyPanda.JPG");
+  textureMode(NORMAL);
+  img = loadImage("BabyPanda.JPG");
 }  
-
-String getModeName() {
-  String s = new Integer(emitterMode).toString() + ": ";
-  switch(emitterMode) {
-    case 0: s += "Bouncy Ball (might need to wait for one to spawn)"; break;
-    case 1: s += "Spout of WATER!"; break;
-    case 2: s += "Heh. Fire."; break;
-    case 3: s += "Magic Missle!"; break;
-    case 4: s += "Fireball. 100k@30FPS bench attempt"; break;
-    case 5: s += "Fireball. 90K@30+FPS bench"; break;
-    case 6: s += "Snow!"; break;
-    case 7: s += "Blank Canvas"; break;
-  }
-  return s;
-}
 
 void draw() {
   tick();

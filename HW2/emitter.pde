@@ -38,7 +38,7 @@ class Emitter {
     //println(pos.x,pos.y,pos.z);
     switch (mode) {
     case 0:
-      println("ball bouncing at pos.");
+      //println("ball bouncing at pos.");
       //change PMesh?
       setAll(
         true,
@@ -56,7 +56,7 @@ class Emitter {
         true);
       break;
     case 1:
-      println("water fountain.");
+      //println("water fountain.");
       setAll(
         true,
         new range(3, 5), new range(1, 1),
@@ -73,7 +73,7 @@ class Emitter {
         false);
       break;
     case 2:
-      println("fire!!!");
+      //println("fire!!!");
       setAll(
         true,
         new range(1, 6), new range(1, 1),
@@ -90,7 +90,7 @@ class Emitter {
         false);
       break;
     case 3:
-      println("spawn balls magic and/or games.");
+      //println("spawn balls magic and/or games.");
       setAll(
         true,
         new range(1, 2), new range(1, 1),
@@ -107,7 +107,7 @@ class Emitter {
         false);
       break;
     case 4:
-      println("Fireball & 100K/30FPS bench attempt");
+      //println("Fireball & 100K/30FPS bench attempt");
       setAll(
         true,
         new range(9, 11), new range(1, 1),
@@ -124,7 +124,7 @@ class Emitter {
         false);
       break;
     case 5:
-      println("Fireball & 90K/30+FPS bench");
+      //println("Fireball & 90K/30+FPS bench");
       setAll(
         true,
         new range(9, 11), new range(1, 1),
@@ -166,6 +166,11 @@ class Emitter {
         posR.l.x + r*cos(a),
         random(posR.l.y,posR.h.y),
         posR.l.z + r*sin(a));
+    else
+      ps[i].pos = new Vec3(
+        random(posR.l.x,posR.h.x),
+        random(posR.l.y,posR.h.y),
+        random(posR.l.z,posR.h.z));
     ps[i].vel = velR.sample();
     ps[i].acc = accR.sample();
     ps[i].life = 0;

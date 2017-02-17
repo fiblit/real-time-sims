@@ -36,33 +36,6 @@ class Cloth {
     springs = new Spring[edges];//+2*boxes];
     
     
-    //vert edges
-    for (int i = 0; i < w; i++) {
-      for (int j = 0; j < h -1; j++) {
-        int edge = i+w*j;
-        springs[edge] = new Spring(parts[edge], parts[edge+w], ks, kd, l0);
-        springs[edge].isVert = true;
-      }
-    }
-    //horiz edges
-    for (int j = 0; j < h; j++) {
-      for (int i = 0; i < w - 1; i++) {
-        int edge = w*(h-1) + i+j*(w-1);
-        springs[edge] = new Spring(parts[i+j*w], parts[i+1+j*w], ks, kd, l0);
-        springs[edge].isVert = false;
-      }
-    }
-    /*
-    //diags
-    for (int j = 0; j < h - 1; j++) {
-      for (int i = 0; i < w - 1; i++) {
-        int b = i + j *(w-1);
-        springs[edges + b] = new Spring(parts[i+j*w], parts[i+1+(j+1)*w], ks, kd, l0/sqrt(2));
-        springs[edges + boxes+ b] = new Spring(parts[i+(j+1)*w], parts[i+1+j*w], ks, kd, l0/sqrt(2));
-      }
-    }
-    */
-    
     for (int i = 0; i < w - 1; i++) {
       for (int j = 0; j < h - 1; j++) {
         int box = i+(w-1)*j;
@@ -106,6 +79,36 @@ class Cloth {
         }
       }
     }
+    
+    
+    //vert edges
+    for (int i = 0; i < w; i++) {
+      for (int j = 0; j < h -1; j++) {
+        int edge = i+w*j;
+        springs[edge] = new Spring(parts[edge], parts[edge+w], ks, kd, l0);
+        springs[edge].isVert = true;
+        springs[edge].adj = spring2AdjTris(springs[edge]);
+      }
+    }
+    //horiz edges
+    for (int j = 0; j < h; j++) {
+      for (int i = 0; i < w - 1; i++) {
+        int edge = w*(h-1) + i+j*(w-1);
+        springs[edge] = new Spring(parts[i+j*w], parts[i+1+j*w], ks, kd, l0);
+        springs[edge].isVert = false;
+        springs[edge].adj = spring2AdjTris(springs[edge]);
+      }
+    }
+    /*
+    //diags
+    for (int j = 0; j < h - 1; j++) {
+      for (int i = 0; i < w - 1; i++) {
+        int b = i + j *(w-1);
+        springs[edges + b] = new Spring(parts[i+j*w], parts[i+1+(j+1)*w], ks, kd, l0/sqrt(2));
+        springs[edges + boxes+ b] = new Spring(parts[i+(j+1)*w], parts[i+1+j*w], ks, kd, l0/sqrt(2));
+      }
+    }
+    */
   }
   
   public void render() {
@@ -158,15 +161,14 @@ class Cloth {
     }
     sphereDetail(50);
     */
-    
-    
+
     for (int i = 0; i < numSprings; i++) {      
       stroke(64,64,64,64);
       if (springs[i].torn)
         stroke(255,0,0);
       line(
-        springs[i].a.pos.x + 1, springs[i].a.pos.y + 1, springs[i].a.pos.z + 1, 
-        springs[i].b.pos.x + 1, springs[i].b.pos.y + 1, springs[i].b.pos.z + 1);
+        springs[i].a.pos.x, springs[i].a.pos.y, springs[i].a.pos.z, 
+        springs[i].b.pos.x, springs[i].b.pos.y, springs[i].b.pos.z);
     }
     noStroke();
     
@@ -282,23 +284,17 @@ class Cloth {
         springs[i].ApplyForce(dt);
     
       if (springs[i].torn) {
-        //stroke(255,0,0);
-      //line(
-        //springs[i].a.pos.x + 1, springs[i].a.pos.y + 1, springs[i].a.pos.z + 1, 
-        //springs[i].b.pos.x + 1, springs[i].b.pos.y + 1, springs[i].b.pos.z + 1);
-        //noStroke();
-        int[] adj = spring2AdjTris(springs[i]);
-        if (adj[0] == 0) {
-          //println(adj[0], adj[1], springs[i].a, springs[i].b);
-        }
+        int[] adj = springs[i].adj;//spring2AdjTris(springs[i]);
         
         int[] id = new int[2];
         id[0] = triIDs[adj[0]][3];
         id[1] = triIDs[adj[1]][3];
         
-        //println(triIDs[adj[0]][4]);
         
+         triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);
+         triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);
         //not even gonna try to explain this, Literally magic that it works
+        /*
         if (springs[i].isVert) {
           if (id[0] == 0 || id[0] == 1) {
              triIDs[adj[0]][4] = triSpringTear(triIDs[adj[0]][4], 3);//2
@@ -319,6 +315,7 @@ class Cloth {
              triIDs[adj[1]][4] = triSpringTear(triIDs[adj[1]][4], 3);//2
           }
         }
+        */
         if (i < numSprings) {
           Spring t = springs[i];
           springs[i] = springs[numSprings - 1];
@@ -330,6 +327,7 @@ class Cloth {
     }
     
     /* drag force */
+    
     for(int i = 0; i < triIDs.length; i++) {
       if (triIDs[i][4] > 0) {
         S_Particle s0 = parts[triIDs[i][0]];

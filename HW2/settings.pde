@@ -21,7 +21,7 @@ char KEYpaddleYP = 'u'; char KEYpaddleYN = 'o';
 char KEYpaddleXP = 'l'; char KEYpaddleXN = 'j';
 char KEYpaddleZP = 'i'; char KEYpaddleZN = 'k';
 float padSpeed = 500;
-float padX = 200; float padY = 250; float padZ = 200; float padR = 200;
+float padX = 200; float padY = 250; float padZ = 200; float padR = 100;
 
 char KEYregen = 'b';// "rebuild"
 
@@ -32,7 +32,7 @@ char KEYregen = 'b';// "rebuild"
 int emitterMode = 7;
 
 /***** SIMULATION *****/
-int   maxcount   = 200000;       //maximum number of particles
+int   maxcount  = 200000;       //maximum number of particles
 
 /***** STATIC COLLIDERS ****/
 float floor = 1200;
@@ -42,6 +42,8 @@ Emitter[] initEmitters = {
   //new Emitter(4, new Vec3(50, 50, -50))
 };
 float spawnDist = 500;
+
+int clothTearType = 1;
 
 /***** PARTICLES *****/
 float radius     = 10;           //particle size
