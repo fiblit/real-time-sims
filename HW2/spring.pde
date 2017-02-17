@@ -41,7 +41,7 @@ class Spring {
           emit.setAll(
           true,
           new range(0.2, 1), new range(1,1), new rangeVec4(new Vec4(255,60,0,255), new Vec4(200,120,0,127)),
-          new range(0, 2*PI), new range(l,l), 
+          new range(0, 2*PI), new range(0,l), 
           new rangeVec3(new Vec3(a.pos.x,a.pos.y,a.pos.z),new Vec3(b.pos.x,b.pos.y,b.pos.z)), new rangeVec3(new Vec3(),new Vec3()), new rangeVec3(new Vec3(0,-98,0),new Vec3(0,-98,0)),
           100,
           0.3,

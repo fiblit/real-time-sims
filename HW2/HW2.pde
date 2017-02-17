@@ -1,7 +1,7 @@
 import java.text.DecimalFormat;
 Cloth myCloth;
 void setup() {
-  size(800, 600, P3D);
+  size(displayWdth, displayHeight, P3D);
   //fullScreen(P3D);
   
   noStroke();
@@ -21,7 +21,7 @@ void setup() {
     emitters.add(e);
   }
   
-  int res = 60;
+  int res = 30;
   myCloth = new Cloth(
     res, res, 
     new Vec3(0,-500,0), 

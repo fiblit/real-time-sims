@@ -181,16 +181,22 @@ class Cloth {
      
     for (int i = 0; i < parts.length; i++) {
       if (parts[i].isKinematic) {
-        //midpoint integration
-        //works by magic
+        //eulerian
+        /*
+                
+        
+        */
+        //midpoint
+        /**/
         parts[i].pos = parts[i].pos.add(parts[i].vel.mul(dt)).add(parts[i].acc.mul(0.5*dt*dt));
         parts[i].vel = parts[i].vel.add(parts[i].acc.mul(dt));
+        /**/
       }
     }
   }
   
   public void checkCollisions() {
-    float buffer = 7;//helps avoid face-clipping
+    float buffer = 10;//helps avoid face-clipping
     for (int i = 0; i < parts.length; i++) {
       /*
       for (int j = 0; j < parts.length; j++) {
