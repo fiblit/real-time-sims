@@ -2,7 +2,7 @@
 
 int main(int argc, char * argv[]) {
     /* Load GLFW  */
-	D(std::cout << "Initializing GLFW for OpenGL 3.3...";)
+	D(std::cout << "Initializing GLFW for OpenGL 3.3...");
     glfwInit();
 	// Set required hints
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -10,10 +10,10 @@ int main(int argc, char * argv[]) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); //For macs
-	D(OK();)
+	D(OK());
 
 	/* Create Window Context */
-	D(std::cout << "Creating GLFW Window Context...";)
+	D(std::cout << "Creating GLFW Window Context...");
 	//handle fullscreen
 	GLFWmonitor* monitor = nullptr;
 	if (G::WIN_FULLSCREEN)
@@ -26,24 +26,24 @@ int main(int argc, char * argv[]) {
 		return DIE(EXIT_FAILURE);
     }
 	glfwMakeContextCurrent(window);
-	D(OK();)
+	D(OK());
 
 	/* Define callbacks */
-	D(std::cout << "Setting Callbacks...";)
+	D(std::cout << "Setting Callbacks...");
 	glfwSetKeyCallback(window, key_callback);
-	D(OK();)
+	D(OK());
 
 	/* load OpenGL 3.3 functions with glad */
-	D(std::cout << "Loading OpenGL with glad...";)
+	D(std::cout << "Loading OpenGL with glad...");
 	gladLoadGL();
-	D(std::cout << "OK ::: OpenGL " << glGetString(GL_VERSION) << std::endl;)
+	D(std::cout << "OK ::: OpenGL " << glGetString(GL_VERSION) << std::endl);
 
 	/* Handle Viewport */
-	D(std::cout << "Creating viewport...";)
+	D(std::cout << "Creating viewport...");
 	int width; int height;
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
-	D(OK();)
+	D(OK());
 
 	/* Triangle */
 	GLfloat vertices[] = {
@@ -62,7 +62,7 @@ int main(int argc, char * argv[]) {
 	//TODO: ... turtles all the way down ... finish 'em all!
 
     /* Game Loop */
-	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl;)
+	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
     while (!glfwWindowShouldClose(window)) {
 		//Callbacks
 		glfwPollEvents();
@@ -74,7 +74,7 @@ int main(int argc, char * argv[]) {
 		//Double Buffer
 		glfwSwapBuffers(window);
     }
-	D(std::cout << std::endl << "Exiting Game Loop..." << std::endl << std::endl;)
+	D(std::cout << std::endl << "Exiting Game Loop..." << std::endl << std::endl);
 	
 	/* Exit */
     return DIE(EXIT_SUCCESS);
@@ -83,16 +83,18 @@ int main(int argc, char * argv[]) {
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 	//Press ESC to close Application
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		D(std::cout << "ESC was pressed" << std::endl;)
+		D(std::cout << "ESC was pressed" << std::endl);
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
 }
 
 int DIE(int retVal) {
 	glfwTerminate();
+
 	std::cerr << std::endl << "Application Terminated. With exit value: " << retVal << std::endl;
-	D(slowPrint(50, 300, "\n\nGoodbye...");)
-	D(slowPrint(150, 500, "OK");)
+	D(slowPrint(50, 300, "\n\nGoodbye..."));
+	D(slowPrint(150, 500, "OK"));
+
 	return retVal;
 }
 
