@@ -2,6 +2,14 @@
 #define MAIN
 #pragma once
 
+// for debug build
+#ifdef DEBUG
+#define D(x) x
+#else
+#define D(x)
+#endif // DEBUG
+
+
 // GL
 #include <glad/glad.h> //OpenGL function loader: https://github.com/Dav1dde/glad
 #include <GLFW/glfw3.h>
@@ -15,14 +23,16 @@
 #include <thread>
 
 // Globals
-const GLint G_winWidth = 1280;
-const GLint G_winHeight = 800;
-const GLboolean G_winFullscreen = GL_FALSE;
+namespace G {
+	const GLint WIN_WIDTH = 1280;
+	const GLint WIN_HEIGHT = 800;
+	const GLboolean WIN_FULLSCREEN = GL_FALSE;
+}
 
 // Prototypes
-void OK();
 int DIE(int retVal);
-void slowPrint(int middle, int after, std::string txt);// just for fun
+D(void OK();)
+D(void slowPrint(int middle, int after, std::string txt);)// just for fun
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
