@@ -6,7 +6,9 @@
 #include "debug.hpp"
 
 /* GL */
-#include <glad/glad.h> //OpenGL function loader: https://github.com/Dav1dde/glad
+// glad: an OpenGL function loader: https://github.com/Dav1dde/glad
+#include <glad/glad.h>
+// glfw: a library for I/O and OpenGL context creation: http://www.glfw.org/
 #include <GLFW/glfw3.h>
 
 /* STL */
@@ -26,10 +28,6 @@ namespace G {
 
 /* Prototypes */
 int DIE(int retVal);
-// TODO: outsource to new file
-D(void OK();)
-D(void slowPrint(int middle, int after, std::string txt);)// just for fun
-
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
 #endif //MAIN
