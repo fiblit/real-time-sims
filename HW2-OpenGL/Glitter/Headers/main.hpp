@@ -21,7 +21,6 @@
 #include <chrono>
 #include <thread>
 
-<<<<<<< HEAD
 /* Globals */
 namespace G {
 	const GLint WIN_WIDTH = 1280;
