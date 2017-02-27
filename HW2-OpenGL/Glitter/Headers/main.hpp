@@ -2,12 +2,8 @@
 #define MAIN
 #pragma once
 
-/* for debug build */
-#ifdef DEBUG
-#define D(x) x
-#else
-#define D(x)
-#endif // DEBUG
+/* MACROS */
+#include "debug.hpp"
 
 /* GL */
 #include <glad/glad.h> //OpenGL function loader: https://github.com/Dav1dde/glad
