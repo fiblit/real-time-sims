@@ -2,11 +2,11 @@
 #define MAIN
 #pragma once
 
-// GL
+/* GL */
 #include <glad/glad.h> //OpenGL function loader: https://github.com/Dav1dde/glad
 #include <GLFW/glfw3.h>
 
-// STL
+/* STL */
 #include <cstdio>
 #include <iostream>
 #include <cstdlib>
@@ -14,14 +14,15 @@
 #include <chrono>
 #include <thread>
 
-// Globals
+/* Globals */
 const GLint G_winWidth = 1280;
 const GLint G_winHeight = 800;
 const GLboolean G_winFullscreen = GL_FALSE;
 
-// Prototypes
-void OK();
+/* Prototypes */
 int DIE(int retVal);
+// TODO: outsource to new file
+void OK();
 void slowPrint(int middle, int after, std::string txt);// just for fun
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);

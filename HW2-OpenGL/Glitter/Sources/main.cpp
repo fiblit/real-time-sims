@@ -56,6 +56,10 @@ int main(int argc, char * argv[]) {
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	//TODO: finish the triangle tutorial
+	//TODO: finish the shader tutorial
+	//TODO: finish the textures tutorial:
+	//TODO: ... turtles all the way down ... finish 'em all!
 
     /* Game Loop */
 	std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl;
