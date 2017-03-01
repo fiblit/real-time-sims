@@ -46,38 +46,52 @@ int main(int argc, char * argv[]) {
 	D(OK());
 
 	/* Vertices */
-	GLfloat vertices[] = {
-		 0.5f,  0.5f, 0.0f,  // Top Right
-		 0.5f, -0.5f, 0.0f,  // Bottom Right
-		-0.5f, -0.5f, 0.0f,  // Bottom Left
-		-0.5f,  0.5f, 0.0f   // Top Left
+	GLfloat vertices0[] = {
+		// First triangle
+		0.5f,  0.5f, 0.0f,  // Top Right
+		0.5f, -0.5f, 0.0f,  // Bottom Right
+		-0.5f,  0.5f, 0.0f,  // Top Left 
 	};
+	GLfloat vertices1[] = {
+		0.5f, -0.5f, 0.0f,  // Bottom Right
+			-0.5f, -0.5f, 0.0f,  // Bottom Left
+			-0.5f, 0.5f, 0.0f   // Top Left
+	};
+	//GLfloat ** vertices = new GLfloat*[2];
+	//vertices[0] = vertices1;
+	//vertices[1] = vertices2;
 	GLuint indices[] = {  // Note that we start from 0
 		0, 1, 3,  // First Triangle
 		1, 2, 3   // Second Triangle
 	};
 
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	GLuint EBO;
-	glGenBuffers(1, &EBO);
+	GLuint * VAO = new GLuint[2];
+	glGenVertexArrays(2, VAO);
+	GLuint * VBO = new GLuint[2];
+	glGenBuffers(2, VBO);
+	//GLuint EBO;
+	//glGenBuffers(1, &EBO);
 
 	// ..:: Initialization code (done once (unless your object frequently changes)) :: ..
 	// 1. Bind Vertex Array Object
-	glBindVertexArray(VAO);
-		// 2. Copy our vertices array in a buffer for OpenGL to use
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-		// 3. Copy our index array in an element buffer for OpenGL to use
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-		// 3. Then set our vertex attributes pointers
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
+	glBindVertexArray(VAO[0]);
+	// 2. Copy our vertices array in a buffer for OpenGL to use
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices0), vertices0, GL_STATIC_DRAW);
+	// 3. Copy our index array in an element buffer for OpenGL to use
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	// 3. Then set our vertex attributes pointers
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
 	// 4. Unbind the VAO (NOT the EBO)
 	glBindVertexArray(0);
+
+	glBindVertexArray(VAO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
 
 
 	/* Shaders */
@@ -112,7 +126,15 @@ int main(int argc, char * argv[]) {
 		out vec4 color;\n\
 		\n\
 		void main() {\n\
-			color = vec4(1.05, 0.5f, 0.2f, 1.0f);\n\
+			color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
+		}\n";
+	const GLchar * fsh_src_yellow =
+		"#version 330 core\n\
+		\n\
+		out vec4 color;\n\
+		\n\
+		void main() {\n\
+			color = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n\
 		}\n";
 	GLuint fsh;
 	fsh = glCreateShader(GL_FRAGMENT_SHADER);
@@ -131,8 +153,27 @@ int main(int argc, char * argv[]) {
 		std::cerr << "ERROR: Shaders did not compile\n" << infoLog << std::endl;
 		return DIE(EXIT_FAILURE);
 	}
-	glDeleteShader(vsh);
 	glDeleteShader(fsh);
+
+	GLuint fshy;
+	fshy = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fshy, 1, &fsh_src_yellow, NULL);
+	glCompileShader(fshy);
+	GLuint shaderProgram_y;
+	shaderProgram_y = glCreateProgram();
+	glAttachShader(shaderProgram_y, vsh);
+	glAttachShader(shaderProgram_y, fshy);
+	glLinkProgram(shaderProgram_y);
+
+	glGetProgramiv(shaderProgram_y, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shaderProgram_y, 512, NULL, infoLog);
+		std::cerr << "ERROR: Shaders did not compile\n" << infoLog << std::endl;
+		return DIE(EXIT_FAILURE);
+	}
+
+	glDeleteShader(vsh);
+	glDeleteShader(fshy);
 
 	//TODO: finish the shader tutorial
 	//TODO: finish the textures tutorial:
@@ -142,7 +183,7 @@ int main(int argc, char * argv[]) {
 
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
-    while (!glfwWindowShouldClose(window)) {
+	while (!glfwWindowShouldClose(window)) {
 		//Callbacks
 		glfwPollEvents();
 
@@ -151,8 +192,11 @@ int main(int argc, char * argv[]) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(VAO[0]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glUseProgram(shaderProgram_y);
+		glBindVertexArray(VAO[1]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
 
 		//Double Buffer
@@ -160,6 +204,10 @@ int main(int argc, char * argv[]) {
     }
 	D(std::cout << std::endl << "Exiting Game Loop..." << std::endl << std::endl);
 	
+	// Properly de-allocate all resources once they've outlived their purpose
+	glDeleteVertexArrays(2, VAO);
+	glDeleteBuffers(2, VBO);
+
 	/* Exit */
     return DIE(EXIT_SUCCESS);
 }
