@@ -45,17 +45,85 @@ int main(int argc, char * argv[]) {
 	glViewport(0, 0, width, height);
 	D(OK());
 
-	/* Triangle */
+	/* Vertices */
 	GLfloat vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
 		0.0f,  0.5f, 0.0f
 	};
 
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// ..:: Initialization code (done once (unless your object frequently changes)) :: ..
+	// 1. Bind Vertex Array Object
+	glBindVertexArray(VAO);
+		// 2. Copy our vertices array in a buffer for OpenGL to use
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		// 3. Then set our vertex attributes pointers
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+	// 4. Unbind the VAO
+	glBindVertexArray(0);
+
+	/* Shaders */
+	//TODO: loading shaders
+	const GLchar * vsh_src =
+		"#version 330 core\n\
+		\n\
+		layout (location = 0) in vec3 position;\n\
+		\n\
+		void main() {\n\
+			gl_Position = vec4(position.x, position.y, position.z, 1.0);\n\
+		}\n";
+
+	GLuint vsh;
+	vsh = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vsh, 1, &vsh_src, NULL);
+	glCompileShader(vsh);
+
+	// did it compile?
+	GLint success;
+	GLchar infoLog[512];
+	glGetShaderiv(vsh, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(vsh, 512, NULL, infoLog);
+		std::cerr << "ERROR: Vertex Shader did not compile\n" << infoLog << std::endl;
+		return DIE(EXIT_FAILURE);
+	}
+
+	const GLchar * fsh_src =
+		"#version 330 core\n\
+		\n\
+		out vec4 color;\n\
+		\n\
+		void main() {\n\
+			color = vec4(1.05, 0.5f, 0.2f, 1.0f);\n\
+		}\n";
+	GLuint fsh;
+	fsh = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fsh, 1, &fsh_src, NULL);
+	glCompileShader(fsh);
+
+	GLuint shaderProgram;
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vsh);
+	glAttachShader(shaderProgram, fsh);
+	glLinkProgram(shaderProgram);
+
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		std::cerr << "ERROR: Shaders did not compile\n" << infoLog << std::endl;
+		return DIE(EXIT_FAILURE);
+	}
+	glDeleteShader(vsh);
+	glDeleteShader(fsh);
+
+
 	//TODO: finish the triangle tutorial
 	//TODO: finish the shader tutorial
 	//TODO: finish the textures tutorial:
@@ -70,6 +138,11 @@ int main(int argc, char * argv[]) {
 		/* Render */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(shaderProgram);
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindVertexArray(0);
 
 		//Double Buffer
 		glfwSwapBuffers(window);
