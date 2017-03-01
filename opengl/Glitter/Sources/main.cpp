@@ -47,15 +47,22 @@ int main(int argc, char * argv[]) {
 
 	/* Vertices */
 	GLfloat vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
+		 0.5f,  0.5f, 0.0f,  // Top Right
+		 0.5f, -0.5f, 0.0f,  // Bottom Right
+		-0.5f, -0.5f, 0.0f,  // Bottom Left
+		-0.5f,  0.5f, 0.0f   // Top Left
+	};
+	GLuint indices[] = {  // Note that we start from 0
+		0, 1, 3,  // First Triangle
+		1, 2, 3   // Second Triangle
 	};
 
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
+	GLuint EBO;
+	glGenBuffers(1, &EBO);
 
 	// ..:: Initialization code (done once (unless your object frequently changes)) :: ..
 	// 1. Bind Vertex Array Object
@@ -63,11 +70,15 @@ int main(int argc, char * argv[]) {
 		// 2. Copy our vertices array in a buffer for OpenGL to use
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		// 3. Copy our index array in an element buffer for OpenGL to use
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 		// 3. Then set our vertex attributes pointers
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
-	// 4. Unbind the VAO
+	// 4. Unbind the VAO (NOT the EBO)
 	glBindVertexArray(0);
+
 
 	/* Shaders */
 	//TODO: loading shaders
@@ -123,11 +134,11 @@ int main(int argc, char * argv[]) {
 	glDeleteShader(vsh);
 	glDeleteShader(fsh);
 
-
-	//TODO: finish the triangle tutorial
 	//TODO: finish the shader tutorial
 	//TODO: finish the textures tutorial:
 	//TODO: ... turtles all the way down ... finish 'em all!
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
@@ -141,7 +152,7 @@ int main(int argc, char * argv[]) {
 
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
 		//Double Buffer
