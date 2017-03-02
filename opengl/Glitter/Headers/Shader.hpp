@@ -19,9 +19,7 @@ public:
 	Shader(const GLchar* vertPath, const GLchar* fragPath) {
 		// read in mandatory shaders
 		const GLchar* vertCode = readShader(vertPath);
-		D(std::cout << "hello" << std::endl << vertCode << std::endl);
 		const GLchar* fragCode = readShader(fragPath);
-		D(std::cout << "hello2" << std::endl << fragCode << std::endl);
 
 		// compile shaders (and check for errors)
 		GLuint vert = compileShader(vertCode, GL_VERTEX_SHADER);
@@ -56,10 +54,14 @@ public:
 			std::cerr << "ERROR: Shader file could not be read: " << path << std::endl;
 		}
 
+		/* remind me again to never do this late at night */
 		GLchar* c = new GLchar[code.length()];
-		for (int i = 0; i < code.length(); i++)
+		int i = 0;
+		while (code[i] != '\0') {
 			c[i] = code[i];
-		D(std::cout << "hello" << std::endl << c << std::endl);
+			i++;
+		}
+		c[i] = '\0';
 		return c;
 	}
 
