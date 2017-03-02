@@ -51,6 +51,7 @@ public:
 			code = stream.str();
 		}
 		catch (std::ifstream::failure e) {
+			/* this didn't help at all */
 			std::cerr << "ERROR: Shader file could not be read: " << path << std::endl;
 		}
 
@@ -79,7 +80,7 @@ public:
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 		if (!success) {
 			glGetShaderInfoLog(shader, 512, NULL, infoLog);
-			std::cerr << "ERROR: A shader file failed to compile" << std::endl << infoLog << std::endl;
+			std::cerr << "ERROR: A shader file failed to compile" << std::endl << infoLog << std::endl << code << std::endl;
 		}
 
 		return shader;
@@ -97,7 +98,7 @@ public:
 		glGetProgramiv(program, GL_LINK_STATUS, &success);
 		if (!success) {
 			glGetProgramInfoLog(program, 512, NULL, infoLog);
-			std::cerr << "ERROR: A shader failed to link" << std::endl << infoLog << std::endl;
+			std::cerr << "ERROR: A shader program failed to link" << std::endl << infoLog << std::endl;
 		}
 
 		return program;
