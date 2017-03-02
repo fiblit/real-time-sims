@@ -19,10 +19,9 @@ public:
 	Shader(const GLchar* vertPath, const GLchar* fragPath) {
 		// read in mandatory shaders
 		const GLchar* vertCode = readShader(vertPath);
+		D(std::cout << "hello" << std::endl << vertCode << std::endl);
 		const GLchar* fragCode = readShader(fragPath);
-
-		D(std::cout << vertCode << std::endl);
-		D(std::cout << fragCode << std::endl);
+		D(std::cout << "hello2" << std::endl << fragCode << std::endl);
 
 		// compile shaders (and check for errors)
 		GLuint vert = compileShader(vertCode, GL_VERTEX_SHADER);
@@ -43,42 +42,25 @@ public:
 		// Retrieve the source code from its path
 		std::string code;
 		std::ifstream shader;
+
 		// ensures ifstream objects can throw exceptions
 		shader.exceptions(std::ifstream::badbit);
 		try {
 			shader.open(path);
-
-			if (!shader) {
-				std::cout << "!!!" << std::endl;
-			}
-			else {
-				std::cout << "it worked!" << std::endl;
-			}
-
 			std::stringstream stream;
-			//std::filebuf* pbuf = shader.rdbuf();
-			//std::size_t size = pbuf->pubseekoff(0, shader.end, shader.in);
-			//pbuf->pubseekpos(0, shader.in);
-
-			//char* buffer = new char[size];
-
-			//pbuf->sgetn(buffer, size);
-			//shader.close();
-			//stream.write(buffer, size);
-			//delete[] buffer;
-
-			shader >> code;
-			D(std::cout << code);
+			stream << shader.rdbuf();
 			shader.close();
-			//code = stream.str();
+			code = stream.str();
 		}
 		catch (std::ifstream::failure e) {
 			std::cerr << "ERROR: Shader file could not be read: " << path << std::endl;
 		}
 
-		D(std::cout << code.length() << std::endl);
-
-		return code.c_str();
+		GLchar* c = new GLchar[code.length()];
+		for (int i = 0; i < code.length(); i++)
+			c[i] = code[i];
+		D(std::cout << "hello" << std::endl << c << std::endl);
+		return c;
 	}
 
 	GLuint compileShader(const GLchar* code, GLenum shaderType) {

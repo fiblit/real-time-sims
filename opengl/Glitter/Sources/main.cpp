@@ -104,8 +104,8 @@ int main(int argc, char * argv[]) {
 	glBindVertexArray(0);
 
 	/* Shaders */
-	Shader* rainbow = new Shader("E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\indentity.vert", "simple.frag");
-	Shader* yellow = new Shader("identity.vert", "yellow.frag");
+	Shader* rainbow = new Shader("E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\identity.vert", "E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\simple.frag");
+	Shader* yellow = new Shader("E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\identity.vert", "E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\yellow.frag");
 	//TODO: finish the textures tutorial:
 	//TODO: ... turtles all the way down ... finish 'em all!
 
