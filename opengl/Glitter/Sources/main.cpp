@@ -47,15 +47,15 @@ int main(int argc, char * argv[]) {
 
 	/* Vertices */
 	GLfloat vertices0[] = {
-		// First triangle
-		0.5f,  0.5f, 0.0f,  // Top Right
-		0.5f, -0.5f, 0.0f,  // Bottom Right
-		-0.5f,  0.5f, 0.0f,  // Top Left 
+		// Positions         // Colors
+		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, // Top Right
+		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // Bottom Right
+		-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f  // Top Left 
 	};
 	GLfloat vertices1[] = {
-		0.5f, -0.5f, 0.0f,  // Bottom Right
-			-0.5f, -0.5f, 0.0f,  // Bottom Left
-			-0.5f, 0.5f, 0.0f   // Top Left
+		 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,// Bottom Right
+		-0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,// Bottom Left
+		-0.5f, 0.5f, 0.0f,   0.0f, 0.0f, 1.0f// Top Left
 	};
 	//GLfloat ** vertices = new GLfloat*[2];
 	//vertices[0] = vertices1;
@@ -82,104 +82,34 @@ int main(int argc, char * argv[]) {
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	// 3. Then set our vertex attributes pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
+	// Color attr
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
 	// 4. Unbind the VAO (NOT the EBO)
 	glBindVertexArray(0);
 
 	glBindVertexArray(VAO[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
 
+	// Position attr
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// Color attr
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
 
 	/* Shaders */
-	//TODO: loading shaders
-	const GLchar * vsh_src =
-		"#version 330 core\n\
-		\n\
-		layout (location = 0) in vec3 position;\n\
-		\n\
-		void main() {\n\
-			gl_Position = vec4(position.x, position.y, position.z, 1.0);\n\
-		}\n";
-
-	GLuint vsh;
-	vsh = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vsh, 1, &vsh_src, NULL);
-	glCompileShader(vsh);
-
-	// did it compile?
-	GLint success;
-	GLchar infoLog[512];
-	glGetShaderiv(vsh, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vsh, 512, NULL, infoLog);
-		std::cerr << "ERROR: Vertex Shader did not compile\n" << infoLog << std::endl;
-		return DIE(EXIT_FAILURE);
-	}
-
-	const GLchar * fsh_src =
-		"#version 330 core\n\
-		\n\
-		out vec4 color;\n\
-		\n\
-		void main() {\n\
-			color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
-		}\n";
-	const GLchar * fsh_src_yellow =
-		"#version 330 core\n\
-		\n\
-		out vec4 color;\n\
-		\n\
-		void main() {\n\
-			color = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n\
-		}\n";
-	GLuint fsh;
-	fsh = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fsh, 1, &fsh_src, NULL);
-	glCompileShader(fsh);
-
-	GLuint shaderProgram;
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vsh);
-	glAttachShader(shaderProgram, fsh);
-	glLinkProgram(shaderProgram);
-
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cerr << "ERROR: Shaders did not compile\n" << infoLog << std::endl;
-		return DIE(EXIT_FAILURE);
-	}
-	glDeleteShader(fsh);
-
-	GLuint fshy;
-	fshy = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fshy, 1, &fsh_src_yellow, NULL);
-	glCompileShader(fshy);
-	GLuint shaderProgram_y;
-	shaderProgram_y = glCreateProgram();
-	glAttachShader(shaderProgram_y, vsh);
-	glAttachShader(shaderProgram_y, fshy);
-	glLinkProgram(shaderProgram_y);
-
-	glGetProgramiv(shaderProgram_y, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram_y, 512, NULL, infoLog);
-		std::cerr << "ERROR: Shaders did not compile\n" << infoLog << std::endl;
-		return DIE(EXIT_FAILURE);
-	}
-
-	glDeleteShader(vsh);
-	glDeleteShader(fshy);
-
-	//TODO: finish the shader tutorial
+	Shader* rainbow = new Shader("E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\identity.vert", "E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\simple.frag");
+	Shader* yellow = new Shader("E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\identity.vert", "E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\yellow.frag");
 	//TODO: finish the textures tutorial:
 	//TODO: ... turtles all the way down ... finish 'em all!
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
@@ -191,12 +121,19 @@ int main(int argc, char * argv[]) {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
+		rainbow->Use();
+		//GLfloat timeValue = glfwGetTime();
+		//GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
+		//GLint vertexColorLocation = glGetUniformLocation(shaderProgram, "vertexColor");
+		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
 		glBindVertexArray(VAO[0]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glUseProgram(shaderProgram_y);
+
+		yellow->Use();
 		glBindVertexArray(VAO[1]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+
 		glBindVertexArray(0);
 
 		//Double Buffer

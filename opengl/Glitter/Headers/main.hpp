@@ -2,8 +2,11 @@
 #define MAIN
 #pragma once
 
+/* LOCALS */
 /* MACROS */
 #include "debug.hpp"
+
+#include "Shader.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad
