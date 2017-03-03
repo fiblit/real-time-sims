@@ -1,6 +1,7 @@
 #include "main.hpp"
 
 int main(int argc, char * argv[]) {
+
     /* Load GLFW  */
 	D(std::cout << "Initializing GLFW for OpenGL 3.3...");
     glfwInit();
@@ -31,6 +32,8 @@ int main(int argc, char * argv[]) {
 	/* Define callbacks */
 	D(std::cout << "Setting Callbacks...");
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 	D(OK());
 
 	/* load OpenGL 3.3 functions with glad */
@@ -45,55 +48,30 @@ int main(int argc, char * argv[]) {
 	glViewport(0, 0, width, height);
 	D(OK());
 
-	/* Vertices */
-	GLfloat vertices0[] = {
-		// Positions         // Colors
-		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, // Top Right
-		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // Bottom Right
-		-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f  // Top Left 
-	};
-	GLfloat vertices1[] = {
-		 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,// Bottom Right
-		-0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,// Bottom Left
-		-0.5f, 0.5f, 0.0f,   0.0f, 0.0f, 1.0f// Top Left
-	};
-	//GLfloat ** vertices = new GLfloat*[2];
-	//vertices[0] = vertices1;
-	//vertices[1] = vertices2;
-	GLuint indices[] = {  // Note that we start from 0
-		0, 1, 3,  // First Triangle
-		1, 2, 3   // Second Triangle
-	};
+	glEnable(GL_DEPTH_TEST);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	GLuint * VAO = new GLuint[2];
-	glGenVertexArrays(2, VAO);
-	GLuint * VBO = new GLuint[2];
-	glGenBuffers(2, VBO);
+	/* Shaders */
+	Shader* rainbow = new Shader("..\\Glitter\\Shaders\\identity.vert", "..\\Glitter\\Shaders\\simple.frag");
+	Shader* yellow = new Shader("..\\Glitter\\Shaders\\identity.vert", "..\\Glitter\\Shaders\\yellow.frag");
+	cam = new Camera();
+
+	/* Objects */
+	GLuint* VAO = new GLuint[1];
+	glGenVertexArrays(1, VAO);
+	GLuint* VBO = new GLuint[1];
+	glGenBuffers(1, VBO);
 	//GLuint EBO;
 	//glGenBuffers(1, &EBO);
 
-	// ..:: Initialization code (done once (unless your object frequently changes)) :: ..
-	// 1. Bind Vertex Array Object
 	glBindVertexArray(VAO[0]);
-	// 2. Copy our vertices array in a buffer for OpenGL to use
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices0), vertices0, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(obj::cube), obj::cube, GL_STATIC_DRAW);
 	// 3. Copy our index array in an element buffer for OpenGL to use
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	// 3. Then set our vertex attributes pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	// Color attr
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-	// 4. Unbind the VAO (NOT the EBO)
-	glBindVertexArray(0);
-
-	glBindVertexArray(VAO[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-
+	
 	// Position attr
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
@@ -101,39 +79,45 @@ int main(int argc, char * argv[]) {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 
-	glBindVertexArray(0);
+	glBindVertexArray(0); // unbind VBO
 
-	/* Shaders */
-	Shader* rainbow = new Shader("E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\identity.vert", "E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\simple.frag");
-	Shader* yellow = new Shader("E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\identity.vert", "E:\\djdjh\\Documents\\Classes\\5611\\5611-HW\\opengl\\Glitter\\Shaders\\yellow.frag");
-	//TODO: finish the textures tutorial:
-	//TODO: ... turtles all the way down ... finish 'em all!
-
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	/* todo: textures */
 
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
 	while (!glfwWindowShouldClose(window)) {
+		// Time
+		GLfloat currentFrame = glfwGetTime();
+		timer::delta = currentFrame - timer::last;
+		timer::last = currentFrame;
+
 		//Callbacks
 		glfwPollEvents();
+		do_movement();
 
 		/* Render */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		rainbow->Use();
-		//GLfloat timeValue = glfwGetTime();
-		//GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
-		//GLint vertexColorLocation = glGetUniformLocation(shaderProgram, "vertexColor");
-		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+		glm::mat4 proj = glm::perspective(glm::radians(cam->fov), (GLfloat)G::WIN_WIDTH / (GLfloat)G::WIN_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = cam->getView();
+
+		rainbow->use();
+		
+		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "proj"), 1, GL_FALSE, glm::value_ptr(proj));
+		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 
 		glBindVertexArray(VAO[0]);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		for (GLuint i = 0; i < 10; i++) {
+			glm::mat4 model;
+			model = glm::translate(model, obj::cubePositions[i]);
+			model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+			if (i % 3 == 0)
+				model = glm::rotate(model, (GLfloat)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.3f, 0.7f, 0.8f));
+			glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-		yellow->Use();
-		glBindVertexArray(VAO[1]);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 		glBindVertexArray(0);
 
 		//Double Buffer
@@ -142,8 +126,8 @@ int main(int argc, char * argv[]) {
 	D(std::cout << std::endl << "Exiting Game Loop..." << std::endl << std::endl);
 	
 	// Properly de-allocate all resources once they've outlived their purpose
-	glDeleteVertexArrays(2, VAO);
-	glDeleteBuffers(2, VBO);
+	glDeleteVertexArrays(1, VAO);
+	glDeleteBuffers(1, VBO);
 
 	/* Exit */
     return DIE(EXIT_SUCCESS);
@@ -151,10 +135,48 @@ int main(int argc, char * argv[]) {
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 	//Press ESC to close Application
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		D(std::cout << "ESC was pressed" << std::endl);
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (action == GLFW_PRESS) {
+		D(std::cout << /*glfwGetKeyName(key, key)*/ key << " was pressed" << std::endl);
+		keys[key] = true;
 	}
+	else if (action == GLFW_RELEASE) {
+		D(std::cout << /*glfwGetKeyName(key, key)*/ key << " was released" << std::endl);
+		keys[key] = false;
+	}
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+	if (!mouse::focus) {
+		mouse::lastX = xpos;
+		mouse::lastY = ypos;
+		mouse::focus = true;
+	}
+
+	GLfloat xoffset = xpos - mouse::lastX;
+	GLfloat yoffset = ypos - mouse::lastY;
+	mouse::lastX = xpos;
+	mouse::lastY = ypos;
+	//xoffset *= mouse::sensitivity;
+	//yoffset *= mouse::sensitivity;
+
+	cam->mouseRotateCamera(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow * window, double xoffset, double yoffset) {
+	cam->scrollZoomCamera(yoffset);
+}
+
+void do_movement() {
+	if (keys[GLFW_KEY_W])
+		cam->translateCamera(G::CAMERA::FORWARD, timer::delta);
+	if (keys[GLFW_KEY_S])
+		cam->translateCamera(G::CAMERA::BACKWARD, timer::delta);
+	if (keys[GLFW_KEY_A])
+		cam->translateCamera(G::CAMERA::LEFT, timer::delta);
+	if (keys[GLFW_KEY_D])
+		cam->translateCamera(G::CAMERA::RIGHT, timer::delta);
 }
 
 int DIE(int retVal) {

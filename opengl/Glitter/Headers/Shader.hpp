@@ -12,9 +12,10 @@
 #include <GLFW/glfw3.h>
 
 class Shader {
-public:
+private:
 	GLuint program;
-	
+public:
+	GLuint getProgram() { return program; }
 	//To be clear, I'm just following the tutorial, Header-only class feels really weird, wrong even
 	Shader(const GLchar* vertPath, const GLchar* fragPath) {
 		// read in mandatory shaders
@@ -110,7 +111,7 @@ public:
 		delete[] shaders;
 	}
 
-	void Use() { glUseProgram(this->program); };
+	void use() { glUseProgram(this->program); };
 };
 
 #endif // SHADER_H_GUARD
