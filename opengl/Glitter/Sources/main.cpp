@@ -53,7 +53,6 @@ int main(int argc, char * argv[]) {
 
 	/* Shaders */
 	Shader* rainbow = new Shader("..\\Glitter\\Shaders\\identity.vert", "..\\Glitter\\Shaders\\simple.frag");
-	Shader* yellow = new Shader("..\\Glitter\\Shaders\\identity.vert", "..\\Glitter\\Shaders\\yellow.frag");
 	cam = new Camera();
 
 	/* Objects */
