@@ -47,7 +47,7 @@ add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
                                ${VENDORS_SOURCES})
 
 target_link_libraries(${PROJECT_NAME} glfw
-                      ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
+                      ${GLFW_LIBRARIES} ${GLAD_LIBRARIES} LinearMath)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
