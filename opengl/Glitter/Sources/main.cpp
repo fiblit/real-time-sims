@@ -1,6 +1,8 @@
 #include "main.hpp"
 
-int main(int argc, char * argv[]) {
+int main() {
+
+	_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
 
     /* Load GLFW  */
 	D(std::cout << "Initializing GLFW for OpenGL 3.3...");
@@ -54,60 +56,93 @@ int main(int argc, char * argv[]) {
 	/* Shaders */
 	Shader* rainbow = new Shader("..\\Glitter\\Shaders\\identity.vert", "..\\Glitter\\Shaders\\simple.frag");
 	cam = new Camera();
+	ShallowWater* sw = new ShallowWater(50, 9.8f);
+
+	D(std::cout << "1" << std::endl);
 
 	/* Objects */
-	GLuint* VAO = new GLuint[1];
-	glGenVertexArrays(1, VAO);
-	GLuint* VBO = new GLuint[1];
-	glGenBuffers(1, VBO);
-	//GLuint EBO;
-	//glGenBuffers(1, &EBO);
+	GLuint VAO[2];
+	glGenVertexArrays(2, VAO);
+	GLuint VBO[2];
+	glGenBuffers(2, VBO);
+	D(std::cout << "2" << std::endl);
 
-	glBindVertexArray(VAO[0]);
-
+	glBindVertexArray(VAO[0]);				// occasionally a crash here
+	D(std::cout << "21" << std::endl);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	D(std::cout << "s" << sizeof(obj::cube) << std::endl);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(obj::cube), obj::cube, GL_STATIC_DRAW);
-	// 3. Copy our index array in an element buffer for OpenGL to use
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	
+	D(std::cout << "22" << std::endl);
 	// Position attr
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 	// Color attr
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
 	glBindVertexArray(0); // unbind VBO
+
+	D(std::cout << "3" << std::endl);
+	
+	
+	//GLuint* VAO_shallow_water = new GLuint[1];
+	//glGenVertexArrays(1, VAO_shallow_water);
+	//GLuint* VBO_shallow_water = new GLuint[1];
+	//glGenVertexArrays(1, VBO_shallow_water);
+
+	
+	glBindVertexArray(VAO[1]);				// occasionally a crash here
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+
+	D(std::cout << "4" << std::endl);
+	D(std::cout << "s" << sizeof(GLfloat) * 3 * (6 * (sw->ncells - 1)) << std::endl);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * (6 * (sw->ncells - 1)), sw->mesh, GL_STATIC_DRAW);
+
+	D(std::cout << "5" << std::endl);
+	// Position attr
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+	D(std::cout << "6" << std::endl);
 
 	/* todo: textures */
 
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
 	while (!glfwWindowShouldClose(window)) {
+
+		D(std::cout << "7" << std::endl);
 		// Time
-		GLfloat currentFrame = glfwGetTime();
+		GLfloat currentFrame = (GLfloat) glfwGetTime();
 		timer::delta = currentFrame - timer::last;
 		timer::last = currentFrame;
+
+		D(std::cout << "8" << std::endl);
 
 		//Callbacks
 		glfwPollEvents();
 		do_movement();
 
+		D(std::cout << "9" << std::endl);
+
 		/* Render */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		D(std::cout << "10" << std::endl);
 
 		glm::mat4 proj = glm::perspective(glm::radians(cam->fov), (GLfloat)G::WIN_WIDTH / (GLfloat)G::WIN_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = cam->getView();
+
+		D(std::cout << "11" << std::endl);
 
 		rainbow->use();
 		
 		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "proj"), 1, GL_FALSE, glm::value_ptr(proj));
 		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 
+		D(std::cout << "12" << std::endl);
+		
 		glBindVertexArray(VAO[0]);
-		for (GLuint i = 0; i < 10; i++) {
+		for (GLuint i = 3; i < 6; i++) {
 			glm::mat4 model;
 			model = glm::translate(model, obj::cubePositions[i]);
 			model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
@@ -117,16 +152,48 @@ int main(int argc, char * argv[]) {
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+		
+		
+
+		D(std::cout << "13" << std::endl);
+		glBindVertexArray(VAO[1]);
+		glm::mat4 model;
+		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+		D(std::cout << "14" << std::endl);
+		D(std::cout << sw->mesh[0] << std::endl);
+
+		for (int i = 0; i < sw->ncells*6; i++) {
+			for (int k = 0; k < 1; k++){ 
+				GLfloat * vert = &sw->mesh[3* (6 * i + k)];
+				glm::vec4 l = glm::vec4(*(vert + 0), *(vert + 1), *(vert + 2), 1.0f);
+				glm::vec4 p = proj * view * model * l;
+				D(std::cout << "sw " << i << "\t"<<k<<":\t" << p.x/p.z <<" "<< p.y/p.z <<" "<< p.z/p.z << std::endl);
+			}
+		}
+
+		D(std::cout << "15" << std::endl);
+		
+		glDrawArrays(GL_TRIANGLES, 0, sw->ncells*6);
+
+		D(std::cout << "16" << std::endl);
+		
 		glBindVertexArray(0);
+
+		D(std::cout << "17" << std::endl);
 
 		//Double Buffer
 		glfwSwapBuffers(window);
+		D(std::cout << "18" << std::endl);
     }
 	D(std::cout << std::endl << "Exiting Game Loop..." << std::endl << std::endl);
 	
+
 	// Properly de-allocate all resources once they've outlived their purpose
-	glDeleteVertexArrays(1, VAO);
-	glDeleteBuffers(1, VBO);
+	glDeleteVertexArrays(2, VAO);
+	glDeleteBuffers(2, VBO);
+
+	D(std::cout << "19" << std::endl);
 
 	/* Exit */
     return DIE(EXIT_SUCCESS);
@@ -137,26 +204,26 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (action == GLFW_PRESS) {
-		D(std::cout << /*glfwGetKeyName(key, key)*/ key << " was pressed" << std::endl);
+		D(std::cout << "KEY: " << /*glfwGetKeyName(key, key)*/ key << std::endl);
 		keys[key] = true;
 	}
 	else if (action == GLFW_RELEASE) {
-		D(std::cout << /*glfwGetKeyName(key, key)*/ key << " was released" << std::endl);
+		D(std::cout << "\tKEY: " <</*glfwGetKeyName(key, key)*/ key << std::endl);
 		keys[key] = false;
 	}
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	if (!mouse::focus) {
-		mouse::lastX = xpos;
-		mouse::lastY = ypos;
+		mouse::lastX = (GLfloat) xpos;
+		mouse::lastY = (GLfloat) ypos;
 		mouse::focus = true;
 	}
 
-	GLfloat xoffset = xpos - mouse::lastX;
-	GLfloat yoffset = ypos - mouse::lastY;
-	mouse::lastX = xpos;
-	mouse::lastY = ypos;
+	GLfloat xoffset = (GLfloat) xpos - mouse::lastX;
+	GLfloat yoffset = (GLfloat) ypos - mouse::lastY;
+	mouse::lastX = (GLfloat) xpos;
+	mouse::lastY = (GLfloat) ypos;
 	//xoffset *= mouse::sensitivity;
 	//yoffset *= mouse::sensitivity;
 
@@ -164,7 +231,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow * window, double xoffset, double yoffset) {
-	cam->scrollZoomCamera(yoffset);
+	cam->scrollZoomCamera((GLfloat) yoffset);
 }
 
 void do_movement() {

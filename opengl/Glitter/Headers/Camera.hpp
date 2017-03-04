@@ -1,9 +1,6 @@
 #ifndef CAMERA_H_GUARD
 #define CAMERA_H_GUARD
 
-// STL
-#include <vector>
-
 // GL
 #include <glad/glad.h>
 #include <glm/glm.hpp>

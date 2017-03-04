@@ -90,19 +90,19 @@ public:
 	GLuint linkShaders(GLuint shaders[], int n) {
 		GLint success;
 		GLchar infoLog[512];
-		GLuint program = glCreateProgram();
+		GLint prog = glCreateProgram();
 		for (int i = 0; i < n; i++)
-			glAttachShader(program, shaders[i]);
-		glLinkProgram(program);
+			glAttachShader(prog, shaders[i]);
+		glLinkProgram(prog);
 
 		// check for linking errors
-		glGetProgramiv(program, GL_LINK_STATUS, &success);
+		glGetProgramiv(prog, GL_LINK_STATUS, &success);
 		if (!success) {
-			glGetProgramInfoLog(program, 512, NULL, infoLog);
+			glGetProgramInfoLog(prog, 512, NULL, infoLog);
 			std::cerr << "ERROR: A shader program failed to link" << std::endl << infoLog << std::endl;
 		}
 
-		return program;
+		return prog;
 	}
 
 	void deleteShaders(GLuint shaders[], int n) {

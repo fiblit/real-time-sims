@@ -8,6 +8,7 @@
 
 #include "Shader.hpp"
 #include "Camera.hpp"
+#include "ShallowWater.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad
@@ -79,13 +80,13 @@ namespace obj {//should be in G
 	};
 	glm::vec3 cubePositions[] = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
-		glm::vec3( 2.0f,  5.0f, -15.0f),
+		glm::vec3( 0.5f,  5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(-3.8f, -0.5f, -12.3f),
 		glm::vec3( 2.4f, -0.4f, -3.5f),
 		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3( 1.3f, -2.0f, -2.5f),
-		glm::vec3( 1.5f,  2.0f, -2.5f),
+		glm::vec3( 1.3f, -0.5f, -2.5f),
+		glm::vec3( 1.5f,  0.5f, -2.5f),
 		glm::vec3( 1.5f,  0.2f, -1.5f),
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
@@ -95,8 +96,8 @@ namespace timer {//could be in G
 	GLfloat last = 0.0f; // Time of last frame
 }
 namespace mouse {
-	GLfloat lastX = G::WIN_WIDTH / 2.0f;
-	GLfloat lastY = G::WIN_HEIGHT / 2.0f;
+	GLfloat lastX = G::WIN_WIDTH / 0.5f;
+	GLfloat lastY = G::WIN_HEIGHT / 0.5f;
 	GLboolean focus = false;
 	//GLfloat sensitivity = 0.25f;
 }
