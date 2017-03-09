@@ -22,7 +22,7 @@ int main() {
 	if (G::WIN_FULLSCREEN)
 		monitor = glfwGetPrimaryMonitor();
 	//Make a window
-	std::string title = "Dalton Hildreth - 5611 - Homework 2: Cloth Simulations ::: OpenGL v3.3";
+	std::string title = "Dalton Hildreth ::: gg engine ::: OpenGL v3.3";
     GLFWwindow* window = glfwCreateWindow(G::WIN_WIDTH, G::WIN_HEIGHT, title.c_str(), monitor, nullptr);
     if (window == nullptr) {
 		std::cerr << "Failed to create OpenGL Context" << std::endl;
@@ -104,19 +104,29 @@ int main() {
 		do_movement();
 
 		/* Render */
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 proj = glm::perspective(glm::radians(cam->fov), (GLfloat)G::WIN_WIDTH / (GLfloat)G::WIN_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = cam->getView();
 		glm::mat4 model;
-		glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+
+		glm::vec3 lightDiffuse = glm::vec3(0.5f,0.5f,0.5f); // Decrease the influence
+		glm::vec3 lightAmbient = glm::vec3(0.2f,0.2f,0.2f); // Low influence
+		glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 		cubeShader->use();
-		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "objectColor"), 1.0f, 0.5f, 0.31f);
-		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "lightColor"), lightColor.x, lightColor.y, lightColor.z);
-		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "material.ambient"), 1.0f, 0.5f, 0.31f);
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "material.diffuse"), 1.0f, 0.5f, 0.31f);
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "material.specular"), 1.0f, 0.5f, 0.31f);
+		glUniform1f(glGetUniformLocation(cubeShader->getProgram(), "material.shine"), 32.0f);
+
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "light.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "light.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "light.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "light.pos"), lightPos.x, lightPos.y, lightPos.z);
+
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader->getProgram(), "proj"), 1, GL_FALSE, glm::value_ptr(proj));
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 		
@@ -134,7 +144,7 @@ int main() {
 		}
 
 		lampShader->use();
-		glUniform3f(glGetUniformLocation(lampShader->getProgram(), "lightColor"), lightColor.x, lightColor.y, lightColor.z);
+		glUniform3f(glGetUniformLocation(lampShader->getProgram(), "lightColor"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
 		glUniformMatrix4fv(glGetUniformLocation(lampShader->getProgram(), "proj"), 1, GL_FALSE, glm::value_ptr(proj));
 		glUniformMatrix4fv(glGetUniformLocation(lampShader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 		model = glm::mat4();
