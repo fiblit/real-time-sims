@@ -53,39 +53,50 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+	/* Management */
+	timer = new Timer();
+
 	/* Shaders */
-	Shader* rainbow = new Shader("..\\Glitter\\Shaders\\identity.vert", "..\\Glitter\\Shaders\\simple.frag");
+	Shader* cubeShader = new Shader("..\\Glitter\\Shaders\\cube.vert", "..\\Glitter\\Shaders\\cube.frag");
+	Shader* lampShader = new Shader("..\\Glitter\\Shaders\\lamp.vert", "..\\Glitter\\Shaders\\lamp.frag");
 	cam = new Camera();
 
 	/* Objects */
-	const GLuint numObj = 1;
-	GLuint VAO[numObj]; // should probably make this dynamically resizable... / managed
-	glGenVertexArrays(numObj, VAO);
-	GLuint VBO[numObj];
-	glGenBuffers(numObj, VBO);
+	// cubes
+	const GLuint numBuf = 1;
+	GLuint VAO[numBuf]; // should probably make this dynamically resizable... / managed
+	glGenVertexArrays(numBuf, VAO);
+	GLuint VBO[numBuf];
+	glGenBuffers(numBuf, VBO);
 
 	glBindVertexArray(VAO[0]);				// occasionally a crash here
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(obj::cube), obj::cube, GL_STATIC_DRAW);
 	// Position attr
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
-	// Color attr
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(0); // unbind VBO
+	glBindVertexArray(0);
+
+	// lamps
+	GLuint lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+	// We only need to bind to the VBO, the container's VBO's data already contains the correct data.
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	// Position attr
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+
 
 	/* todo: textures */
 
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
 	while (!glfwWindowShouldClose(window)) {
-		// Time
-		GLfloat currentFrame = (GLfloat) glfwGetTime();
-		timer::delta = currentFrame - timer::last;
-		timer::last = currentFrame;
+		timer->tick();
 
-		//Callbacks
+		/* Callbacks */
 		glfwPollEvents();
 		do_movement();
 
@@ -95,24 +106,39 @@ int main() {
 
 		glm::mat4 proj = glm::perspective(glm::radians(cam->fov), (GLfloat)G::WIN_WIDTH / (GLfloat)G::WIN_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = cam->getView();
+		glm::mat4 model;
+		glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-		rainbow->use();
-		
-		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "proj"), 1, GL_FALSE, glm::value_ptr(proj));
-		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+		cubeShader->use();
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "objectColor"), 1.0f, 0.5f, 0.31f);
+		glUniform3f(glGetUniformLocation(cubeShader->getProgram(), "lightColor"), lightColor.x, lightColor.y, lightColor.z);
+		glUniformMatrix4fv(glGetUniformLocation(cubeShader->getProgram(), "proj"), 1, GL_FALSE, glm::value_ptr(proj));
+		glUniformMatrix4fv(glGetUniformLocation(cubeShader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 		
 		glBindVertexArray(VAO[0]);
-		for (GLuint i = 3; i < 6; i++) {
-			glm::mat4 model;
+		for (GLuint i = 0; i < 10; i++) {
+			model = glm::mat4();
 			model = glm::translate(model, obj::cubePositions[i]);
 			model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
 			if (i % 3 == 0)
 				model = glm::rotate(model, (GLfloat)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.3f, 0.7f, 0.8f));
-			glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(cubeShader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		lampShader->use();
+		glUniform3f(glGetUniformLocation(lampShader->getProgram(), "lightColor"), lightColor.x, lightColor.y, lightColor.z);
+		glUniformMatrix4fv(glGetUniformLocation(lampShader->getProgram(), "proj"), 1, GL_FALSE, glm::value_ptr(proj));
+		glUniformMatrix4fv(glGetUniformLocation(lampShader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+		model = glm::mat4();
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		glUniformMatrix4fv(glGetUniformLocation(lampShader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 
 		//Double Buffer
@@ -134,11 +160,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (action == GLFW_PRESS) {
-		D(std::cout << "KEY: " << /*glfwGetKeyName(key, key)*/ key << std::endl);
+		D(std::cout << "Key Pressed: " << /*glfwGetKeyName(key, key)*/ key << std::endl);
 		keys[key] = true;
 	}
 	else if (action == GLFW_RELEASE) {
-		D(std::cout << "\tKEY: " <</*glfwGetKeyName(key, key)*/ key << std::endl);
 		keys[key] = false;
 	}
 }
@@ -166,13 +191,13 @@ void scroll_callback(GLFWwindow * window, double xoffset, double yoffset) {
 
 void do_movement() {
 	if (keys[GLFW_KEY_W])
-		cam->translateCamera(G::CAMERA::FORWARD, timer::delta);
+		cam->translateCamera(G::CAMERA::FORWARD, timer->getDelta());
 	if (keys[GLFW_KEY_S])
-		cam->translateCamera(G::CAMERA::BACKWARD, timer::delta);
+		cam->translateCamera(G::CAMERA::BACKWARD, timer->getDelta());
 	if (keys[GLFW_KEY_A])
-		cam->translateCamera(G::CAMERA::LEFT, timer::delta);
+		cam->translateCamera(G::CAMERA::LEFT, timer->getDelta());
 	if (keys[GLFW_KEY_D])
-		cam->translateCamera(G::CAMERA::RIGHT, timer::delta);
+		cam->translateCamera(G::CAMERA::RIGHT, timer->getDelta());
 }
 
 int DIE(int retVal) {

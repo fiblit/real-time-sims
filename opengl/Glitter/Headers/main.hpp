@@ -8,6 +8,7 @@
 
 #include "Shader.hpp"
 #include "Camera.hpp"
+#include "Timer.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad
@@ -35,47 +36,47 @@ namespace G {
 }
 namespace obj {//should be in G
 	GLfloat cube[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
 
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f, -0.5f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f
+		-0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
 	};
 	glm::vec3 cubePositions[] = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -90,10 +91,6 @@ namespace obj {//should be in G
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 }
-namespace timer {//could be in G
-	GLfloat delta = 0.0f; // Time between current frame and last frame
-	GLfloat last = 0.0f; // Time of last frame
-}
 namespace mouse {
 	GLfloat lastX = G::WIN_WIDTH / 0.5f;
 	GLfloat lastY = G::WIN_HEIGHT / 0.5f;
@@ -102,6 +99,7 @@ namespace mouse {
 }
 
 Camera* cam;
+Timer* timer;
 
 /* UI */
 bool keys[1024];
