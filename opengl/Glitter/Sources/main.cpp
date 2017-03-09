@@ -56,13 +56,13 @@ int main() {
 	/* Shaders */
 	Shader* rainbow = new Shader("..\\Glitter\\Shaders\\identity.vert", "..\\Glitter\\Shaders\\simple.frag");
 	cam = new Camera();
-	ShallowWater* sw = new ShallowWater(50, 9.8f);
 
 	/* Objects */
-	GLuint VAO[2];
-	glGenVertexArrays(2, VAO);
-	GLuint VBO[2];
-	glGenBuffers(2, VBO);
+	const GLuint numObj = 1;
+	GLuint VAO[numObj]; // should probably make this dynamically resizable... / managed
+	glGenVertexArrays(numObj, VAO);
+	GLuint VBO[numObj];
+	glGenBuffers(numObj, VBO);
 
 	glBindVertexArray(VAO[0]);				// occasionally a crash here
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
@@ -74,19 +74,6 @@ int main() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(0); // unbind VBO
-	
-	//GLuint* VAO_shallow_water = new GLuint[1];
-	//glGenVertexArrays(1, VAO_shallow_water);
-	//GLuint* VBO_shallow_water = new GLuint[1];
-	//glGenVertexArrays(1, VBO_shallow_water);
-	
-	glBindVertexArray(VAO[1]);				// occasionally a crash here
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * (6 * (sw->ncells - 1)), sw->mesh, GL_DYNAMIC_DRAW);
-	// Position attr
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	glBindVertexArray(0);
 
 	/* todo: textures */
 
@@ -97,8 +84,6 @@ int main() {
 		GLfloat currentFrame = (GLfloat) glfwGetTime();
 		timer::delta = currentFrame - timer::last;
 		timer::last = currentFrame;
-
-		sw->update(timer::delta);
 
 		//Callbacks
 		glfwPollEvents();
@@ -127,31 +112,6 @@ int main() {
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-		
-
-		glBindVertexArray(VAO[1]);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * (6 * (sw->ncells - 1)), sw->mesh, GL_DYNAMIC_DRAW);
-		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * (6 * (sw->ncells - 1)), sw->mesh);
-
-		// Position attr
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		//glEnableVertexAttribArray(0);
-
-		glm::mat4 model;
-		glUniformMatrix4fv(glGetUniformLocation(rainbow->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-		/*
-		for (int i = 0; i < sw->ncells; i++) {
-			for (int k = 0; k < 6; k++) {
-				GLfloat * vert = &sw->mesh[3 * (6 * i + k)];
-				glm::vec4 l = glm::vec4(*(vert + 0), *(vert + 1), *(vert + 2), 1.0f);
-				glm::vec4 p = proj * view * model * l;
-				D(std::cout << "sw " << i << "\t" << k << ":\t" << l.x << " " << l.y << " " << l.z << std::endl);
-			}
-		}
-		*/
-		glDrawArrays(GL_TRIANGLES, 0, sw->ncells*6);
 
 		glBindVertexArray(0);
 

@@ -8,7 +8,6 @@
 
 #include "Shader.hpp"
 #include "Camera.hpp"
-#include "ShallowWater.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad
