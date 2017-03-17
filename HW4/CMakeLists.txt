@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(gg-engine)
+project(hw4_5611)
 
 option(GLFW_BUILD_DOCS OFF)
 option(GLFW_BUILD_EXAMPLES OFF)
