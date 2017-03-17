@@ -1,0 +1,12 @@
+[submodule "HW4/Libraries/glfw"]
+	path = HW4/Libraries/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "HW4/Libraries/glm"]
+	path = HW4/Libraries/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "HW4/Libraries/stb"]
+	path = HW4/Libraries/stb
+	url = https://github.com/nothings/stb.git
+[submodule "HW4/Libraries/glad"]
+	path = HW4/Libraries/glad
+	url = https://github.com/Dav1dde/glad.git
