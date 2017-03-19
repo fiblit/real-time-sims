@@ -11,10 +11,16 @@ Graph<T>::addVertex(Node<T> & v) {
 }
 
 template <class T>
-Graph<T>::addEdge(Node<T> & v, Node<T> & u) {
+Graph<T>::addEdge(Node<T> * v, Node<T> * u) {
+	//todo: check that u and v are in vertices
+	this->addDirectedEdge(v, u);
+	this->addDirectedEdge(u, v);
+}
+
+template <class T>
+Graph<T>::addDirectedEdge(Node<T> * v, Node<T> * u) {
 	//todo: check that u and v are in vertices
 	v->edges->push_back(u);
-	u->edges->push_back(v);
 }
 
 template <class T>

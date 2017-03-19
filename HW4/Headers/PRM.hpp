@@ -2,16 +2,68 @@
 #define PRM_H_GUARD
 
 #include "graph.hpp"
+#include <random>
 
-template <class C>
+/*
+class Extent {
+	
+
+};
+
+struct rect {
+	float x;
+	float y;
+	float w;
+	float h;
+};
+*/
+/* aka configuratio n*/
+struct Point {
+	float x;
+	float y;
+};
+struct Circle {
+	Point o;
+	float r;
+};
+
+typedef std::vector<Node<Point> *> VecPoint;
+
 class PRM {
 private:
-	Graph<C> * roadmap;
-	Node<C> * start;
-	Node<C> * goal;
-	ConfigSpace<C> * cSpace;
+	Graph<Point> * roadmap;
+	Cspace_2D * cSpace;
+	VecPoint * sampleNodes(Cspace_2D * cSpace);
+	VecPoint * findNearestNeighbours(VecPoint * nodes, int targetIdx);
+	Graph<Point> * connectRoadmap(VecPoint * nodes);
 public:
-	PRM(C * start, C * goal, ConfigSpace<C> * cSpace);
+	PRM(Point start, Point goal, Cspace_2D * cSpace);
+	VecPoint * findPathUCS();
+	VecPoint * findPathAstar();
 };
+
+class Cspace_2D {
+private:
+	std::vector<Circle> * obs_circle;
+public:
+	Cspace_2D(std::vector<Circle> & obs, Circle & agent);
+	bool isCollision(Point a);
+	bool lineOfSight(Point a, Point b);
+};
+
+// very general
+// config = 
+// cspace = HashMap<name, Range> or Range[dim]
+// Range:
+//	int bins;
+//	float axis[bins]
+//  float sample();
+//  int val2bin();
+
+//or
+// Range:
+//   float lo;
+//   float hi;
+//   float sample();
 
 #endif // PRM_H_GUARD
