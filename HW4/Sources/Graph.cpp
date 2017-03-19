@@ -2,11 +2,11 @@
 
 template <class T>
 Graph<T>::Graph() {
-	this->vertices = new std::vector<Node<T>>();
+	this->vertices = new std::vector<Node<T> *>();
 }
 
 template <class T>
-Graph<T>::addVertex(Node<T> & v) {
+Graph<T>::addVertex(Node<T> * v) {
 	this->vertices.push_back(v);
 }
 

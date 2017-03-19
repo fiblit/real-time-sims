@@ -3,6 +3,10 @@
 
 #include "graph.hpp"
 #include <random>
+#include <utility>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
 
 /*
 class Extent {

@@ -40,6 +40,10 @@ VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
 
 /* connects NNs of each node by Graph edges */
 Graph<Point> * PRM::connectRoadmap(VecPoint * nodes) {
+	this->roadmap = new Graph<Point>();
+	for (int i = 0; i < nodes->size(); i++)
+		this->roadmap->addVertex((*nodes)[i]);
+
 	for (int i = 0; i < nodes->size(); i++) {
 		VecPoint * NNs = findNearestNeighbours(nodes, i);
 		for (int n = 0; n < NNs->size(); n++) {
@@ -65,16 +69,159 @@ PRM::PRM(Point start, Point goal, Cspace_2D * cSpace) {
 	this->roadmap = connectRoadmap(sample);
 }
 
-/* custom uniform cost search for a PRM Graph */
+/* custom uniform cost search (aka Djikstra's search) for a PRM Graph 
+simplifciation of A*. (h = 0)
+*/
 VecPoint * PRM::findPathUCS() {
+	// maximum g-cost
+	const int maxi = std::numeric_limits<int>::max();
 
-	return nullptr;
+	/* typedefs for readability */
+	typedef Node<Point> * Vert;
+	typedef std::unordered_set<Vert> Set;
+	typedef std::unordered_map<Vert, Vert> VertVert;
+	typedef std::unordered_map<Vert, float> VertFloat;
+
+	// parent tree
+	VertVert parents;
+	VertFloat gcost;
+	
+	//initialize
+	VecPoint verts = *this->roadmap->vertices;
+	Vert start = verts[0];
+	Vert target = verts[1];
+	gcost[start] = 0.0f;
+	parents[start] = nullptr;
+
+	// closed set
+	Set closed = Set();
+
+	//create PQ
+	std::deque<Vert> pq = std::deque<Vert>(); //min PQ
+	auto cmp = [gcost](Vert l, Vert r) { return gcost.at(l) > gcost.at(r); }; //normally < 
+
+	//skip start; i = 1
+	for (int i = 1; i < verts.size(); i++) {
+		Vert v = verts[i];
+		parents[v] = nullptr;
+		gcost[v] = maxi;
+		pq.push_back(v);
+	}
+	std::make_heap(pq.begin(), pq.end(), cmp);
+
+	while (!pq.empty()) {
+		Vert u = pq.front();
+		std::pop_heap(pq.begin(), pq.end());
+		pq.pop_back();
+		//add to closed
+
+		for (int e = 0; e < u->edges->size(); e++) {
+			//if neighoubr in closed
+			// continue
+
+			Vert adj = (*u->edges)[e];
+			float g_alt = gcost[u] + distP(adj->data, u->data);
+			if (g_alt < gcost[adj]) {
+				gcost[adj] = g_alt;
+				parents[adj] = u;
+				/* TODO: replace with a bubble 
+				currently this idea was inspired by:
+				http://stackoverflow.com/questions/9209323/easiest-way-of-using-min-priority-queue-with-key-update-in-c 
+				*/
+				std::make_heap(pq.begin(), pq.end(), cmp);
+			}
+		}
+		if (u == target)
+			break;
+	}
+
+	// retrace path
+	VecPoint * path = new VecPoint();
+	Vert curr = target;
+	while (curr != nullptr) {
+		path->insert(path->begin(), curr);
+		curr = parents[curr];
+	}
+	return path;
 }
 
-/* custom A* search for a PRM Graph */
+/* custom A* search for a PRM Graph
+*/
 VecPoint * PRM::findPathAstar() {
+	// maximum g-cost
+	const int maxi = std::numeric_limits<int>::max();
 
-	return nullptr;
+	/* typedefs for readability */
+	typedef Node<Point> * Vert;
+	typedef std::unordered_set<Vert> Set;
+	typedef std::unordered_map<Vert, Vert> VertVert;
+	typedef std::unordered_map<Vert, float> VertFloat;
+
+	// parent tree
+	VertVert parents;
+	VertFloat gcost;
+	VertFloat hcost;
+
+	//initialize
+	VecPoint verts = *this->roadmap->vertices;
+	Vert start = verts[0];
+	Vert target = verts[1];
+	gcost[start] = 0.0f;
+	hcost[start] = distP(target->data, start->data);
+	parents[start] = nullptr;
+
+	Set closed;
+
+	//create PQ
+	std::deque<Vert> pq; //min PQ
+	auto cmp = [gcost, hcost](Vert l, Vert r) { return gcost.at(l) + hcost.at(l) > gcost.at(r) + hcost.at(r); }; //normally < 
+
+																			  //skip start; i = 1
+	for (int i = 1; i < verts.size(); i++) {
+		Vert v = verts[i];
+		parents[v] = nullptr;
+		gcost[v] = maxi;
+		hcost[v] = distP(target->data, v->data);
+		pq.push_back(v);
+	}
+	std::make_heap(pq.begin(), pq.end(), cmp);
+
+	while (!pq.empty()) {
+		Vert u = pq.front();
+		std::pop_heap(pq.begin(), pq.end(), cmp);
+		pq.pop_back();
+
+		closed.emplace(u);
+
+		for (int e = 0; e < u->edges->size(); e++) {
+			Vert adj = (*u->edges)[e];
+			if (closed.find(adj) != closed.end())
+				continue;
+
+			
+			float g_alt = gcost[u] + distP(adj->data, u->data);
+			if (g_alt < gcost[adj]) {
+				gcost[adj] = g_alt;
+				parents[adj] = u;
+				/* TODO: replace with a bubble
+				currently this idea was inspired by:
+				http://stackoverflow.com/questions/9209323/easiest-way-of-using-min-priority-queue-with-key-update-in-c
+				*/
+				std::make_heap(pq.begin(), pq.end(), cmp);
+			}
+		}
+		if (u == target)
+			break;
+	}
+
+	// retrace path
+	VecPoint * path = new VecPoint();
+	Vert curr = target;
+	while (curr != nullptr) {
+		path->insert(path->begin(), curr);
+		curr = parents[curr];
+	}
+	return path;
 }
 
 /* generates a configuartion space given a list of obstacles (circles-only) and agents (circle-only; 1-only) */
@@ -104,6 +251,10 @@ bool Cspace_2D::isCollision(Point p) {
 /* just some basic vector math */
 float dotP(Point a, Point b) {
 	return a.x * b.x + a.y * b.y;
+}
+float distP(Point a, Point b) {
+	Point d = subP(a, b);
+	return sqrt(dotP(d, d));
 }
 Point addP(Point a, Point b) {
 	Point c;
@@ -139,31 +290,32 @@ bool Cspace_2D::lineOfSight(Point a, Point b) {
 	Point Lab;
 	Lab.x = b.x - a.x;
 	Lab.y = b.y - a.y;
-	float d = dotP(Lab, Lab);
+	float len2 = dotP(Lab, Lab);
 
 	for (int i = 0; i < this->obs_circle->size(); i++) {
 		Circle c;
 		Point Lao;
 		Lao.x = c.o.x - a.x;
 		Lao.y = c.o.y - a.y;
+
+		float r2 = c.r * c.r;
+		if (dotP(Lao, Lao) <= r2)//point a inside circle
+			return false; // HIT
+
 		Point Lbo;
 		Lbo.x = c.o.x - b.x;
 		Lbo.y = c.o.y - b.y;
-
-		float r2 = c.r * c.r;
-		if (dotP(Lao, Lao) <= r2) //point a inside circle
-			return false; // HIT
-		if (dotP(Lbo, Lbo) <= r2) //point b inside circle
+		if (dotP(Lbo, Lbo) <= r2)//point b inside circle
 			return false; // HIT
 
-		float n = dotP(Lab, Lao);
-		Point proj = scaleP(a, n / d);
+		float ang = dotP(Lab, Lao);
+		Point proj = scaleP(a, ang / len2);
 		Point rej = subP(b, proj);
-		float dp = dotP(proj, proj);
+		float plen2 = dotP(proj, proj);
 
-		if (dotP(rej, rej) <= r2 //close enough tangentially
-				&& 0 <= n        //point a before circle center
-				&& dp <= d)      //point b after circle center
+		if (dotP(rej, rej) <= r2  //close enough tangentially
+				&& 0 <= ang       //point a before circle center
+				&& plen2 <= len2) //point b after circle center
 			return false; // HIT
 	}
 	return true; // MISS
