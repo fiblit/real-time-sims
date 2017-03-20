@@ -6,9 +6,11 @@
 /* MACROS */
 #include "debug.hpp"
 
+/* CLASSES */
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include "Timer.hpp"
+#include "PRM.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad
@@ -88,7 +90,7 @@ namespace obj {//should be in G
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
-	glm::vec3 cubePositions[] = {
+	glm::vec3 * cubePositions;/* = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
 		glm::vec3( 0.5f,  5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -99,7 +101,7 @@ namespace obj {//should be in G
 		glm::vec3( 1.5f,  0.5f, -2.5f),
 		glm::vec3( 1.5f,  0.2f, -1.5f),
 		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
+	};*/
 }
 namespace mouse {
 	GLfloat lastX = G::WIN_WIDTH / 0.5f;
@@ -111,7 +113,7 @@ namespace mouse {
 Camera* cam;
 Timer* timer;
 
-/* UI */
+/* UI prototypes */
 bool keys[1024];
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);

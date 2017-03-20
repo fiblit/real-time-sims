@@ -147,6 +147,29 @@ int main() {
 	stbi_image_free(image);
 	glBindTexture(GL_TEXTURE_2D, 1);
 
+	/* Path Planning */
+	const int NR_OBST = 1;
+	Circle agentBounds;
+	Point start; start.x = -9.0f; start.y = -9.0f;
+	Point goal; goal.x = 9.0f; goal.y = 9.0f;
+	agentBounds.o = start;
+	agentBounds.r = 1.0f;
+	Circle obstBounds[NR_OBST];
+	obstBounds[0].o.x = 0.0f;
+	obstBounds[0].o.y = 0.0f;
+	obstBounds[0].r = 2.0f;
+	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, agentBounds);
+	PRM * prm = new PRM(start, goal, cspace);
+	std::vector<Node<Point> *> * path = prm->findPathUCS(); //UCS before A*; 'tis simpler
+
+	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
+	obj::cubePositions = new glm::vec3[verts->size()];
+	for (int i = 0; i < verts->size(); i++)
+		obj::cubePositions[i] = glm::vec3(verts->at(i)->data.x, 0.0f, verts->at(i)->data.y);
+
+	//change properties for the path; maybe turn into a set so I can just easily check membership
+	//
+
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
 	while (!glfwWindowShouldClose(window)) {
@@ -218,6 +241,15 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, tex_container_specular);
 
 		glBindVertexArray(VAO[0]);
+
+		/* TODO: replace with 
+			render tinybox @ start point with color 1
+			render tinybox @ goal point with color 2
+			render tinybox @ path points with color 3
+			render tintinybox @ non ^^ verts with color 4
+			render box (cyl) @ agent with color 5
+			render box (cyl) @ obsts with color 6
+		*/
 		for (GLuint i = 0; i < 10; i++) {
 			model = glm::mat4();
 			model = glm::translate(model, obj::cubePositions[i]);

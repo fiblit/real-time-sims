@@ -226,8 +226,16 @@ VecPoint * PRM::findPathAstar() {
 
 /* generates a configuartion space given a list of obstacles (circles-only) and agents (circle-only; 1-only) */
 Cspace_2D::Cspace_2D(std::vector<Circle> & obs, Circle & agent) {
+	init(obs.data(), obs.size(), agent);
+}
+
+Cspace_2D::Cspace_2D(Circle * obs, int n, Circle & agent) {
+	init(obs, n, agent);
+}
+
+void Cspace_2D::init(Circle * obs, int n, Circle & agent) {
 	this->obs_circle = new std::vector<Circle>();
-	for (int i = 0; i < obs.size(); i++) {
+	for (int i = 0; i < n; i++) {
 		Circle c;
 		c.r = obs[i].r + agent.r;
 		c.o.x = obs[i].o.x;
@@ -239,16 +247,17 @@ Cspace_2D::Cspace_2D(std::vector<Circle> & obs, Circle & agent) {
 /* detects if a point collides with anything in the configuration space */
 bool Cspace_2D::isCollision(Point p) {
 	for (int i = 0; i < this->obs_circle->size(); i++) {
-		float ox = (*this->obs_circle)[i].o.x;
-		float oy = (*this->obs_circle)[i].o.y;
-		float or = (*this->obs_circle)[i].r;
-		if ((p.x - ox) * (p.x - ox) + (p.y - oy) * (p.y - oy) <= or * or)
+		Point o = (*this->obs_circle)[i].o;
+		float r = (*this->obs_circle)[i].r;
+		Point diff = subP(p, o);
+		if (dotP(diff, diff) <= r * r)
 			return true;
 	}
 	return false;
 }
 
 /* just some basic vector math */
+/* TODO: change to glm.... why didn't I do that in the first place? */
 float dotP(Point a, Point b) {
 	return a.x * b.x + a.y * b.y;
 }
