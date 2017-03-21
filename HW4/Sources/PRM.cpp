@@ -54,11 +54,9 @@ Graph<Point> * PRM::connectRoadmap(VecPoint * nodes) {
 		
 		for (int n = 0; n < NNs->size(); n++) {
 			if (this->cSpace->lineOfSight((*NNs)[n]->data, (*nodes)[i]->data)) {
-				/*
 				// we want directed because we'll be passing over the other side during
 				// the course of the outer loop
 				G->addDirectedEdge((*NNs)[n], (*nodes)[i]);
-				*/
 			}
 		}
 	}
@@ -312,8 +310,11 @@ bool Cspace_2D::lineOfSight(Point a, Point b) {
 	Lab.y = b.y - a.y;
 	float len2 = dotP(Lab, Lab);
 
+	
 	for (int i = 0; i < this->obs_circle->size(); i++) {
 		Circle c;
+		c = this->obs_circle->at(i);
+
 		Point Lao;
 		Lao.x = c.o.x - a.x;
 		Lao.y = c.o.y - a.y;
@@ -338,5 +339,6 @@ bool Cspace_2D::lineOfSight(Point a, Point b) {
 				&& plen2 <= len2) //point b after circle center
 			return false; // HIT
 	}
+
 	return true; // MISS
 }
