@@ -47,17 +47,22 @@ Graph<Point> * PRM::connectRoadmap(VecPoint * nodes) {
 	Graph<Point> * G = new Graph<Point>();
 	for (int i = 0; i < nodes->size(); i++)
 		G->addVertex((*nodes)[i]);
-
+	
 	for (int i = 0; i < nodes->size(); i++) {
+		
 		VecPoint * NNs = findNearestNeighbours(nodes, i);
+		
 		for (int n = 0; n < NNs->size(); n++) {
 			if (this->cSpace->lineOfSight((*NNs)[n]->data, (*nodes)[i]->data)) {
+				/*
 				// we want directed because we'll be passing over the other side during
 				// the course of the outer loop
 				G->addDirectedEdge((*NNs)[n], (*nodes)[i]);
+				*/
 			}
 		}
 	}
+	
 	return G;
 }
 
@@ -67,10 +72,11 @@ PRM::PRM(Point start, Point goal, Cspace_2D * cSpace) {
 
 	Node<Point> * startNode = new Node<Point>(start, new VecPoint());
 	Node<Point> * goalNode = new Node<Point>(goal, new VecPoint());
+	
 	VecPoint * sample = sampleNodes(this->cSpace);
 	sample->insert(sample->begin(), goalNode);
 	sample->insert(sample->begin(), startNode);
-
+	
 	this->roadmap = connectRoadmap(sample);
 }
 
