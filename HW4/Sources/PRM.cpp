@@ -47,11 +47,11 @@ Graph<Point> * PRM::connectRoadmap(VecPoint * nodes) {
 	Graph<Point> * G = new Graph<Point>();
 	for (int i = 0; i < nodes->size(); i++)
 		G->addVertex((*nodes)[i]);
-	
+
 	for (int i = 0; i < nodes->size(); i++) {
-		
+
 		VecPoint * NNs = findNearestNeighbours(nodes, i);
-		
+
 		for (int n = 0; n < NNs->size(); n++) {
 			if (this->cSpace->lineOfSight((*NNs)[n]->data, (*nodes)[i]->data)) {
 				// we want directed because we'll be passing over the other side during
@@ -60,7 +60,7 @@ Graph<Point> * PRM::connectRoadmap(VecPoint * nodes) {
 			}
 		}
 	}
-	
+
 	return G;
 }
 
@@ -92,11 +92,11 @@ VecPoint * PRM::findPathUCS() {
 	typedef std::unordered_map<Vert, float> VertFloat;
 
 	// parent tree
-	VertVert parents;
-	VertFloat gcost;
+	VertVert parents = VertVert();
+	VertFloat gcost = VertFloat();
 	
 	//initialize
-	VecPoint verts = *this->roadmap->vertices;
+	VecPoint verts = *(this->roadmap->vertices);
 	Vert start = verts[0];
 	Vert target = verts[1];
 	gcost[start] = 0.0f;

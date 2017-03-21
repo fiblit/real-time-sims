@@ -41,9 +41,9 @@
 
 /* Globals */
 namespace G {
-	const GLint WIN_WIDTH = 1920;
-	const GLint WIN_HEIGHT = 1080;
-	const GLboolean WIN_FULLSCREEN = GL_TRUE;
+	const GLint WIN_WIDTH = 800;
+	const GLint WIN_HEIGHT = 680;
+	const GLboolean WIN_FULLSCREEN = GL_FALSE;
 }
 namespace obj {//should be in G
 	GLfloat cube[] = {

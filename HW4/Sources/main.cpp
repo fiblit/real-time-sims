@@ -160,18 +160,21 @@ int main() {
 	obstBounds[0].r = 2.0f;
 	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, agentBounds);
 	PRM * prm = new PRM(start, goal, cspace);
-	//std::vector<Node<Point> *> * pathVec = prm->findPathUCS(); //UCS before A*; 'tis simpler
+	std::vector<Node<Point> *> * pathVec = prm->findPathUCS(); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
-	//for (int i = 0; i < prm->roadmap->vertices->size(); i++)
-	//	path->insert((*prm->roadmap->vertices)[i]);
+	for (int i = 0; i < prm->roadmap->vertices->size(); i++)
+		path->insert((*prm->roadmap->vertices)[i]);
 
 //	float epsilon = 0.000001;
 
 	//change properties for the path
-	/*
 	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
 	obj::cubePositions = new glm::vec3[verts->size()];
-	obj::NR_CUBES == verts->size();
+	obj::cubeScale = new float[verts->size()];
+	obj::diffuseColor = new glm::vec3[verts->size()];
+	obj::specularColor = new glm::vec3[verts->size()];
+	obj::NR_CUBES = verts->size();
+	
 	for (int i = 0; i < obj::NR_CUBES; i++) {
 		Node<Point> * v = verts->at(i);
 		obj::cubePositions[i] = glm::vec3(v->data.x, 0.0f, v->data.y);
@@ -196,13 +199,13 @@ int main() {
 			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 	}
-	*/
+	
 
     /* Game Loop */
 	
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
 	
-	/*
+	
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
@@ -312,7 +315,7 @@ int main() {
 		//Double Buffer
 		glfwSwapBuffers(window);
     }
-	*/
+	
 	D(std::cout << std::endl << "Exiting Game Loop..." << std::endl << std::endl);
 	
 
