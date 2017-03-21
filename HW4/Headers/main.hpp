@@ -90,6 +90,10 @@ namespace obj {//should be in G
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
+	int NR_CUBES;
+	glm::vec3 * specularColor;
+	glm::vec3 * diffuseColor;
+	float * cubeScale;
 	glm::vec3 * cubePositions;/* = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
 		glm::vec3( 0.5f,  5.0f, -15.0f),

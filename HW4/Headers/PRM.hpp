@@ -10,15 +10,15 @@
 
 /*
 class Extent {
-	
+
 
 };
 
 struct rect {
-	float x;
-	float y;
-	float w;
-	float h;
+float x;
+float y;
+float w;
+float h;
 };
 */
 
@@ -34,6 +34,17 @@ struct Circle {
 
 typedef std::vector<Node<Point> *> VecPoint;
 
+class Cspace_2D {
+private:
+	std::vector<Circle> * obs_circle;
+	void init(Circle * obs, int n, Circle & agent);
+public:
+	Cspace_2D(std::vector<Circle> & obs, Circle & agent);
+	Cspace_2D(Circle * obs, int n, Circle & agent);
+	bool isCollision(Point a);
+	bool lineOfSight(Point a, Point b);
+};
+
 class PRM {
 private:
 	Cspace_2D * cSpace;
@@ -47,15 +58,12 @@ public:
 	VecPoint * findPathAstar();
 };
 
-class Cspace_2D {
-private:
-	std::vector<Circle> * obs_circle;
-	void init(Circle * obs, int n, Circle & agent);
-public:
-	Cspace_2D(std::vector<Circle> & obs, Circle & agent);
-	Cspace_2D(Circle * obs, int n, Circle & agent);
-	bool isCollision(Point a);
-	bool lineOfSight(Point a, Point b);
-};
+
+float dotP(Point a, Point b);
+float distP(Point a, Point b);
+Point subP(Point a, Point b);
+Point addP(Point a, Point b);
+Point scaleP(Point a, float s);
+
 
 #endif // PRM_H_GUARD

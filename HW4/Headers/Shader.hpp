@@ -16,6 +16,10 @@ private:
 	GLuint program;
 public:
 	GLuint getProgram() { return program; }
+
+	GLint Uni(std::string uniform) {
+		return glGetUniformLocation(this->program, uniform.c_str());
+	}
 	//To be clear, I'm just following the tutorial, Header-only class feels really weird, wrong even
 	Shader(const GLchar* vertPath, const GLchar* fragPath) {
 		// read in mandatory shaders

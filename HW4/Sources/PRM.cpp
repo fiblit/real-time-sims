@@ -16,10 +16,12 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 		p.y = yrand(gen);
 
 		if (!this->cSpace->isCollision(p))
-			sample->push_back( new Node<Point>(p, VecPoint()) );
+			sample->push_back( new Node<Point>(p, new VecPoint()) );
 		//else
 		//	i--;
 	}
+
+	return sample;
 }
 
 /* threshold search to find NNs */
@@ -36,13 +38,15 @@ VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
 				// push the close enough node onto the neighbours list
 				neighbours->push_back( (*nodes)[i] );
 	}
+
+	return neighbours;
 }
 
 /* connects NNs of each node by Graph edges */
 Graph<Point> * PRM::connectRoadmap(VecPoint * nodes) {
-	this->roadmap = new Graph<Point>();
+	Graph<Point> * G = new Graph<Point>();
 	for (int i = 0; i < nodes->size(); i++)
-		this->roadmap->addVertex((*nodes)[i]);
+		G->addVertex((*nodes)[i]);
 
 	for (int i = 0; i < nodes->size(); i++) {
 		VecPoint * NNs = findNearestNeighbours(nodes, i);
@@ -50,21 +54,22 @@ Graph<Point> * PRM::connectRoadmap(VecPoint * nodes) {
 			if (this->cSpace->lineOfSight((*NNs)[n]->data, (*nodes)[i]->data)) {
 				// we want directed because we'll be passing over the other side during
 				// the course of the outer loop
-				this->roadmap->addDirectedEdge((*NNs)[n], (*nodes)[i]);
+				G->addDirectedEdge((*NNs)[n], (*nodes)[i]);
 			}
 		}
 	}
+	return G;
 }
 
 /* samples and connects a Pobabilistic Road Map */
 PRM::PRM(Point start, Point goal, Cspace_2D * cSpace) {
 	this->cSpace = cSpace;
 
-	Node<Point> * startNode = new Node<Point>(start, VecPoint());
-	Node<Point> * goalNode = new Node<Point>(goal, VecPoint());
+	Node<Point> * startNode = new Node<Point>(start, new VecPoint());
+	Node<Point> * goalNode = new Node<Point>(goal, new VecPoint());
 	VecPoint * sample = sampleNodes(this->cSpace);
-	sample->insert(sample->begin(), startNode);
 	sample->insert(sample->begin(), goalNode);
+	sample->insert(sample->begin(), startNode);
 
 	this->roadmap = connectRoadmap(sample);
 }
