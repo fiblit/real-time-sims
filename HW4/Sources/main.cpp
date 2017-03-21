@@ -160,18 +160,19 @@ int main() {
 	obstBounds[0].r = 2.0f;
 	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, agentBounds);
 	PRM * prm = new PRM(start, goal, cspace);
-	std::vector<Node<Point> *> * pathVec = prm->findPathUCS(); //UCS before A*; 'tis simpler
+	//std::vector<Node<Point> *> * pathVec = prm->findPathUCS(); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
-	for (int i = 0; i < pathVec->size(); i++)
-		path->insert(pathVec->at(i));
+	//for (int i = 0; i < prm->roadmap->vertices->size(); i++)
+	//	path->insert((*prm->roadmap->vertices)[i]);
 
-	float epsilon = 0.000001;
+//	float epsilon = 0.000001;
 
 	//change properties for the path
+	/*
 	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
 	obj::cubePositions = new glm::vec3[verts->size()];
 	obj::NR_CUBES == verts->size();
-	for (int i = 0; i < verts->size(); i++) {
+	for (int i = 0; i < obj::NR_CUBES; i++) {
 		Node<Point> * v = verts->at(i);
 		obj::cubePositions[i] = glm::vec3(v->data.x, 0.0f, v->data.y);
 		if (i == 0) {
@@ -195,17 +196,21 @@ int main() {
 			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 	}
+	*/
 
     /* Game Loop */
+	
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
+	
+	/*
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
-		/* Callbacks */
+		///* Callbacks 
 		glfwPollEvents();
 		do_movement();
 
-		/* Render */
+		///* Render 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -225,7 +230,7 @@ int main() {
 		glm::vec3 dirLightDir = glm::vec3(0.0f, -1.0f, 0.0f);
 
 		cubeShader->use();
-		/*TODO: something to make these lines shorter / not as many */
+		///*TODO: something to make these lines shorter / not as many 
 		glUniform3f(cubeShader->Uni("material.ambient"), 1.0f, 0.5f, 0.31f);
 		glUniform1i(cubeShader->Uni("material.diffuse"), 0);
 		glUniform1i(cubeShader->Uni("material.specular"), 1);
@@ -268,14 +273,14 @@ int main() {
 
 		glBindVertexArray(VAO[0]);
 
-		/* TODO: replace with 
-			render tinybox @ start point with color 1 -- check
-			render tinybox @ goal point with color 2 -- check
-			render tinybox @ path points with color 3 -- check
-			render tintinybox @ non ^^ verts with color 4 -- check
-			render box (cyl) @ agent with color 5
-			render box (cyl) @ obsts with color 6
-		*/
+		// TODO: replace with 
+		//	render tinybox @ start point with color 1 -- check
+		//	render tinybox @ goal point with color 2 -- check
+		//	render tinybox @ path points with color 3 -- check
+		//	render tintinybox @ non ^^ verts with color 4 -- check
+		//	render box (cyl) @ agent with color 5
+		//	render box (cyl) @ obsts with color 6
+		//
 		for (GLuint i = 0; i < obj::NR_CUBES; i++) {
 			model = glm::mat4();
 			model = glm::translate(model, obj::cubePositions[i]);
@@ -307,6 +312,7 @@ int main() {
 		//Double Buffer
 		glfwSwapBuffers(window);
     }
+	*/
 	D(std::cout << std::endl << "Exiting Game Loop..." << std::endl << std::endl);
 	
 
