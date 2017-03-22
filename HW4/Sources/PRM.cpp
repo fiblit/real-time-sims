@@ -10,7 +10,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
 	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 20;
+	const int samplecount = 50;
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
@@ -32,18 +32,22 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 
 /* threshold search to find NNs */
 VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
-	const int threshold = 20.0f; // 20m radius
-	VecPoint * neighbours = new VecPoint();
+	int threshold = 7.0f; // 7m radius
 
-	Point t = (*nodes)[targetIdx]->data;
-	for (int i = 0; i < nodes->size(); i++) {
-		Point n = (*nodes)[i]->data;
-		// don't consider this node we're looking from
-		if (i != targetIdx)
-			if (distP(t, n) < threshold)
-				// push the close enough node onto the neighbours list
-				neighbours->push_back( (*nodes)[i] );
-	}
+	VecPoint * neighbours = new VecPoint();
+	//do {
+
+		Point t = (*nodes)[targetIdx]->data;
+		for (int i = 0; i < nodes->size(); i++) {
+			Point n = (*nodes)[i]->data;
+			// don't consider this node we're looking from
+			if (i != targetIdx)
+				if (distP(t, n) < threshold)
+					// push the close enough node onto the neighbours list
+					neighbours->push_back((*nodes)[i]);
+		}
+
+	//} while (neighbours->size() == 0);
 
 	return neighbours;
 }
@@ -103,11 +107,11 @@ VecPoint * PRM::findPathUCS() {
 	
 	//initialize
 	VecPoint verts = *(this->roadmap->vertices);
-	for (int i = 0; i < verts.size(); i++) {
-		std::cout << "v" << (i) << " es" << verts[i]->edges->size() << "\t" << verts[i] << std::endl;
-		for (int e = 0; e < verts[i]->edges->size(); e++)
-			std::cout << "\t e" << e << " " << (*verts[i]->edges)[e] << std::endl;
-	}
+	//for (int i = 0; i < verts.size(); i++) {
+		//std::cout << "v" << (i) << " es" << verts[i]->edges->size() << "\t" << verts[i] << std::endl;
+	//	for (int e = 0; e < verts[i]->edges->size(); e++)
+			//std::cout << "\t e" << e << " " << (*verts[i]->edges)[e] << std::endl;
+	//}
 	Vert start = verts[0];
 	Vert target = verts[1];
 	gcost[start] = 0.0f;
@@ -135,16 +139,16 @@ VecPoint * PRM::findPathUCS() {
 		//add to closed
 		closed.insert(u);
 
-		std::cout << "s" << u->edges->size() << "u" << u << std::endl;
+		//std::cout << "s" << u->edges->size() << "u" << u << std::endl;
 		for (int e = 0; e < u->edges->size(); e++) {
 			Vert adj = (*u->edges)[e];
 			if (closed.count(adj) > 0) {
-				std::cout << "closed" << std::endl;
+				//std::cout << "closed" << std::endl;
 				continue;
 			}
 			
 			float g_alt = gcost[u] + distP(adj->data, u->data);
-			std::cout << "alt:" << g_alt << " old:" << gcost[adj] << std::endl;
+			//std::cout << "alt:" << g_alt << " old:" << gcost[adj] << std::endl;
 			if (g_alt < gcost[adj]) {
 				gcost[adj] = g_alt;
 				parents[adj] = u;
@@ -168,7 +172,7 @@ VecPoint * PRM::findPathUCS() {
 					}
 				}
 				else {
-					std::cout << "!!!" << std::endl;
+					//std::cout << "!!!" << std::endl;
 					pq.push(adj);
 				}
 			}
@@ -189,6 +193,7 @@ VecPoint * PRM::findPathUCS() {
 }
 
 /* custom A* search for a PRM Graph
+TODO: make this A*, not Djikstra's
 */
 VecPoint * PRM::findPathAstar(float e) {
 	// maximum g-cost
@@ -206,11 +211,6 @@ VecPoint * PRM::findPathAstar(float e) {
 
 	//initialize
 	VecPoint verts = *(this->roadmap->vertices);
-	for (int i = 0; i < verts.size(); i++) {
-		std::cout << "v" << (i) << " es" << verts[i]->edges->size() << "\t" << verts[i] << std::endl;
-		for (int e = 0; e < verts[i]->edges->size(); e++)
-			std::cout << "\t e" << e << " " << (*verts[i]->edges)[e] << std::endl;
-	}
 	Vert start = verts[0];
 	Vert target = verts[1];
 	gcost[start] = 0.0f;
@@ -238,16 +238,12 @@ VecPoint * PRM::findPathAstar(float e) {
 		//add to closed
 		closed.insert(u);
 
-		std::cout << "s" << u->edges->size() << "u" << u << std::endl;
 		for (int e = 0; e < u->edges->size(); e++) {
 			Vert adj = (*u->edges)[e];
-			if (closed.count(adj) > 0) {
-				std::cout << "closed" << std::endl;
+			if (closed.count(adj) > 0)
 				continue;
-			}
 
 			float g_alt = gcost[u] + distP(adj->data, u->data);
-			std::cout << "alt:" << g_alt << " old:" << gcost[adj] << std::endl;
 			if (g_alt < gcost[adj]) {
 				gcost[adj] = g_alt;
 				parents[adj] = u;
@@ -271,7 +267,6 @@ VecPoint * PRM::findPathAstar(float e) {
 					}
 				}
 				else {
-					std::cout << "!!!" << std::endl;
 					pq.push(adj);
 				}
 			}

@@ -90,22 +90,21 @@ namespace obj {//should be in G
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
-	int NR_CUBES;
-	glm::vec3 * specularColor;
-	glm::vec3 * diffuseColor;
+	int NR_CUBES = 0;
+	glm::vec3 * cubeSpecularColor;
+	glm::vec3 * cubeDiffuseColor;
 	float * cubeScale;
-	glm::vec3 * cubePositions;/* = {
-		glm::vec3( 0.0f,  0.0f,  0.0f),
-		glm::vec3( 0.5f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -0.5f, -12.3f),
-		glm::vec3( 2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3( 1.3f, -0.5f, -2.5f),
-		glm::vec3( 1.5f,  0.5f, -2.5f),
-		glm::vec3( 1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};*/
+	glm::vec3 * cubePositions;
+
+	int NR_OBST = 0;
+	float * obstScale;
+	glm::vec4 * obstRotation;
+	glm::vec3 * obstPositions;
+
+	int NR_AGENT = 0;
+	float * agentScale;
+	glm::vec4 * agentRotation;
+	glm::vec3 * agentPositions;
 }
 namespace mouse {
 	GLfloat lastX = G::WIN_WIDTH / 0.5f;
@@ -126,5 +125,6 @@ void do_movement();
 
 /* Other Prototypes */
 int DIE(int retVal);
+void animate_agent(std::vector<Node<Point> *> * path, int * completed_nodes, float dt);
 
 #endif //MAIN

@@ -1,5 +1,6 @@
 #include "graph.hpp"
 /*
+// putting it in the CPP wasn't working for some reason. commented it out to compile it. Will figure this out later.
 template <class T>
 Graph<T>::Graph() {
 	this->vertices = new std::vector<Node<T> *>();

@@ -26,6 +26,7 @@ namespace G {
 }
 
 // An abstract camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL
+/* modified from learnopengl.com */
 class Camera
 {
 public:

@@ -59,6 +59,7 @@ in vec3 FragPos;
 
 out vec4 color;
 
+/* heavily inspired by learnopengl.com */
 void main() {
 	vec3 norm = normalize(Normal);
 	vec3 viewDir = normalize(-FragPos);

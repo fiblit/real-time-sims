@@ -11,6 +11,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+/* Modified from learnopengl.com */
 class Shader {
 private:
 	GLuint program;

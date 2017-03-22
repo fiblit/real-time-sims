@@ -1,5 +1,10 @@
 #include "main.hpp"
 
+/* some of this might look like stuff from learnopengl.com ... probably not much anymore 
+   I have been changing it a lot. 
+   Oh, and I think there's a bit from github.com/Polytonic/glitter or maybe from the
+   stb github repo... It's mostly just stuff to interface with libraries (e.g. GLFW, 
+   stb, glad, etc. ) */
 int main() {
     /* Load GLFW  */
 	D(std::cout << "Initializing GLFW for OpenGL 3.3...");
@@ -63,8 +68,18 @@ int main() {
 	timer = new Timer();
 
 	/* Shaders */
-	Shader* cubeShader = new Shader(((std::string)PROJECT_SOURCE_DIR + "/Shaders/flat.vert").c_str(), ((std::string)PROJECT_SOURCE_DIR + "/Shaders/flat.frag").c_str());
-	Shader* lampShader = new Shader(((std::string)PROJECT_SOURCE_DIR + "/Shaders/lamp.vert").c_str(), ((std::string)PROJECT_SOURCE_DIR + "/Shaders/lamp.frag").c_str());
+	auto shv = [](auto s) {return ; };
+	auto shf = [](auto s) {return ((std::string)PROJECT_SOURCE_DIR + "/Shaders/" + s + ".frag").c_str(); };
+	std::cout << "1" << std::endl;
+	Shader* cubeShader = new Shader(
+		((std::string)PROJECT_SOURCE_DIR + "/Shaders/cube.vert").c_str(), 
+		((std::string)PROJECT_SOURCE_DIR + "/Shaders/cube.frag").c_str());
+	Shader* flatShader = new Shader(
+		((std::string)PROJECT_SOURCE_DIR + "/Shaders/flat.vert").c_str(),
+		((std::string)PROJECT_SOURCE_DIR + "/Shaders/flat.frag").c_str());
+	Shader* lampShader = new Shader(
+		((std::string)PROJECT_SOURCE_DIR + "/Shaders/lamp.vert").c_str(),
+		((std::string)PROJECT_SOURCE_DIR + "/Shaders/lamp.frag").c_str());
 	cam = new Camera();
 
 	/* Objects */
@@ -85,8 +100,8 @@ int main() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 	// Tex Coords attr
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-	//glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
 
 	// lamps
@@ -103,9 +118,10 @@ int main() {
 	/* Load textures */
 	GLenum tex_format;
 	GLint tex_width, tex_height, tex_channels;
-	GLubyte * image = stbi_load(((std::string)PROJECT_SOURCE_DIR + "/Resources/container2.png").c_str(), &tex_width, &tex_height, &tex_channels, 0);
+	std::string RESOURCES_DIR = (std::string)PROJECT_SOURCE_DIR + "/Resources/";
+	GLubyte * image = stbi_load((RESOURCES_DIR + "container2.png").c_str(), &tex_width, &tex_height, &tex_channels, 0);
 	if (!image)
-		std::cerr << "Failed to load texture ..//..//Resources//container2.png" << std::endl;
+		std::cerr << "Failed to load texture " + RESOURCES_DIR + "container2.png" << std::endl;
 	switch (tex_channels) {
 		case 1: tex_format = GL_ALPHA;     break;
 		case 2: tex_format = GL_LUMINANCE; break;
@@ -125,9 +141,9 @@ int main() {
 	stbi_image_free(image);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	image = stbi_load(((std::string)PROJECT_SOURCE_DIR + (std::string)"/Resources/container2_specular.png").c_str(), &tex_width, &tex_height, &tex_channels, 0);
+	image = stbi_load((RESOURCES_DIR+"container2_specular.png").c_str(), &tex_width, &tex_height, &tex_channels, 0);
 	if (!image)
-		std::cerr << "Failed to load texture ..//Resources//container2_specular.png" << std::endl;
+		std::cerr << "Failed to load texture "+RESOURCES_DIR+"container2_specular.png" << std::endl;
 	switch (tex_channels) {
 		case 1: tex_format = GL_ALPHA;     break;
 		case 2: tex_format = GL_LUMINANCE; break;
@@ -170,50 +186,74 @@ int main() {
 
 //	float epsilon = 0.000001;
 
-	//change properties for the path
+	//change properties for the path -- instantiate cube visualizations
 	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
-	obj::cubePositions = new glm::vec3[verts->size()];
-	obj::cubeScale = new float[verts->size()];
-	obj::diffuseColor = new glm::vec3[verts->size()];
-	obj::specularColor = new glm::vec3[verts->size()];
 	obj::NR_CUBES = verts->size();
+	obj::cubePositions = new glm::vec3[obj::NR_CUBES];
+	obj::cubeScale = new float[obj::NR_CUBES];
+	obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
+	obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
 	
 	for (int i = 0; i < obj::NR_CUBES; i++) {
 		Node<Point> * v = verts->at(i);
 		obj::cubePositions[i] = glm::vec3(v->data.x, 0.0f, v->data.y);
 		if (i == 0) {
-			obj::cubeScale[i] = 0.95f;
-			obj::diffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
-			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+			obj::cubeScale[i] = 1.0f;
+			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 		else if (i == 1) {
-			obj::cubeScale[i] = 0.95f;
-			obj::diffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
-			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+			obj::cubeScale[i] = 1.0f;
+			obj::cubeDiffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 		else if (path->find(v) != path->end()) {
 			obj::cubeScale[i] = 0.75f;
-			obj::diffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
-			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+			std::cout << "!!!" << std::endl;
 		}
 		else {
 			obj::cubeScale[i] = 0.5f;
-			obj::diffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
-			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+			obj::cubeDiffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 	}
-	
+
+	obj::NR_OBST = 5;
+	obj::obstPositions = new glm::vec3[obj::NR_OBST];
+	obj::obstRotation = new glm::vec4[obj::NR_OBST];
+	obj::obstScale = new float[obj::NR_OBST];
+	for (int i = 0; i < obj::NR_OBST; i++) {
+		obj::obstPositions[i] = glm::vec3(0.0f, -2.0f - 0.001f*i, 0.0f);
+		obj::obstScale[i] = 2.0f * sqrt(2);
+		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * i) );
+	}
+
+	obj::NR_AGENT = 5;
+	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
+	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
+	obj::agentScale = new float[obj::NR_AGENT];
+	for (int i = 0; i < obj::NR_AGENT; i++) {
+		obj::agentPositions[i] = glm::vec3(-9.0f, 2.0f + 0.001f*i, -9.0f);
+		obj::agentScale[i] = 1.0f * sqrt(2);
+		obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_AGENT * i) );
+	}
+
+	int completed_nodes = 0;
 
     /* Game Loop */
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
-		///* Callbacks 
+		animate_agent(pathVec, &completed_nodes, timer->getDelta());
+
+		// Callbacks 
 		glfwPollEvents();
 		do_movement();
 
-		///* Render 
+		// Render 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -233,11 +273,15 @@ int main() {
 		glm::vec3 dirLightDir = glm::vec3(0.0f, -1.0f, 0.0f);
 
 		cubeShader->use();
-		///*TODO: something to make these lines shorter / not as many 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex_container);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, tex_container_specular);
+
 		glUniform3f(cubeShader->Uni("material.ambient"), 1.0f, 0.5f, 0.31f);
-		//glUniform1i(cubeShader->Uni("material.diffuse"), 0);
-		//glUniform1i(cubeShader->Uni("material.specular"), 1);
 		glUniform1f(cubeShader->Uni("material.shine"), 32.0f);
+		glUniform1i(cubeShader->Uni("material.diffuse"), 0);
+		glUniform1i(cubeShader->Uni("material.specular"), 1);
 
 		glUniform3f(cubeShader->Uni("dirLight.direction"), dirLightDir.x, dirLightDir.y, dirLightDir.z);
 		glUniform3f(cubeShader->Uni("dirLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
@@ -246,56 +290,100 @@ int main() {
 
 		for (GLuint i = 0; i < 4; i++) {
 			std::string si = "pointLights[" + std::to_string(i) + "].";
-			glUniform3f(cubeShader->Uni( si + "position"), pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
-			glUniform1f(cubeShader->Uni( si + "constant"), 1.0f);
-			glUniform1f(cubeShader->Uni( si + "linear"), 0.045f);
-			glUniform1f(cubeShader->Uni( si + "quadratic"), 0.0075f);
-			glUniform3f(cubeShader->Uni( si + "ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
-			glUniform3f(cubeShader->Uni( si + "diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-			glUniform3f(cubeShader->Uni( si + "specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+			glUniform3f(cubeShader->Uni(si + "position"), pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
+			glUniform1f(cubeShader->Uni(si + "constant"), 1.0f);
+			glUniform1f(cubeShader->Uni(si + "linear"), 0.045f);
+			glUniform1f(cubeShader->Uni(si + "quadratic"), 0.0075f);
+			glUniform3f(cubeShader->Uni(si + "ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
+			glUniform3f(cubeShader->Uni(si + "diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
+			glUniform3f(cubeShader->Uni(si + "specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
 		}
 
-		glUniform3f(cubeShader->Uni( "spotLight.position"), cam->pos.x, cam->pos.y, cam->pos.z);
-		glUniform3f(cubeShader->Uni( "spotLight.direction"), cam->dir.x, cam->dir.y, cam->dir.z);
-		glUniform3f(cubeShader->Uni( "spotLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
-		glUniform3f(cubeShader->Uni( "spotLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-		glUniform3f(cubeShader->Uni( "spotLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
-		glUniform1f(cubeShader->Uni( "spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
-		glUniform1f(cubeShader->Uni( "spotLight.fadeOff"), glm::cos(glm::radians(17.5f)));
-		glUniform1f(cubeShader->Uni( "spotLight.constant"), 1.0f);
-		glUniform1f(cubeShader->Uni( "spotLight.linear"), 0.045f);
-		glUniform1f(cubeShader->Uni( "spotLight.quadratic"), 0.0075f);
+		glUniform3f(cubeShader->Uni("spotLight.position"), cam->pos.x, cam->pos.y, cam->pos.z);
+		glUniform3f(cubeShader->Uni("spotLight.direction"), cam->dir.x, cam->dir.y, cam->dir.z);
+		glUniform3f(cubeShader->Uni("spotLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
+		glUniform3f(cubeShader->Uni("spotLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
+		glUniform3f(cubeShader->Uni("spotLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		glUniform1f(cubeShader->Uni("spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
+		glUniform1f(cubeShader->Uni("spotLight.fadeOff"), glm::cos(glm::radians(17.5f)));
+		glUniform1f(cubeShader->Uni("spotLight.constant"), 1.0f);
+		glUniform1f(cubeShader->Uni("spotLight.linear"), 0.045f);
+		glUniform1f(cubeShader->Uni("spotLight.quadratic"), 0.0075f);
 
-		glUniformMatrix4fv(cubeShader->Uni( "proj"), 1, GL_FALSE, glm::value_ptr(proj));
-		glUniformMatrix4fv(cubeShader->Uni( "view"), 1, GL_FALSE, glm::value_ptr(view));
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex_container);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, tex_container_specular);
+		glUniformMatrix4fv(cubeShader->Uni("proj"), 1, GL_FALSE, glm::value_ptr(proj));
+		glUniformMatrix4fv(cubeShader->Uni("view"), 1, GL_FALSE, glm::value_ptr(view));
 
 		glBindVertexArray(VAO[0]);
 
-		// TODO: replace with 
-		//	render tinybox @ start point with color 1 -- check
-		//	render tinybox @ goal point with color 2 -- check
-		//	render tinybox @ path points with color 3 -- check
-		//	render tintinybox @ non ^^ verts with color 4 -- check
-		//	render box (cyl) @ agent with color 5
-		//	render box (cyl) @ obsts with color 6
-		//
-		for (GLuint i = 0; i < obj::NR_CUBES; i++) {
-			glUniform3f(cubeShader->Uni("material.diffuse"), obj::diffuseColor[i].x, obj::diffuseColor[i].y, obj::diffuseColor[i].z);
-			glUniform3f(cubeShader->Uni("material.specular"), obj::specularColor[i].x, obj::specularColor[i].y, obj::specularColor[i].z);
+		for (GLuint i = 0; i < obj::NR_OBST; i++) {
 			model = glm::mat4();
-			model = glm::translate(model, obj::cubePositions[i]);
-			model = glm::scale(model, glm::vec3(obj::cubeScale[i]));
+			model = glm::translate(model, obj::obstPositions[i]);
+			model = glm::scale(model, glm::vec3(obj::obstScale[i]));
+			model = glm::rotate(model, obj::obstRotation[i].w, glm::vec3(obj::obstRotation[i].x, obj::obstRotation[i].y, obj::obstRotation[i].z));
 			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(cubeShader->Uni( "normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
+			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		for (GLuint i = 0; i < obj::NR_AGENT; i++) {
+			model = glm::mat4();
+			model = glm::translate(model, obj::agentPositions[i]);
+			model = glm::scale(model, glm::vec3(obj::agentScale[i]));
+			model = glm::rotate(model, obj::agentRotation[i].w, glm::vec3(obj::agentRotation[i].x, obj::agentRotation[i].y, obj::agentRotation[i].z));
+			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		/* end cube shaders */
+
+		flatShader->use();
+		glUniform3f(flatShader->Uni("material.ambient"), 1.0f, 0.5f, 0.31f);
+		glUniform1f(flatShader->Uni("material.shine"), 32.0f);
+
+		glUniform3f(flatShader->Uni("dirLight.direction"), dirLightDir.x, dirLightDir.y, dirLightDir.z);
+		glUniform3f(flatShader->Uni("dirLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
+		glUniform3f(flatShader->Uni("dirLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
+		glUniform3f(flatShader->Uni("dirLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+
+		for (GLuint i = 0; i < 4; i++) {
+			std::string si = "pointLights[" + std::to_string(i) + "].";
+			glUniform3f(flatShader->Uni( si + "position"), pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
+			glUniform1f(flatShader->Uni( si + "constant"), 1.0f);
+			glUniform1f(flatShader->Uni( si + "linear"), 0.045f);
+			glUniform1f(flatShader->Uni( si + "quadratic"), 0.0075f);
+			glUniform3f(flatShader->Uni( si + "ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
+			glUniform3f(flatShader->Uni( si + "diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
+			glUniform3f(flatShader->Uni( si + "specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		}
+
+		glUniform3f(flatShader->Uni( "spotLight.position"), cam->pos.x, cam->pos.y, cam->pos.z);
+		glUniform3f(flatShader->Uni( "spotLight.direction"), cam->dir.x, cam->dir.y, cam->dir.z);
+		glUniform3f(flatShader->Uni( "spotLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
+		glUniform3f(flatShader->Uni( "spotLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
+		glUniform3f(flatShader->Uni( "spotLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		glUniform1f(flatShader->Uni( "spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
+		glUniform1f(flatShader->Uni( "spotLight.fadeOff"), glm::cos(glm::radians(17.5f)));
+		glUniform1f(flatShader->Uni( "spotLight.constant"), 1.0f);
+		glUniform1f(flatShader->Uni( "spotLight.linear"), 0.045f);
+		glUniform1f(flatShader->Uni( "spotLight.quadratic"), 0.0075f);
+
+		glUniformMatrix4fv(flatShader->Uni( "proj"), 1, GL_FALSE, glm::value_ptr(proj));
+		glUniformMatrix4fv(flatShader->Uni( "view"), 1, GL_FALSE, glm::value_ptr(view));
+
+		for (GLuint i = 0; i < obj::NR_CUBES; i++) {
+			glUniform3f(flatShader->Uni("material.diffuse"), obj::cubeDiffuseColor[i].x, obj::cubeDiffuseColor[i].y, obj::cubeDiffuseColor[i].z);
+			glUniform3f(flatShader->Uni("material.specular"), obj::cubeSpecularColor[i].x, obj::cubeSpecularColor[i].y, obj::cubeSpecularColor[i].z);
+			model = glm::mat4();
+			model = glm::translate(model, obj::cubePositions[i]);
+			model = glm::scale(model, glm::vec3(obj::cubeScale[i]));
+			glUniformMatrix4fv(flatShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(flatShader->Uni( "normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		/* end flat shaders */
 
 		lampShader->use();
 		glUniformMatrix4fv(lampShader->Uni( "proj"), 1, GL_FALSE, glm::value_ptr(proj));
@@ -313,8 +401,9 @@ int main() {
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 		glBindVertexArray(0);
+		/* end lamp shaders */
 
-		//Double Buffer
+		// Swap the Double Buffer
 		glfwSwapBuffers(window);
     }
 	
@@ -382,4 +471,33 @@ int DIE(int retVal) {
 	D(slowPrint(150, 500, "OK"));
 
 	return retVal;
+}
+
+
+void animate_agent(std::vector<Node<Point> *> * path, int * completed_nodes, float dt) {
+	if ((*completed_nodes) + 1 < path->size()) {
+		float velocity = 1.0f; // x m/s
+		Point agentNow;
+		agentNow.x = obj::agentPositions[0].x;
+		agentNow.y = obj::agentPositions[0].z;
+
+		Point nextNode;
+		nextNode.x = (*path)[(*completed_nodes) + 1]->data.x;
+		nextNode.y = (*path)[(*completed_nodes) + 1]->data.y;
+
+		float dist = distP(nextNode, agentNow);
+		if (dist < 0.1f) {
+			(*completed_nodes)++;
+			if (dist < dt*velocity) {
+				agentNow.x = nextNode.x;
+				agentNow.y = nextNode.y;
+				velocity -= dist / dt;
+			}
+		}
+
+		Point motion = scaleP(subP(nextNode, agentNow), velocity * dt / distP(nextNode, agentNow));
+		for (int i = 0; i < obj::NR_AGENT; i++) {
+			obj::agentPositions[i] += glm::vec3(motion.x, 0.0f, motion.y);
+		}
+	}
 }

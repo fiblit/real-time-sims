@@ -8,7 +8,7 @@ class Node {
 private:
 public:
 	T data;
-	/* TODO: change to unordered_set for fast lookup, yet easy iteration */
+	/* TODO: change to unordered_set for fast lookup, yet easy ---iteration--- <nope> */
 	std::vector<Node<T> *> * edges;
 	Node(T item, std::vector<Node<T> *> * edges) {
 		this->data = item;
@@ -27,7 +27,7 @@ template <class T>
 class Graph {
 private:
 public:
-	/* TODO: change to unordered_set for fast lookup, yet easy iteration */
+	/* TODO: change to unordered_set for fast lookup, yet easy  ---iteration--- <nope> */
 	std::vector<Node<T> *> * vertices;
 	Graph() {
 		this->vertices = new std::vector<Node<T> *>();
