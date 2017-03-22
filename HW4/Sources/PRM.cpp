@@ -359,7 +359,7 @@ void printP(Point a, std::string s = "P") {
    It seems like there are more dot products, but hey! No square roots!
 
    If you want to play with it I made this:
-   https://www.desmos.com/calculator/xnitdx0vw7
+   https://www.desmos.com/calculator/fxgnyi8skw
  */
 bool Cspace_2D::lineOfSight(Point a, Point b) {
 	printP(a, "a ");
