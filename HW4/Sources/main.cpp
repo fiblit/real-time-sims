@@ -188,13 +188,13 @@ int main() {
 
 	//change properties for the path -- instantiate cube visualizations
 	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
-	obj::NR_CUBES = verts->size();
+	obj::NR_CUBES = verts->size() + 1;
 	obj::cubePositions = new glm::vec3[obj::NR_CUBES];
 	obj::cubeScale = new float[obj::NR_CUBES];
 	obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
 	obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
 	
-	for (int i = 0; i < obj::NR_CUBES; i++) {
+	for (int i = 0; i < obj::NR_CUBES - 1; i++) {
 		Node<Point> * v = verts->at(i);
 		obj::cubePositions[i] = glm::vec3(v->data.x, 0.0f, v->data.y);
 		if (i == 0) {
@@ -220,6 +220,11 @@ int main() {
 		}
 	}
 
+	obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
+	obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
+	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
+	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
+
 	obj::NR_OBST = 5;
 	obj::obstPositions = new glm::vec3[obj::NR_OBST];
 	obj::obstRotation = new glm::vec4[obj::NR_OBST];
@@ -243,6 +248,7 @@ int main() {
 	int completed_nodes = 0;
 
     /* Game Loop */
+	timer->tick();
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();

@@ -10,7 +10,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
 	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 50;
+	const int samplecount = 0;
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
@@ -32,7 +32,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 
 /* threshold search to find NNs */
 VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
-	int threshold = 7.0f; // 7m radius
+	int threshold = 80.0f; // 7m radius
 
 	VecPoint * neighbours = new VecPoint();
 	//do {
@@ -346,6 +346,10 @@ Point subP(Point a, Point b) {
 	return c;
 }
 
+void printP(Point a, std::string s = "P") {
+	std::cout << (std::string)s + (std::string)" x" + (std::string)std::to_string(a.x) + (std::string)" y" + (std::string)std::to_string(a.y) << std::endl;
+}
+
 /* detects if a line segment between Point a and Point b collides with the C-space 
    method : projects the line (AC) onto (AB), determines if the projection is close 
    enough to the segment and if the rejection is within the circle
@@ -354,44 +358,72 @@ Point subP(Point a, Point b) {
    Not even sure if it is more efficient than the classic ray-sphere, lol.
    It seems like there are more dot products, but hey! No square roots!
 
-   If you want to play with it:
+   If you want to play with it I made this:
    https://www.desmos.com/calculator/xnitdx0vw7
  */
 bool Cspace_2D::lineOfSight(Point a, Point b) {
+	printP(a, "a ");
+	printP(b, "b ");
+
 	Point Lab;
 	Lab.x = b.x - a.x;
 	Lab.y = b.y - a.y;
-	float len2 = dotP(Lab, Lab);
+	printP(Lab, "Lab ");
 
-	
+	float len2 = dotP(Lab, Lab);
+	std::cout << "len2 " << len2 << std::endl;
+
 	for (int i = 0; i < this->obs_circle->size(); i++) {
 		Circle c;
 		c = this->obs_circle->at(i);
+		printP(c.o, "co ");
+		std::cout << "cr " << c.r << std::endl;
 
 		Point Lao;
 		Lao.x = c.o.x - a.x;
 		Lao.y = c.o.y - a.y;
+		printP(Lao, "Lao ");
 
 		float r2 = c.r * c.r;
-		if (dotP(Lao, Lao) <= r2)//point a inside circle
+		std::cout << "r2 " << r2 << std::endl;
+		std::cout << "Lao2 " << dotP(Lao, Lao) << std::endl;
+		if (dotP(Lao, Lao) <= r2) {//point a inside circle
+			std::cout << "HIT 1" << std::endl;
 			return false; // HIT
+		}
 
 		Point Lbo;
 		Lbo.x = c.o.x - b.x;
 		Lbo.y = c.o.y - b.y;
-		if (dotP(Lbo, Lbo) <= r2)//point b inside circle
+		printP(Lbo, "Lbo ");
+		std::cout << "Lbo2 " << dotP(Lbo, Lbo) << std::endl;
+		if (dotP(Lbo, Lbo) <= r2) { //point b inside circle
+			std::cout << "HIT 2" << std::endl;
 			return false; // HIT
+		}
 
 		float ang = dotP(Lab, Lao);
+		std::cout << "ang " << ang << std::endl;
 		Point proj = scaleP(a, ang / len2);
+		printP(proj, "proj ");
 		Point rej = subP(b, proj);
+		printP(rej, "rej ");
 		float plen2 = dotP(proj, proj);
+		std::cout << "plen2 " <<  plen2 << std::endl;
 
+		std::cout << "rej2 " << dotP(rej, rej) << std::endl;
+		std::cout << "1 " << (dotP(rej, rej) <= r2) << std::endl;
+		std::cout << "2 " << (0 <= ang) << std::endl;
+		std::cout << "3 " << (plen2 <= len2) << std::endl;
 		if (dotP(rej, rej) <= r2  //close enough tangentially
 				&& 0 <= ang       //point a before circle center
-				&& plen2 <= len2) //point b after circle center
+				&& plen2 <= len2) { //point b after circle center
+
+			std::cout << "HIT 3" << std::endl;
 			return false; // HIT
+		}
 	}
 
+	std::cout << "MISS" << std::endl;
 	return true; // MISS
 }
