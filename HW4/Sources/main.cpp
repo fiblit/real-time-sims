@@ -175,7 +175,7 @@ int main() {
 	obstBounds[0].r = 2.0f;
 	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, agentBounds);
 	PRM * prm = new PRM(start, goal, cspace);
-	std::vector<Node<Point> *> * pathVec = prm->findPathUCS(); //UCS before A*; 'tis simpler
+	std::vector<Node<Point> *> * pathVec = prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
 	for (int i = 0; i < pathVec->size(); i++)
 		path->insert((*pathVec)[i]);
@@ -248,7 +248,7 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
-		animate_agent(pathVec, &completed_nodes, timer->getDelta());
+		animate_agent(cspace, pathVec, &completed_nodes, timer->getDelta());
 
 		// Callbacks 
 		glfwPollEvents();
@@ -475,20 +475,28 @@ int DIE(int retVal) {
 }
 
 
-void animate_agent(std::vector<Node<Point> *> * path, int * completed_nodes, float dt) {
-	if ((*completed_nodes) + 1 < path->size()) {
+void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * completed_nodes, float dt) {
+	if ((*completed_nodes) < path->size()) {
 		float velocity = 1.0f; // x m/s
 		Point agentNow;
 		agentNow.x = obj::agentPositions[0].x;
 		agentNow.y = obj::agentPositions[0].z;
 
 		Point nextNode;
-		nextNode.x = (*path)[(*completed_nodes) + 1]->data.x;
-		nextNode.y = (*path)[(*completed_nodes) + 1]->data.y;
+		nextNode.x = (*path)[(*completed_nodes)]->data.x;
+		nextNode.y = (*path)[(*completed_nodes)]->data.y;
+
+		while ((*completed_nodes) + 1 < path->size() 
+				&& c->lineOfSight(agentNow, (*path)[(*completed_nodes) + 1]->data)) {
+			(*completed_nodes)++;
+			nextNode.x = (*path)[(*completed_nodes)]->data.x;
+			nextNode.y = (*path)[(*completed_nodes)]->data.y;
+		}
 
 		float dist = distP(nextNode, agentNow);
 		if (dist < 0.1f) {
 			(*completed_nodes)++;
+			//not sure why I have this, as this will, like, never happen.
 			if (dist < dt*velocity) {
 				agentNow.x = nextNode.x;
 				agentNow.y = nextNode.y;

@@ -104,115 +104,12 @@ VecPoint * PRM::findPathUCS() {
 	
 	//initialize
 	VecPoint verts = *(this->roadmap->vertices);
-	//for (int i = 0; i < verts.size(); i++) {
-		//std::cout << "v" << (i) << " es" << verts[i]->edges->size() << "\t" << verts[i] << std::endl;
-	//	for (int e = 0; e < verts[i]->edges->size(); e++)
-			//std::cout << "\t e" << e << " " << (*verts[i]->edges)[e] << std::endl;
-	//}
+
 	Vert start = verts[0];
 	Vert target = verts[1];
 	gcost[start] = 0.0f;
 	parents[start] = nullptr;
 	
-	//skip start; i = 0
-	for (int i = 1; i < verts.size(); i++) {
-		Vert v = verts[i];
-		parents[v] = nullptr;
-		gcost[v] = maxi;
-	}
-
-	// closed set
-	Set closed = Set();
-
-	//create PQ
-	auto cmp = [gcost](Node<Point> * l, Node<Point> * r) { return gcost.at(l) > gcost.at(r); }; //normally <
-	std::priority_queue<Vert, std::vector<Vert>, decltype(cmp)> pq(cmp);
-	pq.push(verts[0]);
-
-	while (!pq.empty()) {
-		Vert u = pq.top();
-		pq.pop();
-
-		//add to closed
-		closed.insert(u);
-
-		//std::cout << "s" << u->edges->size() << "u" << u << std::endl;
-		for (int e = 0; e < u->edges->size(); e++) {
-			Vert adj = (*u->edges)[e];
-			if (closed.count(adj) > 0) {
-				//std::cout << "closed" << std::endl;
-				continue;
-			}
-			
-			float g_alt = gcost[u] + distP(adj->data, u->data);
-			//std::cout << "alt:" << g_alt << " old:" << gcost[adj] << std::endl;
-			if (g_alt < gcost[adj]) {
-				gcost[adj] = g_alt;
-				parents[adj] = u;
-
-				std::vector<Vert> pqvec = std::vector<Vert>();
-				while (!pq.empty()) {
-					pqvec.push_back(pq.top());
-					pq.pop();
-				}
-				for (int i = 0; i < pqvec.size(); i++) {
-					pq.push(pqvec[i]);
-				}
-
-				if (std::any_of(pqvec.begin(), pqvec.end(), [adj](Vert v) {return v == adj; })) {
-					while (!pq.empty()) {
-						pq.pop();
-					}
-					while (pqvec.size() > 0) {
-						pq.push(pqvec.back());
-						pqvec.pop_back();
-					}
-				}
-				else {
-					//std::cout << "!!!" << std::endl;
-					pq.push(adj);
-				}
-			}
-		}
-		if (u == target)
-			break;
-	}
-		
-	// retrace path
-	VecPoint * path = new VecPoint();
-	Vert curr = target;
-	while (curr != nullptr) {
-		path->insert(path->begin(), curr);
-		curr = parents[curr];
-	}
-	
-	return path;
-}
-
-/* custom A* search for a PRM Graph
-TODO: make this A*, not Djikstra's
-*/
-VecPoint * PRM::findPathAstar(float e) {
-	// maximum g-cost
-	const int maxi = std::numeric_limits<int>::max();
-
-	/* typedefs for readability */
-	typedef Node<Point> * Vert;
-	typedef std::unordered_set<Vert> Set;
-	typedef std::unordered_map<Vert, Vert> VertVert;
-	typedef std::unordered_map<Vert, float> VertFloat;
-
-	// parent tree
-	VertVert parents = VertVert();
-	VertFloat gcost = VertFloat();
-
-	//initialize
-	VecPoint verts = *(this->roadmap->vertices);
-	Vert start = verts[0];
-	Vert target = verts[1];
-	gcost[start] = 0.0f;
-	parents[start] = nullptr;
-
 	//skip start; i = 0
 	for (int i = 1; i < verts.size(); i++) {
 		Vert v = verts[i];
@@ -239,13 +136,16 @@ VecPoint * PRM::findPathAstar(float e) {
 			Vert adj = (*u->edges)[e];
 			if (closed.count(adj) > 0)
 				continue;
-
+			
 			float g_alt = gcost[u] + distP(adj->data, u->data);
 			if (g_alt < gcost[adj]) {
 				gcost[adj] = g_alt;
 				parents[adj] = u;
 
 				std::vector<Vert> pqvec = std::vector<Vert>();
+				//inefficient as hell; only way to fix is to write my own PQ; not in the mood to do that rn at 4 AM
+				// ACTUALLY; the best way to handle this would be to just maintain a secondary set, like closed.
+				//pull data out of the pq, but don't keep it off (immediately return to pq)
 				while (!pq.empty()) {
 					pqvec.push_back(pq.top());
 					pq.pop();
@@ -254,6 +154,7 @@ VecPoint * PRM::findPathAstar(float e) {
 					pq.push(pqvec[i]);
 				}
 
+				// update adj if it is already on the PQ
 				if (std::any_of(pqvec.begin(), pqvec.end(), [adj](Vert v) {return v == adj; })) {
 					while (!pq.empty()) {
 						pq.pop();
@@ -263,6 +164,111 @@ VecPoint * PRM::findPathAstar(float e) {
 						pqvec.pop_back();
 					}
 				}
+				// add to PQ if not already on it
+				else {
+					pq.push(adj);
+				}
+			}
+		}
+		if (u == target)
+			break;
+	}
+		
+	// retrace path
+	VecPoint * path = new VecPoint();
+	Vert curr = target;
+	while (curr != nullptr) {
+		path->insert(path->begin(), curr);
+		curr = parents[curr];
+	}
+	
+	return path;
+}
+
+/* custom A* search for a PRM Graph
+*/
+VecPoint * PRM::findPathAstar(float e) {
+	// maximum g-cost
+	const int maxi = std::numeric_limits<int>::max();
+
+	/* typedefs for readability */
+	typedef Node<Point> * Vert;
+	typedef std::unordered_set<Vert> Set;
+	typedef std::unordered_map<Vert, Vert> VertVert;
+	typedef std::unordered_map<Vert, float> VertFloat;
+
+	// parent tree
+	VertVert parents = VertVert();
+	VertFloat gcost = VertFloat();
+	VertFloat hcost = VertFloat();
+
+	//initialize
+	VecPoint verts = *(this->roadmap->vertices);
+	Vert start = verts[0];
+	Vert target = verts[1];
+	gcost[start] = 0.0f;
+	hcost[start] = distP(start->data, target->data);
+	parents[start] = nullptr;
+
+	//skip start; i = 0
+	//wish I didn't have to do this up front... dumb lambdas.
+	for (int i = 1; i < verts.size(); i++) {
+		Vert v = verts[i];
+		parents[v] = nullptr;
+		gcost[v] = maxi;
+		hcost[v] = distP(v->data, target->data);
+	}
+
+	// closed set
+	Set closed = Set();
+
+	//create PQ
+	auto cmp = [gcost, hcost, e](Node<Point> * l, Node<Point> * r) { return gcost.at(l) + e * hcost.at(l) > gcost.at(r) + e * hcost.at(r); }; //normally <
+	std::priority_queue<Vert, std::vector<Vert>, decltype(cmp)> pq(cmp);
+	pq.push(verts[0]);
+
+	while (!pq.empty()) {
+		Vert u = pq.top();
+		pq.pop();
+
+		// we will never change u again, so it is closed
+		closed.insert(u);
+
+		for (int e = 0; e < u->edges->size(); e++) {
+			Vert adj = (*u->edges)[e];
+			if (closed.count(adj) > 0)
+				continue;
+
+			//only consider g-cost since the h-cost can't be changed via a new path.
+			float g_alt = gcost[u] + distP(adj->data, u->data);
+			if (g_alt < gcost[adj]) {
+				gcost[adj] = g_alt;
+				parents[adj] = u;
+
+				std::vector<Vert> pqvec = std::vector<Vert>();
+				//inefficient as hell; only way to fix is to write my own PQ; not in the mood to do that rn at 4 AM
+				// ACTUALLY; the best way to handle this would be to just maintain a secondary set, like closed.
+				//pull data out of the pq, but don't keep it off (immediately return to pq)
+				while (!pq.empty()) {
+					pqvec.push_back(pq.top());
+					pq.pop();
+				}
+				for (int i = 0; i < pqvec.size(); i++) {
+					pq.push(pqvec[i]);
+				}
+
+				// update adj if it is already on the PQ
+				if (std::any_of(pqvec.begin(), pqvec.end(), [adj](Vert v) {return v == adj; })) {
+					//inefficient as hell; ...
+					while (!pq.empty()) {
+						pq.pop();
+					}
+					while (pqvec.size() > 0) {
+						pq.push(pqvec.back());
+						pqvec.pop_back();
+					}
+				}
+				// add to PQ if not already on it
 				else {
 					pq.push(adj);
 				}
@@ -359,68 +365,38 @@ void printP(Point a, std::string s = "P") {
    https://www.desmos.com/calculator/fxgnyi8skw
  */
 bool Cspace_2D::lineOfSight(Point a, Point b) {
-//	printP(a, "a ");
-//	printP(b, "b ");
-
 	Point Lab;
 	Lab.x = b.x - a.x;
 	Lab.y = b.y - a.y;
-//	printP(Lab, "Lab ");
-
 	float len2 = dotP(Lab, Lab);
-//	std::cout << "len2 " << len2 << std::endl;
 
 	for (int i = 0; i < this->obs_circle->size(); i++) {
 		Circle c;
 		c = this->obs_circle->at(i);
-//		printP(c.o, "co ");
-//		std::cout << "cr " << c.r << std::endl;
 
 		Point Lao;
 		Lao.x = c.o.x - a.x;
 		Lao.y = c.o.y - a.y;
-//		printP(Lao, "Lao ");
 
 		float r2 = c.r * c.r;
-//		std::cout << "r2 " << r2 << std::endl;
-//		std::cout << "Lao2 " << dotP(Lao, Lao) << std::endl;
-		if (dotP(Lao, Lao) <= r2) {//point a inside circle
-//			std::cout << "HIT 1" << std::endl;
+		if (dotP(Lao, Lao) <= r2) //point a inside circle
 			return false; // HIT
-		}
 
 		Point Lbo;
 		Lbo.x = c.o.x - b.x;
 		Lbo.y = c.o.y - b.y;
-//		printP(Lbo, "Lbo ");
-//		std::cout << "Lbo2 " << dotP(Lbo, Lbo) << std::endl;
-		if (dotP(Lbo, Lbo) <= r2) { //point b inside circle
-//			std::cout << "HIT 2" << std::endl;
+		if (dotP(Lbo, Lbo) <= r2) //point b inside circle
 			return false; // HIT
-		}
 
 		float ang = dotP(Lab, Lao);
-//		std::cout << "ang " << ang << std::endl;
 		Point proj = scaleP(Lab, ang / len2);
-//		printP(proj, "proj ");
 		Point rej = subP(Lao, proj);
-//		printP(rej, "rej ");
 		float plen2 = dotP(proj, proj);
-//		std::cout << "plen2 " <<  plen2 << std::endl;
 
-//		std::cout << "rej2 " << dotP(rej, rej) << std::endl;
-//		std::cout << "1 " << (dotP(rej, rej) <= r2) << std::endl;
-//		std::cout << "2 " << (0 <= ang) << std::endl;
-//		std::cout << "3 " << (plen2 <= len2) << std::endl;
 		if (dotP(rej, rej) <= r2  //close enough tangentially
 				&& 0 <= ang       //point a before circle center
-				&& plen2 <= len2) { //point b after circle center
-
-//			std::cout << "HIT 3" << std::endl;
+				&& plen2 <= len2) //point b after circle center
 			return false; // HIT
-		}
 	}
-
-//	std::cout << "MISS" << std::endl;
 	return true; // MISS
 }
