@@ -63,7 +63,7 @@ int main() {
 	timer = new Timer();
 
 	/* Shaders */
-	Shader* cubeShader = new Shader(((std::string)PROJECT_SOURCE_DIR + "/Shaders/cube.vert").c_str(), ((std::string)PROJECT_SOURCE_DIR + "/Shaders/cube.frag").c_str());
+	Shader* cubeShader = new Shader(((std::string)PROJECT_SOURCE_DIR + "/Shaders/flat.vert").c_str(), ((std::string)PROJECT_SOURCE_DIR + "/Shaders/flat.frag").c_str());
 	Shader* lampShader = new Shader(((std::string)PROJECT_SOURCE_DIR + "/Shaders/lamp.vert").c_str(), ((std::string)PROJECT_SOURCE_DIR + "/Shaders/lamp.frag").c_str());
 	cam = new Camera();
 
@@ -85,8 +85,8 @@ int main() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 	// Tex Coords attr
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+	//glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
 
 	// lamps
@@ -162,8 +162,11 @@ int main() {
 	PRM * prm = new PRM(start, goal, cspace);
 	std::vector<Node<Point> *> * pathVec = prm->findPathUCS(); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
-	for (int i = 0; i < prm->roadmap->vertices->size(); i++)
-		path->insert((*prm->roadmap->vertices)[i]);
+	for (int i = 0; i < pathVec->size(); i++)
+		path->insert((*pathVec)[i]);
+
+	std::cout << pathVec->size() << std::endl;
+	std::cout << path->size() << std::endl;
 
 //	float epsilon = 0.000001;
 
@@ -179,22 +182,22 @@ int main() {
 		Node<Point> * v = verts->at(i);
 		obj::cubePositions[i] = glm::vec3(v->data.x, 0.0f, v->data.y);
 		if (i == 0) {
-			obj::cubeScale[i] = 0.2f;
+			obj::cubeScale[i] = 0.95f;
 			obj::diffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
 			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 		else if (i == 1) {
-			obj::cubeScale[i] = 0.2f;
+			obj::cubeScale[i] = 0.95f;
 			obj::diffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
 			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 		else if (path->find(v) != path->end()) {
-			obj::cubeScale[i] = 0.2f;
+			obj::cubeScale[i] = 0.75f;
 			obj::diffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
 			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 		else {
-			obj::cubeScale[i] = 0.05f;
+			obj::cubeScale[i] = 0.5f;
 			obj::diffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
 			obj::specularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
@@ -202,10 +205,7 @@ int main() {
 	
 
     /* Game Loop */
-	
 	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
-	
-	
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 

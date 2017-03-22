@@ -3,6 +3,7 @@
 
 #include "graph.hpp"
 #include <random>
+#include <chrono>
 #include <utility>
 #include <queue>
 #include <unordered_map>
