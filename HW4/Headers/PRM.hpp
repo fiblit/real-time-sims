@@ -57,7 +57,7 @@ public:
 	Graph<Point> * roadmap;
 	PRM(Point start, Point goal, Cspace_2D * cSpace);
 	VecPoint * findPathUCS();
-	VecPoint * findPathAstar();
+	VecPoint * findPathAstar(float e);
 };
 
 

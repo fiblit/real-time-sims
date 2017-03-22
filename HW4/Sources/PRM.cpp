@@ -40,7 +40,7 @@ VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
 		Point n = (*nodes)[i]->data;
 		// don't consider this node we're looking from
 		if (i != targetIdx)
-			if ((t.x - n.x) * (t.x - n.x) + (t.y - n.y) * (t.y - n.y) < threshold)
+			if (distP(t, n) < threshold)
 				// push the close enough node onto the neighbours list
 				neighbours->push_back( (*nodes)[i] );
 	}
@@ -124,27 +124,14 @@ VecPoint * PRM::findPathUCS() {
 	Set closed = Set();
 
 	//create PQ
-	auto cmp = [gcost](Node<Point> * l, Node<Point> * r) {
-		//std::cout << gcost.size() << ";" << std::endl;
-		//std::cout << l << " " << l->data.x << " " << l->data.y << " " << (gcost.find(l) == gcost.end()) << ";\n"
-		//	<< r << " " << r->data.x << " " << r->data.y << " " << (gcost.find(r) == gcost.end())<<std::endl;
-		return gcost.at(l) > gcost.at(r); }; //normally < 
-	//std::deque<Vert>  = std::deque<Vert>(); //min PQ
+	auto cmp = [gcost](Node<Point> * l, Node<Point> * r) { return gcost.at(l) > gcost.at(r); }; //normally <
 	std::priority_queue<Vert, std::vector<Vert>, decltype(cmp)> pq(cmp);
-	//for (int i = 0; i < verts.size(); i++)
-		pq.push(verts[0]);
-	
-	//std::make_heap(pq.begin(), pq.end(), cmp);
+	pq.push(verts[0]);
 
 	while (!pq.empty()) {
-		//Vert u = pq.front();
 		Vert u = pq.top();
-		//std::cout << "g" << gcost[u] << std::endl;
-		std::cout << pq.size() << std::endl;
-		//std::pop_heap(pq.begin(), pq.end());
-
-		//pq.pop_back();
 		pq.pop();
+
 		//add to closed
 		closed.insert(u);
 
@@ -172,10 +159,6 @@ VecPoint * PRM::findPathUCS() {
 				}
 
 				if (std::any_of(pqvec.begin(), pqvec.end(), [adj](Vert v) {return v == adj; })) {
-					// TODO: replace with a bubble 
-					//currently this idea was inspired by:
-					//http://stackoverflow.com/questions/9209323/easiest-way-of-using-min-priority-queue-with-key-update-in-c 
-					//std::make_heap(pq.begin(), pq.end(), cmp);
 					while (!pq.empty()) {
 						pq.pop();
 					}
@@ -195,8 +178,6 @@ VecPoint * PRM::findPathUCS() {
 	}
 		
 	// retrace path
-	//std::for_each(parents.begin(), parents.end(), [](auto &n) {std::cout << "; " << (n.second) << std::endl; });
-
 	VecPoint * path = new VecPoint();
 	Vert curr = target;
 	while (curr != nullptr) {
@@ -209,7 +190,7 @@ VecPoint * PRM::findPathUCS() {
 
 /* custom A* search for a PRM Graph
 */
-VecPoint * PRM::findPathAstar() {
+VecPoint * PRM::findPathAstar(float e) {
 	// maximum g-cost
 	const int maxi = std::numeric_limits<int>::max();
 
@@ -220,56 +201,79 @@ VecPoint * PRM::findPathAstar() {
 	typedef std::unordered_map<Vert, float> VertFloat;
 
 	// parent tree
-	VertVert parents;
-	VertFloat gcost;
-	VertFloat hcost;
+	VertVert parents = VertVert();
+	VertFloat gcost = VertFloat();
 
 	//initialize
-	VecPoint verts = *this->roadmap->vertices;
+	VecPoint verts = *(this->roadmap->vertices);
+	for (int i = 0; i < verts.size(); i++) {
+		std::cout << "v" << (i) << " es" << verts[i]->edges->size() << "\t" << verts[i] << std::endl;
+		for (int e = 0; e < verts[i]->edges->size(); e++)
+			std::cout << "\t e" << e << " " << (*verts[i]->edges)[e] << std::endl;
+	}
 	Vert start = verts[0];
 	Vert target = verts[1];
 	gcost[start] = 0.0f;
-	hcost[start] = distP(target->data, start->data);
 	parents[start] = nullptr;
 
-	Set closed;
-
-	//create PQ
-	std::deque<Vert> pq; //min PQ
-	auto cmp = [gcost, hcost](Vert l, Vert r) { return gcost.at(l) + hcost.at(l) > gcost.at(r) + hcost.at(r); }; //normally < 
-
-																			  //skip start; i = 1
+	//skip start; i = 0
 	for (int i = 1; i < verts.size(); i++) {
 		Vert v = verts[i];
 		parents[v] = nullptr;
 		gcost[v] = maxi;
-		hcost[v] = distP(target->data, v->data);
-		pq.push_back(v);
 	}
-	std::make_heap(pq.begin(), pq.end(), cmp);
+
+	// closed set
+	Set closed = Set();
+
+	//create PQ
+	auto cmp = [gcost](Node<Point> * l, Node<Point> * r) { return gcost.at(l) > gcost.at(r); }; //normally <
+	std::priority_queue<Vert, std::vector<Vert>, decltype(cmp)> pq(cmp);
+	pq.push(verts[0]);
 
 	while (!pq.empty()) {
-		Vert u = pq.front();
-		std::pop_heap(pq.begin(), pq.end(), cmp);
-		pq.pop_back();
+		Vert u = pq.top();
+		pq.pop();
 
-		closed.emplace(u);
+		//add to closed
+		closed.insert(u);
 
+		std::cout << "s" << u->edges->size() << "u" << u << std::endl;
 		for (int e = 0; e < u->edges->size(); e++) {
 			Vert adj = (*u->edges)[e];
-			if (closed.find(adj) != closed.end())
+			if (closed.count(adj) > 0) {
+				std::cout << "closed" << std::endl;
 				continue;
+			}
 
-			
 			float g_alt = gcost[u] + distP(adj->data, u->data);
+			std::cout << "alt:" << g_alt << " old:" << gcost[adj] << std::endl;
 			if (g_alt < gcost[adj]) {
 				gcost[adj] = g_alt;
 				parents[adj] = u;
-				/* TODO: replace with a bubble
-				currently this idea was inspired by:
-				http://stackoverflow.com/questions/9209323/easiest-way-of-using-min-priority-queue-with-key-update-in-c
-				*/
-				std::make_heap(pq.begin(), pq.end(), cmp);
+
+				std::vector<Vert> pqvec = std::vector<Vert>();
+				while (!pq.empty()) {
+					pqvec.push_back(pq.top());
+					pq.pop();
+				}
+				for (int i = 0; i < pqvec.size(); i++) {
+					pq.push(pqvec[i]);
+				}
+
+				if (std::any_of(pqvec.begin(), pqvec.end(), [adj](Vert v) {return v == adj; })) {
+					while (!pq.empty()) {
+						pq.pop();
+					}
+					while (pqvec.size() > 0) {
+						pq.push(pqvec.back());
+						pqvec.pop_back();
+					}
+				}
+				else {
+					std::cout << "!!!" << std::endl;
+					pq.push(adj);
+				}
 			}
 		}
 		if (u == target)
@@ -283,6 +287,7 @@ VecPoint * PRM::findPathAstar() {
 		path->insert(path->begin(), curr);
 		curr = parents[curr];
 	}
+
 	return path;
 }
 

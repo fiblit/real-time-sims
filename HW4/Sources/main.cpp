@@ -235,8 +235,8 @@ int main() {
 		cubeShader->use();
 		///*TODO: something to make these lines shorter / not as many 
 		glUniform3f(cubeShader->Uni("material.ambient"), 1.0f, 0.5f, 0.31f);
-		glUniform1i(cubeShader->Uni("material.diffuse"), 0);
-		glUniform1i(cubeShader->Uni("material.specular"), 1);
+		//glUniform1i(cubeShader->Uni("material.diffuse"), 0);
+		//glUniform1i(cubeShader->Uni("material.specular"), 1);
 		glUniform1f(cubeShader->Uni("material.shine"), 32.0f);
 
 		glUniform3f(cubeShader->Uni("dirLight.direction"), dirLightDir.x, dirLightDir.y, dirLightDir.z);
@@ -285,6 +285,8 @@ int main() {
 		//	render box (cyl) @ obsts with color 6
 		//
 		for (GLuint i = 0; i < obj::NR_CUBES; i++) {
+			glUniform3f(cubeShader->Uni("material.diffuse"), obj::diffuseColor[i].x, obj::diffuseColor[i].y, obj::diffuseColor[i].z);
+			glUniform3f(cubeShader->Uni("material.specular"), obj::specularColor[i].x, obj::specularColor[i].y, obj::specularColor[i].z);
 			model = glm::mat4();
 			model = glm::translate(model, obj::cubePositions[i]);
 			model = glm::scale(model, glm::vec3(obj::cubeScale[i]));
