@@ -126,5 +126,22 @@ void do_movement();
 /* Other Prototypes */
 int DIE(int retVal);
 void animate_agent(std::vector<Node<Point> *> * path, int * completed_nodes, float dt);
+/*
+TODO:
+75 points
+----
+A* - greedy
+Path smoothing
+Add multiple obstacles onto scene
+Add rectangular extents
+	Obstacles
+	Agents
+		Mixing rectangles and circles
+Thin walls forming a maze
+KD-Tree or User Interaction
+----
+125 Points
+*/
+
 
 #endif //MAIN

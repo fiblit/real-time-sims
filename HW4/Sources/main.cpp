@@ -70,7 +70,6 @@ int main() {
 	/* Shaders */
 	auto shv = [](auto s) {return ; };
 	auto shf = [](auto s) {return ((std::string)PROJECT_SOURCE_DIR + "/Shaders/" + s + ".frag").c_str(); };
-	std::cout << "1" << std::endl;
 	Shader* cubeShader = new Shader(
 		((std::string)PROJECT_SOURCE_DIR + "/Shaders/cube.vert").c_str(), 
 		((std::string)PROJECT_SOURCE_DIR + "/Shaders/cube.frag").c_str());
@@ -181,9 +180,6 @@ int main() {
 	for (int i = 0; i < pathVec->size(); i++)
 		path->insert((*pathVec)[i]);
 
-	std::cout << pathVec->size() << std::endl;
-	std::cout << path->size() << std::endl;
-
 //	float epsilon = 0.000001;
 
 	//change properties for the path -- instantiate cube visualizations
@@ -211,7 +207,6 @@ int main() {
 			obj::cubeScale[i] = 0.75f;
 			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
 			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-			std::cout << "!!!" << std::endl;
 		}
 		else {
 			obj::cubeScale[i] = 0.5f;

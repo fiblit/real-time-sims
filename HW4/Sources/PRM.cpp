@@ -10,7 +10,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
 	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 0;
+	const int samplecount = 100;
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
@@ -32,22 +32,19 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 
 /* threshold search to find NNs */
 VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
-	int threshold = 80.0f; // 7m radius
+	int threshold = 5.0f; // 5m radius(?)
 
 	VecPoint * neighbours = new VecPoint();
-	//do {
 
-		Point t = (*nodes)[targetIdx]->data;
-		for (int i = 0; i < nodes->size(); i++) {
-			Point n = (*nodes)[i]->data;
-			// don't consider this node we're looking from
-			if (i != targetIdx)
-				if (distP(t, n) < threshold)
-					// push the close enough node onto the neighbours list
-					neighbours->push_back((*nodes)[i]);
-		}
-
-	//} while (neighbours->size() == 0);
+	Point t = (*nodes)[targetIdx]->data;
+	for (int i = 0; i < nodes->size(); i++) {
+		Point n = (*nodes)[i]->data;
+		// don't consider this node we're looking from
+		if (i != targetIdx)
+			if (distP(t, n) < threshold)
+				// push the close enough node onto the neighbours list
+				neighbours->push_back((*nodes)[i]);
+	}
 
 	return neighbours;
 }
@@ -362,68 +359,68 @@ void printP(Point a, std::string s = "P") {
    https://www.desmos.com/calculator/fxgnyi8skw
  */
 bool Cspace_2D::lineOfSight(Point a, Point b) {
-	printP(a, "a ");
-	printP(b, "b ");
+//	printP(a, "a ");
+//	printP(b, "b ");
 
 	Point Lab;
 	Lab.x = b.x - a.x;
 	Lab.y = b.y - a.y;
-	printP(Lab, "Lab ");
+//	printP(Lab, "Lab ");
 
 	float len2 = dotP(Lab, Lab);
-	std::cout << "len2 " << len2 << std::endl;
+//	std::cout << "len2 " << len2 << std::endl;
 
 	for (int i = 0; i < this->obs_circle->size(); i++) {
 		Circle c;
 		c = this->obs_circle->at(i);
-		printP(c.o, "co ");
-		std::cout << "cr " << c.r << std::endl;
+//		printP(c.o, "co ");
+//		std::cout << "cr " << c.r << std::endl;
 
 		Point Lao;
 		Lao.x = c.o.x - a.x;
 		Lao.y = c.o.y - a.y;
-		printP(Lao, "Lao ");
+//		printP(Lao, "Lao ");
 
 		float r2 = c.r * c.r;
-		std::cout << "r2 " << r2 << std::endl;
-		std::cout << "Lao2 " << dotP(Lao, Lao) << std::endl;
+//		std::cout << "r2 " << r2 << std::endl;
+//		std::cout << "Lao2 " << dotP(Lao, Lao) << std::endl;
 		if (dotP(Lao, Lao) <= r2) {//point a inside circle
-			std::cout << "HIT 1" << std::endl;
+//			std::cout << "HIT 1" << std::endl;
 			return false; // HIT
 		}
 
 		Point Lbo;
 		Lbo.x = c.o.x - b.x;
 		Lbo.y = c.o.y - b.y;
-		printP(Lbo, "Lbo ");
-		std::cout << "Lbo2 " << dotP(Lbo, Lbo) << std::endl;
+//		printP(Lbo, "Lbo ");
+//		std::cout << "Lbo2 " << dotP(Lbo, Lbo) << std::endl;
 		if (dotP(Lbo, Lbo) <= r2) { //point b inside circle
-			std::cout << "HIT 2" << std::endl;
+//			std::cout << "HIT 2" << std::endl;
 			return false; // HIT
 		}
 
 		float ang = dotP(Lab, Lao);
-		std::cout << "ang " << ang << std::endl;
-		Point proj = scaleP(a, ang / len2);
-		printP(proj, "proj ");
-		Point rej = subP(b, proj);
-		printP(rej, "rej ");
+//		std::cout << "ang " << ang << std::endl;
+		Point proj = scaleP(Lab, ang / len2);
+//		printP(proj, "proj ");
+		Point rej = subP(Lao, proj);
+//		printP(rej, "rej ");
 		float plen2 = dotP(proj, proj);
-		std::cout << "plen2 " <<  plen2 << std::endl;
+//		std::cout << "plen2 " <<  plen2 << std::endl;
 
-		std::cout << "rej2 " << dotP(rej, rej) << std::endl;
-		std::cout << "1 " << (dotP(rej, rej) <= r2) << std::endl;
-		std::cout << "2 " << (0 <= ang) << std::endl;
-		std::cout << "3 " << (plen2 <= len2) << std::endl;
+//		std::cout << "rej2 " << dotP(rej, rej) << std::endl;
+//		std::cout << "1 " << (dotP(rej, rej) <= r2) << std::endl;
+//		std::cout << "2 " << (0 <= ang) << std::endl;
+//		std::cout << "3 " << (plen2 <= len2) << std::endl;
 		if (dotP(rej, rej) <= r2  //close enough tangentially
 				&& 0 <= ang       //point a before circle center
 				&& plen2 <= len2) { //point b after circle center
 
-			std::cout << "HIT 3" << std::endl;
+//			std::cout << "HIT 3" << std::endl;
 			return false; // HIT
 		}
 	}
 
-	std::cout << "MISS" << std::endl;
+//	std::cout << "MISS" << std::endl;
 	return true; // MISS
 }
