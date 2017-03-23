@@ -173,10 +173,11 @@ int main() {
 	obstBounds[0].o.y = 0.0f;	obstBounds[0].o.x = 0.0f;	obstBounds[0].r = 2.0f;
 	obstBounds[1].o.y = 5.0f;	obstBounds[1].o.x = 3.0f;	obstBounds[1].r = 1.5f;
 	obstBounds[2].o.y = -5.0f;	obstBounds[2].o.x = 7.0f;	obstBounds[2].r = 2.0f;
-	Rect rectBounds[3];
-	rectBounds[0].o.y =  5.0f;	rectBounds[0].o.x =  5.0f;	rectBounds[0].w = 1.0f;	rectBounds[0].h = 1.0f;
-	rectBounds[1].o.y = -5.0f;	rectBounds[1].o.x = -1.0f;	rectBounds[1].w = 0.7f;	rectBounds[1].h = 0.7f;
-	rectBounds[2].o.y =  3.0f;	rectBounds[2].o.x = -8.0f;	rectBounds[2].w = 3.0f;	rectBounds[2].h = 3.0f;
+	Rect rectBounds[4];
+	rectBounds[0].o.y =  5.0f;	rectBounds[0].o.x =  7.0f;	rectBounds[0].h = 0.3f;	rectBounds[0].w = 5.0f;
+	rectBounds[1].o.y = -5.0f;	rectBounds[1].o.x = -1.0f;	rectBounds[1].h = 0.7f;	rectBounds[1].w = 0.7f;
+	rectBounds[2].o.y =  3.0f;	rectBounds[2].o.x = -8.0f;	rectBounds[2].h = 3.0f;	rectBounds[2].w = 3.0f;
+	rectBounds[2].o.y = 3.0f;	rectBounds[2].o.x = -0.0f;	rectBounds[2].h = 0.3f;	rectBounds[2].w = 5.0f;
 
 	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, rectBounds, 3, &agentBounds, (Rect *)nullptr);
 	PRM * prm = new PRM(start, goal, cspace);
@@ -197,7 +198,7 @@ int main() {
 	
 	for (int i = 0; i < obj::NR_CUBES - 1; i++) {
 		Node<Point> * v = verts->at(i);
-		obj::cubePositions[i] = glm::vec3(v->data.x, 0.0f, v->data.y);
+		obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
 		if (i == 0) {
 			obj::cubeScale[i] = 1.0f;
 			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -231,16 +232,16 @@ int main() {
 	obj::obstRotation = new glm::vec4[obj::NR_OBST];
 	obj::obstScale = new float[obj::NR_OBST];
 	for (int i = 0; i < obj::NR_OBST; i++) {
-		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i/5].o.x, -2.0f - 0.001f*i, obstBounds[(int)i/5].o.y);
+		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i/5].o.x, 0.0f - 0.001f*i, obstBounds[(int)i/5].o.y);
 		obj::obstScale[i] = obstBounds[(int)i/5].r * sqrt(2);
 		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * (i%5)) );
 	}
 
-	obj::NR_RECT = 3;
+	obj::NR_RECT = 4;
 	obj::rectPositions = new glm::vec3[obj::NR_RECT];
 	obj::rectScale = new glm::vec2[obj::NR_RECT];
 	for (int i = 0; i < obj::NR_RECT; i++) {
-		obj::rectPositions[i] = glm::vec3(rectBounds[i].o.x, -2.0f, rectBounds[i].o.y);
+		obj::rectPositions[i] = glm::vec3(rectBounds[i].o.x, 0.0f, rectBounds[i].o.y);
 		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
 	}
 
@@ -249,7 +250,7 @@ int main() {
 	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
 	obj::agentScale = new float[obj::NR_AGENT];
 	for (int i = 0; i < obj::NR_AGENT; i++) {
-		obj::agentPositions[i] = glm::vec3(-9.0f, 2.0f + 0.001f*i, -9.0f);
+		obj::agentPositions[i] = glm::vec3(-9.0f, 0.0f + 0.001f*i, -9.0f);
 		obj::agentScale[i] = 1.0f * sqrt(2);
 		obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_AGENT * i) );
 	}
@@ -258,7 +259,7 @@ int main() {
 
     /* Game Loop */
 	timer->tick();
-	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);
+	D(std::cout << std::endl << "Entering Game Loop..." << std::endl << std::endl);	
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
@@ -344,7 +345,7 @@ int main() {
 		for (GLuint i = 0; i < obj::NR_RECT; i++) {
 			model = glm::mat4();
 			model = glm::translate(model, obj::rectPositions[i]);
-			model = glm::scale(model, glm::vec3(obj::rectScale[i].x, 1.0f , obj::rectScale[i].y));
+			model = glm::scale(model, glm::vec3(obj::rectScale[i][0], 1.0f , obj::rectScale[i][1]));
 			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
 

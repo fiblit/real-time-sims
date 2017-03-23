@@ -10,7 +10,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
 	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 100;
+	const int samplecount = 50;
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
@@ -177,12 +177,17 @@ VecPoint * PRM::findPathUCS() {
 	// retrace path
 	VecPoint * path = new VecPoint();
 	Vert curr = target;
+	bool flag = false;
 	while (curr != nullptr) {
+		if (curr == start)
+			flag = true;
 		path->insert(path->begin(), curr);
 		curr = parents[curr];
 	}
-	
-	return path;
+	if (flag)
+		return path;
+	else
+		return new VecPoint();
 }
 
 /* custom A* search for a PRM Graph */
@@ -280,12 +285,17 @@ VecPoint * PRM::findPathAstar(float e) {
 	// retrace path
 	VecPoint * path = new VecPoint();
 	Vert curr = target;
+	bool flag = false;
 	while (curr != nullptr) {
+		if (curr == start)
+			flag = true;
 		path->insert(path->begin(), curr);
 		curr = parents[curr];
 	}
-
-	return path;
+	if (flag)
+		return path;
+	else
+		return new VecPoint();
 }
 
 /* generates a configuartion space given a list of obstacles (circles-only) and agents (circle-only; 1-only) */

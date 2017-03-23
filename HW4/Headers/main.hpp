@@ -132,16 +132,35 @@ int DIE(int retVal);
 void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * completed_nodes, float dt);
 /*
 TODO:
-105 (ish) points
+100 (ish) points
 ----
-Thin walls forming a maze
-KD-Tree or User Interaction
+Thin walls forming a maze (+5) -> just numbers and PRM tweaking
+	==> 1 hr
+----
+Videos (+5)
+	==> 2hr
+Write-up (including A* comparison) (+5)
+	==> .5hr
+Website
+	==> .5hr
 
-Videos
-Write-up (including A* comparison)
+{(lame, easy, and annoying)
+press p to plan!
+UI select start and goal at run time (+5) ==> 1hr
+	press g (moves goal)
+	press s (moves start)
+UI add and move obstacles (+5) ==> 2hr
+	press o (spawns obstacle)
+	arrow keys to move it
+	m to change its type
+	ijkl to scale it
+} or {(awesome but harder)
+KD-Tree (+10) ==> 4hr
+}
+
+==> 6 hr
 ----
 125 Points
 */
-
 
 #endif //MAIN
