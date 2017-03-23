@@ -10,7 +10,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
 	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 2000;
+	const int samplecount = 100;
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
@@ -349,12 +349,12 @@ void Cspace_2D::init(Circle * cobs, int cn, Rect * robs, int rn, Circle * cagent
 		else if (cagent != nullptr) {
 			// add robs
 			Rect r;
-			r.o = cagent->o;
+			r.o = robs[i].o;
 			r.w = robs[i].w;
 			r.h = 2 * cagent->r + robs[i].h;
 			this->robs->push_back(r);
 			r.w = 2 * cagent->r + robs[i].w;
-			r.h = robs[i].w;
+			r.h = robs[i].h;
 			this->robs->push_back(r);
 
 			// add cobs
@@ -388,8 +388,10 @@ bool Cspace_2D::isCollision(Point p) {
 			return true;
 	}
 	for (int i = 0; i < this->robs->size(); i++) {
-		if (abs(p.x - (*this->robs)[i].o.x) <= (*this->robs)[i].w /2 
-				&& abs(p.y - (*this->robs)[i].o.y) <= (*this->robs)[i].h / 2)
+		Rect r;
+		r = (*this->robs)[i];
+		if (abs(p.x - r.o.x) <= r.w /2 
+				&& abs(p.y - r.o.y) <= r.h / 2)
 			return true;
 	}
 	return false;

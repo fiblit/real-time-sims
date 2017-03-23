@@ -101,6 +101,10 @@ namespace obj {//should be in G
 	glm::vec4 * obstRotation;
 	glm::vec3 * obstPositions;
 
+	int NR_RECT = 0;
+	glm::vec2 * rectScale;
+	glm::vec3 * rectPositions;
+
 	int NR_AGENT = 0;
 	float * agentScale;
 	glm::vec4 * agentRotation;

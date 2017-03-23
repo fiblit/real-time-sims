@@ -163,17 +163,22 @@ int main() {
 	glBindTexture(GL_TEXTURE_2D, 1);
 
 	/* Path Planning */
-	const int NR_OBST = 1;
 	Circle agentBounds;
 	Point start; start.x = -9.0f; start.y = -9.0f;
 	Point goal; goal.x = 9.0f; goal.y = 9.0f;
 	agentBounds.o = start;
 	agentBounds.r = 1.0f;
+	const int NR_OBST = 3;
 	Circle obstBounds[NR_OBST];
-	obstBounds[0].o.x = 0.0f;
-	obstBounds[0].o.y = 0.0f;
-	obstBounds[0].r = 2.0f;
-	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, (Rect *)nullptr, 0, &agentBounds, (Rect *)nullptr);
+	obstBounds[0].o.y = 0.0f;	obstBounds[0].o.x = 0.0f;	obstBounds[0].r = 2.0f;
+	obstBounds[1].o.y = 5.0f;	obstBounds[1].o.x = 3.0f;	obstBounds[1].r = 1.5f;
+	obstBounds[2].o.y = -5.0f;	obstBounds[2].o.x = 7.0f;	obstBounds[2].r = 2.0f;
+	Rect rectBounds[3];
+	rectBounds[0].o.y =  5.0f;	rectBounds[0].o.x =  5.0f;	rectBounds[0].w = 1.0f;	rectBounds[0].h = 1.0f;
+	rectBounds[1].o.y = -5.0f;	rectBounds[1].o.x = -1.0f;	rectBounds[1].w = 0.7f;	rectBounds[1].h = 0.7f;
+	rectBounds[2].o.y =  3.0f;	rectBounds[2].o.x = -8.0f;	rectBounds[2].w = 3.0f;	rectBounds[2].h = 3.0f;
+
+	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, rectBounds, 3, &agentBounds, (Rect *)nullptr);
 	PRM * prm = new PRM(start, goal, cspace);
 	std::vector<Node<Point> *> * pathVec = prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
@@ -215,19 +220,28 @@ int main() {
 		}
 	}
 
+	// add ground
 	obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
 	obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
 	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
 	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	obj::NR_OBST = 5;
+	obj::NR_OBST = 5 * 3;
 	obj::obstPositions = new glm::vec3[obj::NR_OBST];
 	obj::obstRotation = new glm::vec4[obj::NR_OBST];
 	obj::obstScale = new float[obj::NR_OBST];
 	for (int i = 0; i < obj::NR_OBST; i++) {
-		obj::obstPositions[i] = glm::vec3(0.0f, -2.0f - 0.001f*i, 0.0f);
-		obj::obstScale[i] = 2.0f * sqrt(2);
-		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * i) );
+		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i/5].o.x, -2.0f - 0.001f*i, obstBounds[(int)i/5].o.y);
+		obj::obstScale[i] = obstBounds[(int)i/5].r * sqrt(2);
+		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * (i%5)) );
+	}
+
+	obj::NR_RECT = 3;
+	obj::rectPositions = new glm::vec3[obj::NR_RECT];
+	obj::rectScale = new glm::vec2[obj::NR_RECT];
+	for (int i = 0; i < obj::NR_RECT; i++) {
+		obj::rectPositions[i] = glm::vec3(rectBounds[i].o.x, -2.0f, rectBounds[i].o.y);
+		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
 	}
 
 	obj::NR_AGENT = 5;
@@ -321,6 +335,16 @@ int main() {
 			model = glm::translate(model, obj::obstPositions[i]);
 			model = glm::scale(model, glm::vec3(obj::obstScale[i]));
 			model = glm::rotate(model, obj::obstRotation[i].w, glm::vec3(obj::obstRotation[i].x, obj::obstRotation[i].y, obj::obstRotation[i].z));
+			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		for (GLuint i = 0; i < obj::NR_RECT; i++) {
+			model = glm::mat4();
+			model = glm::translate(model, obj::rectPositions[i]);
+			model = glm::scale(model, glm::vec3(obj::rectScale[i].x, 1.0f , obj::rectScale[i].y));
 			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
 
