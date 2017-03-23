@@ -11,25 +11,18 @@
 #include <iostream>
 #include <string>
 
-/*
-class Extent {
-
-
+struct Rect {
+	Point o;
+	float w;
+	float h;
 };
-
-struct rect {
-float x;
-float y;
-float w;
-float h;
-};
-*/
 
 // aka configuration
 struct Point {
 	float x;
 	float y;
 };
+
 struct Circle {
 	Point o;
 	float r;
@@ -39,11 +32,12 @@ typedef std::vector<Node<Point> *> VecPoint;
 
 class Cspace_2D {
 private:
-	std::vector<Circle> * obs_circle;
-	void init(Circle * obs, int n, Circle & agent);
+	std::vector<Circle> * cobs;
+	std::vector<Rect> * robs;		
+	void init(Circle * cobs, int cn, Rect * robs, int rn, Rect * ragent, Circle * cagent);
 public:
-	Cspace_2D(std::vector<Circle> & obs, Circle & agent);
-	Cspace_2D(Circle * obs, int n, Circle & agent);
+	Cspace_2D(std::vector<Circle> cobs, std::vector<Rect> robs, Rect * ragent, Circle * cagent);
+	Cspace_2D(Circle * cobs, int cn, Rect * robs, int rn, Rect * ragent, Circle * cagent);
 	bool isCollision(Point a);
 	bool lineOfSight(Point a, Point b);
 };
