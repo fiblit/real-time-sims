@@ -11,16 +11,19 @@
 #include <iostream>
 #include <string>
 
-struct Rect {
-	Point o;
-	float w;
-	float h;
-};
+// glm: OpenGL mathematics: http://glm.g-truc.net/0.9.8/index.html
+#include <glm/glm.hpp>
 
 // aka configuration
 struct Point {
 	float x;
 	float y;
+};
+
+struct Rect {
+	Point o;
+	float w;
+	float h;
 };
 
 struct Circle {
@@ -31,13 +34,13 @@ struct Circle {
 typedef std::vector<Node<Point> *> VecPoint;
 
 class Cspace_2D {
-private:
-	std::vector<Circle> * cobs;
-	std::vector<Rect> * robs;		
-	void init(Circle * cobs, int cn, Rect * robs, int rn, Rect * ragent, Circle * cagent);
+private:	
+	void init(Circle * cobs, int cn, Rect * robs, int rn, Circle * cagent, Rect * ragent);
 public:
-	Cspace_2D(std::vector<Circle> cobs, std::vector<Rect> robs, Rect * ragent, Circle * cagent);
-	Cspace_2D(Circle * cobs, int cn, Rect * robs, int rn, Rect * ragent, Circle * cagent);
+	std::vector<Circle> * cobs;
+	std::vector<Rect> * robs;
+	Cspace_2D(std::vector<Circle> cobs, std::vector<Rect> robs, Circle * cagent, Rect * ragent);
+	Cspace_2D(Circle * cobs, int cn, Rect * robs, int rn, Circle * cagent, Rect * ragent);
 	bool isCollision(Point a);
 	bool lineOfSight(Point a, Point b);
 };

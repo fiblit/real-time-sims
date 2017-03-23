@@ -128,13 +128,8 @@ int DIE(int retVal);
 void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * completed_nodes, float dt);
 /*
 TODO:
-85 (ish) points
+105 (ish) points
 ----
-Add multiple obstacles onto scene
-Add rectangular extents
-	Obstacles
-	Agents
-		Mixing rectangles and circles
 Thin walls forming a maze
 KD-Tree or User Interaction
 

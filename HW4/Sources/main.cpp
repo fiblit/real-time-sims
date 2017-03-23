@@ -173,7 +173,7 @@ int main() {
 	obstBounds[0].o.x = 0.0f;
 	obstBounds[0].o.y = 0.0f;
 	obstBounds[0].r = 2.0f;
-	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, agentBounds);
+	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, (Rect *)nullptr, 0, &agentBounds, (Rect *)nullptr);
 	PRM * prm = new PRM(start, goal, cspace);
 	std::vector<Node<Point> *> * pathVec = prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();

@@ -10,7 +10,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
 	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 100;
+	const int samplecount = 2000;
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
@@ -289,15 +289,15 @@ VecPoint * PRM::findPathAstar(float e) {
 }
 
 /* generates a configuartion space given a list of obstacles (circles-only) and agents (circle-only; 1-only) */
-Cspace_2D::Cspace_2D(std::vector<Circle> cobs, std::vector<Rect> robs, Rect * ragent, Circle * cagent) {
-	init(cobs.data(), cobs.size(), robs.data(), robs.size(), ragent, cagent);
+Cspace_2D::Cspace_2D(std::vector<Circle> cobs, std::vector<Rect> robs, Circle * cagent, Rect * ragent) {
+	init(cobs.data(), cobs.size(), robs.data(), robs.size(), cagent, ragent);
 }
 
-Cspace_2D::Cspace_2D(Circle * cobs, int cn, Rect * robs, int rn, Rect * ragent, Circle * cagent) {
-	init(cobs, cn, robs, rn, ragent, cagent);
+Cspace_2D::Cspace_2D(Circle * cobs, int cn, Rect * robs, int rn, Circle * cagent, Rect * ragent) {
+	init(cobs, cn, robs, rn, cagent, ragent);
 }
 
-void Cspace_2D::init(Circle * cobs, int cn, Rect * robs, int rn, Rect * ragent, Circle * cagent) {
+void Cspace_2D::init(Circle * cobs, int cn, Rect * robs, int rn, Circle * cagent, Rect * ragent) {
 	this->cobs = new std::vector<Circle>();
 	this->robs = new std::vector<Rect>();
 	for (int i = 0; i < cn; i++) {
@@ -381,11 +381,15 @@ void Cspace_2D::init(Circle * cobs, int cn, Rect * robs, int rn, Rect * ragent, 
 
 /* detects if a point collides with anything in the configuration space */
 bool Cspace_2D::isCollision(Point p) {
-	for (int i = 0; i < this->obs_circle->size(); i++) {
-		Point o = (*this->obs_circle)[i].o;
-		float r = (*this->obs_circle)[i].r;
+	for (int i = 0; i < this->cobs->size(); i++) {
+		Point o = (*this->cobs)[i].o;
 		Point diff = subP(p, o);
-		if (dotP(diff, diff) <= r * r)
+		if (dotP(diff, diff) <= (*this->cobs)[i].r * (*this->cobs)[i].r)
+			return true;
+	}
+	for (int i = 0; i < this->robs->size(); i++) {
+		if (abs(p.x - (*this->robs)[i].o.x) <= (*this->robs)[i].w /2 
+				&& abs(p.y - (*this->robs)[i].o.y) <= (*this->robs)[i].h / 2)
 			return true;
 	}
 	return false;
@@ -423,6 +427,37 @@ void printP(Point a, std::string s = "P") {
 	std::cout << (std::string)s + (std::string)" x" + (std::string)std::to_string(a.x) + (std::string)" y" + (std::string)std::to_string(a.y) << std::endl;
 }
 
+/* projective geometry solution; learned this from computer vision. :) */
+bool lineSegCollision(Point p1, Point p2, Point p3, Point p4) {
+	Point pp[4] = { p1, p2, p3, p4 };
+	glm::vec3 l[2], p[4], x;
+
+	for (int i = 0; i < 4; i++)
+		p[i] = glm::vec3(pp[i].x, pp[i].y, 1);
+
+	l[0] = glm::cross(p[0], p[1]);
+	l[1] = glm::cross(p[2], p[3]);
+	x = glm::cross(l[0], l[1]);
+	Point px;
+	px.x = x.x / x.z;
+	px.y = x.y / x.z;
+
+	float len2l1 = (l[0].y * l[0].y) + (l[0].x * l[0].x);
+	float len2l2 = (l[1].y * l[1].y) + (l[1].x * l[1].x);
+
+	Point pp2x[4];
+	for (int i = 0; i < 4; i++)
+		pp2x[i] = subP(px, pp[i]);
+	for (int i = 0; i < 2; i++)
+		if (dotP(pp2x[i], pp2x[i]) > len2l1)
+			return false;
+	for (int i = 3; i < 5; i++)
+		if (dotP(pp2x[i], pp2x[i]) > len2l2)
+			return false;
+
+	return true;
+}
+
 /* detects if a line segment between Point a and Point b collides with the C-space 
    method : projects the line (AC) onto (AB), determines if the projection is close 
    enough to the segment and if the rejection is within the circle
@@ -440,9 +475,9 @@ bool Cspace_2D::lineOfSight(Point a, Point b) {
 	Lab.y = b.y - a.y;
 	float len2 = dotP(Lab, Lab);
 
-	for (int i = 0; i < this->obs_circle->size(); i++) {
+	for (int i = 0; i < this->cobs->size(); i++) {
 		Circle c;
-		c = this->obs_circle->at(i);
+		c = this->cobs->at(i);
 
 		Point Lao;
 		Lao.x = c.o.x - a.x;
@@ -468,5 +503,25 @@ bool Cspace_2D::lineOfSight(Point a, Point b) {
 				&& plen2 <= len2) //point b after circle center
 			return false; // HIT
 	}
+
+	for (int i = 0; i < this->robs->size(); i++) {
+		Rect r = this->robs->at(i);
+		Point tl, tr, bl, br;
+		tl.x = r.o.x - r.w / 2;
+		tl.y = r.o.y + r.h / 2;
+		tr.x = r.o.x + r.w / 2;
+		tr.y = r.o.y + r.h / 2;
+		bl.x = r.o.x - r.w / 2;
+		bl.y = r.o.y - r.h / 2;
+		br.x = r.o.x + r.w / 2;
+		br.y = r.o.y - r.h / 2;
+
+		if (lineSegCollision(a, b, tl, tr) 
+				|| lineSegCollision(a, b, tl, bl)
+				|| lineSegCollision(a, b, bl, br)
+				|| lineSegCollision(a, b, tr, br))
+			return false;
+	}
+
 	return true; // MISS
 }
