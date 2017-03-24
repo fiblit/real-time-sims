@@ -171,24 +171,26 @@ int main() {
 	const int NR_OBST = 2;
 	Circle obstBounds[NR_OBST];
 	obstBounds[0].o.y = 0.0f;	obstBounds[0].o.x = 0.0f;	obstBounds[0].r = 2.0f;
-	obstBounds[1].o.y = -7.5f;	obstBounds[1].o.x = 4.0f;	obstBounds[1].r = 1.0f;
-	const int NR_RECT = 8;
+	obstBounds[1].o.y = -7.0f;	obstBounds[1].o.x = 6.0f;	obstBounds[1].r = 1.0f;
+	const int NR_RECT = 10;
 	Rect rectBounds[NR_RECT];
 	{
 		int NR = 0;
-		rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+		rectBounds[NR].o.y =  3.0f;  	rectBounds[NR].o.x =  8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
 		rectBounds[NR].o.y = -7.25f;	rectBounds[NR].o.x = -1.0f;		rectBounds[NR].h = 5.5f;	rectBounds[NR].w = 0.1f; NR++;
-		rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = -8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-		rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 0.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-		rectBounds[NR].o.y = 6.5f;  	rectBounds[NR].o.x = -2.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 8.0f; NR++;//
-		rectBounds[NR].o.y = 4.75f; 	rectBounds[NR].o.x = 2.0f;		rectBounds[NR].h = 3.5f;	rectBounds[NR].w = 0.1f; NR++;
+		rectBounds[NR].o.y =  3.0f;  	rectBounds[NR].o.x = -8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+		rectBounds[NR].o.y =  3.0f;  	rectBounds[NR].o.x =  0.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+		rectBounds[NR].o.y =  6.5f;  	rectBounds[NR].o.x = -2.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 8.0f; NR++;//
+		rectBounds[NR].o.y =  4.75f; 	rectBounds[NR].o.x =  2.0f;		rectBounds[NR].h = 3.5f;	rectBounds[NR].w = 0.1f; NR++;
 		rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 3.0f;	rectBounds[NR].w = 0.1f; NR++;
 		rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 3.0f; NR++;
+		rectBounds[NR].o.y =  0.0f; 	rectBounds[NR].o.x =  4.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+		rectBounds[NR].o.y = -3.0f;		rectBounds[NR].o.x =  6.0f;		rectBounds[NR].h = 6.0f;	rectBounds[NR].w = 0.1f; NR++; //
 	}
 
 	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, rectBounds, NR_RECT, &agentBounds, (Rect *)nullptr);
 	PRM * prm = new PRM(start, goal, cspace);
-	std::vector<Node<Point> *> * pathVec = new std::vector<Node<Point> *>();//prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
+	std::vector<Node<Point> *> * pathVec = prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
 	for (int i = 0; i < pathVec->size(); i++)
 		path->insert((*pathVec)[i]);
@@ -234,14 +236,14 @@ int main() {
 	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
 	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	obj::NR_OBST = 5 * NR_OBST;
+	obj::NR_OBST = cylinder_res * NR_OBST;
 	obj::obstPositions = new glm::vec3[obj::NR_OBST];
 	obj::obstRotation = new glm::vec4[obj::NR_OBST];
 	obj::obstScale = new float[obj::NR_OBST];
 	for (int i = 0; i < obj::NR_OBST; i++) {
-		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i/5].o.x, 0.0f - 0.001f*i, obstBounds[(int)i/5].o.y);
-		obj::obstScale[i] = obstBounds[(int)i/5].r * sqrt(2);
-		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * (i%5)) );
+		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i/cylinder_res].o.x, 0.0f - 0.001f*i, obstBounds[(int)i/cylinder_res].o.y);
+		obj::obstScale[i] = obstBounds[(int)i/cylinder_res].r * sqrt(2);
+		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * (i%cylinder_res)) );
 	}
 
 	obj::NR_RECT = NR_RECT;
@@ -252,14 +254,14 @@ int main() {
 		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
 	}
 
-	obj::NR_AGENT = 5 * 1;
+	obj::NR_AGENT = cylinder_res * 1;
 	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
 	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
 	obj::agentScale = new float[obj::NR_AGENT];
 	for (int i = 0; i < obj::NR_AGENT; i++) {
 		obj::agentPositions[i] = glm::vec3(-9.0f, 0.0f + 0.001f*i, -9.0f);
 		obj::agentScale[i] = 1.0f * sqrt(2);
-		obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_AGENT * i) );
+		obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_AGENT * (i%cylinder_res)) );
 	}
 
 	int completed_nodes = 0;
@@ -288,12 +290,12 @@ int main() {
 		glm::vec3 lightAmbient = glm::vec3(0.05f, 0.05f, 0.05f); // Low influence
 		glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 		glm::vec3 pointLightPositions[] = {
-			glm::vec3(0.7f,  0.2f,  2.0f),
-			glm::vec3(2.3f, -3.3f, -4.0f),
-			glm::vec3(-4.0f,  2.0f, -12.0f),
-			glm::vec3(0.0f,  0.0f, -3.0f)
+			glm::vec3(-8.f,  1.5f,  -8.f),
+			glm::vec3(8.f,  1.5f, 8.f),
+			glm::vec3(0.f,  1.f, 4.f),
+			glm::vec3(5.f,  2.f, -5.f)
 		};
-		glm::vec3 dirLightDir = glm::vec3(-1.0f, -1.0f, -1.0f);
+		glm::vec3 dirLightDir = glm::vec3(-0.5f, 1.0f, -0.7f);
 
 		cubeShader->use();
 		glActiveTexture(GL_TEXTURE0);
@@ -306,10 +308,10 @@ int main() {
 		glUniform1i(cubeShader->Uni("material.diffuse"), 0);
 		glUniform1i(cubeShader->Uni("material.specular"), 1);
 
-		glUniform3f(cubeShader->Uni("dirLight.direction"), dirLightDir.x, dirLightDir.y, dirLightDir.z);
-		glUniform3f(cubeShader->Uni("dirLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
-		glUniform3f(cubeShader->Uni("dirLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-		glUniform3f(cubeShader->Uni("dirLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		glUniform3f(cubeShader->Uni("dirLight.direction"), dirLightDir.x, -dirLightDir.y, dirLightDir.z);
+		glUniform3f(cubeShader->Uni("dirLight.ambient"), lightAmbient.x*0.1, lightAmbient.y*0.1, lightAmbient.z*0.1);
+		glUniform3f(cubeShader->Uni("dirLight.diffuse"), lightDiffuse.x*0.1, lightDiffuse.y*0.1, lightDiffuse.z*0.1);
+		glUniform3f(cubeShader->Uni("dirLight.specular"), lightSpecular.x*0.1, lightSpecular.y*0.1, lightSpecular.z*0.1);
 
 		for (GLuint i = 0; i < 4; i++) {
 			std::string si = "pointLights[" + std::to_string(i) + "].";
@@ -330,8 +332,8 @@ int main() {
 		glUniform1f(cubeShader->Uni("spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
 		glUniform1f(cubeShader->Uni("spotLight.fadeOff"), glm::cos(glm::radians(17.5f)));
 		glUniform1f(cubeShader->Uni("spotLight.constant"), 1.0f);
-		glUniform1f(cubeShader->Uni("spotLight.linear"), 0.045f);
-		glUniform1f(cubeShader->Uni("spotLight.quadratic"), 0.0075f);
+		glUniform1f(cubeShader->Uni("spotLight.linear"), 0.007f);
+		glUniform1f(cubeShader->Uni("spotLight.quadratic"), 0.0002f);
 
 		glUniformMatrix4fv(cubeShader->Uni("proj"), 1, GL_FALSE, glm::value_ptr(proj));
 		glUniformMatrix4fv(cubeShader->Uni("view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -376,9 +378,9 @@ int main() {
 		glUniform1f(flatShader->Uni("material.shine"), 32.0f);
 
 		glUniform3f(flatShader->Uni("dirLight.direction"), dirLightDir.x, dirLightDir.y, dirLightDir.z);
-		glUniform3f(flatShader->Uni("dirLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
-		glUniform3f(flatShader->Uni("dirLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-		glUniform3f(flatShader->Uni("dirLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		glUniform3f(flatShader->Uni("dirLight.ambient"), lightAmbient.x*0.1, lightAmbient.y*0.1, lightAmbient.z*0.1);
+		glUniform3f(flatShader->Uni("dirLight.diffuse"), lightDiffuse.x*0.1, lightDiffuse.y*0.1, lightDiffuse.z*0.1);
+		glUniform3f(flatShader->Uni("dirLight.specular"), lightSpecular.x*0.1, lightSpecular.y*0.1, lightSpecular.z*0.1);
 
 		for (GLuint i = 0; i < 4; i++) {
 			std::string si = "pointLights[" + std::to_string(i) + "].";

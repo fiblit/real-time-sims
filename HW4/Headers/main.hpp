@@ -119,6 +119,8 @@ namespace mouse {
 
 Camera* cam;
 Timer* timer;
+const int cylinder_res = 11;
+
 
 /* UI prototypes */
 bool keys[1024];
