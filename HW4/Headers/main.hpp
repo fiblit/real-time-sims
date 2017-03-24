@@ -144,7 +144,8 @@ Write-up (including A* comparison) (+5)
 Website
 	==> .5hr
 
-{(lame, easy, and annoying)
+listeners
+p / g / s / o /  up / left / right / down / m / i / j / k / l
 press p to plan!
 UI select start and goal at run time (+5) ==> 1hr
 	press g (moves goal)
@@ -154,9 +155,6 @@ UI add and move obstacles (+5) ==> 2hr
 	arrow keys to move it
 	m to change its type
 	ijkl to scale it
-} or {(awesome but harder)
-KD-Tree (+10) ==> 4hr
-}
 
 ==> 6 hr
 ----

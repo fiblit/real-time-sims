@@ -10,7 +10,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
 	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 50;
+	const int samplecount = 300;
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
@@ -439,7 +439,8 @@ void printP(Point a, std::string s = "P") {
 	std::cout << (std::string)s + (std::string)" x" + (std::string)std::to_string(a.x) + (std::string)" y" + (std::string)std::to_string(a.y) << std::endl;
 }
 
-/* projective geometry solution; learned this from computer vision. :) */
+/* projective geometry solution. I learned this from computer vision. :) */
+/* sadly it is broken */
 bool lineSegCollision(Point p1, Point p2, Point p3, Point p4) {
 	Point pp[4] = { p1, p2, p3, p4 };
 	glm::vec3 l[2], p[4], x;
@@ -462,12 +463,41 @@ bool lineSegCollision(Point p1, Point p2, Point p3, Point p4) {
 		pp2x[i] = subP(px, pp[i]);
 	for (int i = 0; i < 2; i++)
 		if (dotP(pp2x[i], pp2x[i]) > len2l1)
-			return false;
+			return false;//miss
 	for (int i = 3; i < 5; i++)
 		if (dotP(pp2x[i], pp2x[i]) > len2l2)
-			return false;
+			return false;//miss
 
-	return true;
+	return true;//must have hit
+}
+
+bool axialLineSegLineSegCollision(Point pp1, Point pp2, float val, int axis, float oValLo, float oValHi) {
+	glm::vec3 l, p1, p2;
+	p1 = glm::vec3(pp1.x, pp1.y, 1);
+	p2 = glm::vec3(pp2.x, pp2.y, 1);
+	l = glm::cross(p1, p2);
+	//vertical
+	if (axis == 0) {// (1/val)*x + 0*y - 1 = 0 // x = val
+		float yint = (-l[0] * val - l[2]) / l[1];
+		//std::cout << "y" << pp1.x << " " << val << " " << pp2.x << " " << oValLo << " " << yint << " " << oValHi << std::endl;
+		if (((pp1.x <= val && val <= pp2.x) || (pp2.x <= val && val <= pp1.x))//val line hits lineseg
+			&& (oValLo <= yint && yint <= oValHi)) { //intersection on axial segment
+			//std::cout << "!" << std::endl;
+			return true;
+		}
+	}
+	//horizontal
+	else if (axis == 1) {// 0x + (1/val)*y - 1 = 0 // y =val
+		float xint = (-l[1] * val - l[2]) / l[0];
+		//std::cout << "y" << pp1.y << " " << val << " " << pp2.y << " " << oValLo << " " << xint << " " << oValHi << std::endl;
+		if (((pp1.y <= val && val <= pp2.y) || (pp2.y <= val && val <= pp1.y))//axis line hits lineseg
+			&& (oValLo <= xint && xint <= oValHi)) { //intersection on axial segment
+			//std::cout << "!" << std::endl;
+			return true;
+		}
+	}
+	return false;
+
 }
 
 /* detects if a line segment between Point a and Point b collides with the C-space 
@@ -518,20 +548,15 @@ bool Cspace_2D::lineOfSight(Point a, Point b) {
 
 	for (int i = 0; i < this->robs->size(); i++) {
 		Rect r = this->robs->at(i);
-		Point tl, tr, bl, br;
-		tl.x = r.o.x - r.w / 2;
-		tl.y = r.o.y + r.h / 2;
-		tr.x = r.o.x + r.w / 2;
-		tr.y = r.o.y + r.h / 2;
-		bl.x = r.o.x - r.w / 2;
-		bl.y = r.o.y - r.h / 2;
-		br.x = r.o.x + r.w / 2;
-		br.y = r.o.y - r.h / 2;
+		float left   = r.o.x - r.w / 2;
+		float right  = r.o.x + r.w / 2;
+		float top    = r.o.y + r.h / 2;
+		float bottom = r.o.y - r.h / 2;
 
-		if (lineSegCollision(a, b, tl, tr) 
-				|| lineSegCollision(a, b, tl, bl)
-				|| lineSegCollision(a, b, bl, br)
-				|| lineSegCollision(a, b, tr, br))
+		if (axialLineSegLineSegCollision(a, b, left, 0, bottom, top)
+				|| axialLineSegLineSegCollision(a, b, right, 0, bottom, top)
+				|| axialLineSegLineSegCollision(a, b, bottom, 1, left, right)
+				|| axialLineSegLineSegCollision(a, b, top, 1, left, right))
 			return false;
 	}
 

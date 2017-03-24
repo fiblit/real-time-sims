@@ -168,20 +168,27 @@ int main() {
 	Point goal; goal.x = 9.0f; goal.y = 9.0f;
 	agentBounds.o = start;
 	agentBounds.r = 1.0f;
-	const int NR_OBST = 3;
+	const int NR_OBST = 2;
 	Circle obstBounds[NR_OBST];
 	obstBounds[0].o.y = 0.0f;	obstBounds[0].o.x = 0.0f;	obstBounds[0].r = 2.0f;
-	obstBounds[1].o.y = 5.0f;	obstBounds[1].o.x = 3.0f;	obstBounds[1].r = 1.5f;
-	obstBounds[2].o.y = -5.0f;	obstBounds[2].o.x = 7.0f;	obstBounds[2].r = 2.0f;
-	Rect rectBounds[4];
-	rectBounds[0].o.y =  5.0f;	rectBounds[0].o.x =  7.0f;	rectBounds[0].h = 0.3f;	rectBounds[0].w = 5.0f;
-	rectBounds[1].o.y = -5.0f;	rectBounds[1].o.x = -1.0f;	rectBounds[1].h = 0.7f;	rectBounds[1].w = 0.7f;
-	rectBounds[2].o.y =  3.0f;	rectBounds[2].o.x = -8.0f;	rectBounds[2].h = 3.0f;	rectBounds[2].w = 3.0f;
-	rectBounds[2].o.y = 3.0f;	rectBounds[2].o.x = -0.0f;	rectBounds[2].h = 0.3f;	rectBounds[2].w = 5.0f;
+	obstBounds[1].o.y = -7.5f;	obstBounds[1].o.x = 4.0f;	obstBounds[1].r = 1.0f;
+	const int NR_RECT = 8;
+	Rect rectBounds[NR_RECT];
+	{
+		int NR = 0;
+		rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+		rectBounds[NR].o.y = -7.25f;	rectBounds[NR].o.x = -1.0f;		rectBounds[NR].h = 5.5f;	rectBounds[NR].w = 0.1f; NR++;
+		rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = -8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+		rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 0.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+		rectBounds[NR].o.y = 6.5f;  	rectBounds[NR].o.x = -2.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 8.0f; NR++;//
+		rectBounds[NR].o.y = 4.75f; 	rectBounds[NR].o.x = 2.0f;		rectBounds[NR].h = 3.5f;	rectBounds[NR].w = 0.1f; NR++;
+		rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 3.0f;	rectBounds[NR].w = 0.1f; NR++;
+		rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 3.0f; NR++;
+	}
 
-	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, rectBounds, 3, &agentBounds, (Rect *)nullptr);
+	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, rectBounds, NR_RECT, &agentBounds, (Rect *)nullptr);
 	PRM * prm = new PRM(start, goal, cspace);
-	std::vector<Node<Point> *> * pathVec = prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
+	std::vector<Node<Point> *> * pathVec = new std::vector<Node<Point> *>();//prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
 	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
 	for (int i = 0; i < pathVec->size(); i++)
 		path->insert((*pathVec)[i]);
@@ -227,7 +234,7 @@ int main() {
 	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
 	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	obj::NR_OBST = 5 * 3;
+	obj::NR_OBST = 5 * NR_OBST;
 	obj::obstPositions = new glm::vec3[obj::NR_OBST];
 	obj::obstRotation = new glm::vec4[obj::NR_OBST];
 	obj::obstScale = new float[obj::NR_OBST];
@@ -237,7 +244,7 @@ int main() {
 		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * (i%5)) );
 	}
 
-	obj::NR_RECT = 4;
+	obj::NR_RECT = NR_RECT;
 	obj::rectPositions = new glm::vec3[obj::NR_RECT];
 	obj::rectScale = new glm::vec2[obj::NR_RECT];
 	for (int i = 0; i < obj::NR_RECT; i++) {
@@ -245,7 +252,7 @@ int main() {
 		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
 	}
 
-	obj::NR_AGENT = 5;
+	obj::NR_AGENT = 5 * 1;
 	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
 	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
 	obj::agentScale = new float[obj::NR_AGENT];
@@ -286,7 +293,7 @@ int main() {
 			glm::vec3(-4.0f,  2.0f, -12.0f),
 			glm::vec3(0.0f,  0.0f, -3.0f)
 		};
-		glm::vec3 dirLightDir = glm::vec3(0.0f, -1.0f, 0.0f);
+		glm::vec3 dirLightDir = glm::vec3(-1.0f, -1.0f, -1.0f);
 
 		cubeShader->use();
 		glActiveTexture(GL_TEXTURE0);
