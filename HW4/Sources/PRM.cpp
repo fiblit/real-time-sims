@@ -8,23 +8,32 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	hrclock::time_point first = hrclock::now();
 
 	std::default_random_engine gen;
-	std::uniform_real_distribution<float> xrand(-10.0f, 10.0f);
-	std::uniform_real_distribution<float> yrand(-10.0f, 10.0f);
-	const int samplecount = 300;//this does not work on all maps
+	std::uniform_real_distribution<float> std(-0.5f, 0.5f);
+	const int samplecount = 5;//this does not work on all maps
 
 	hrclock::duration seed = hrclock::now() - first;
 	gen.seed(seed.count());
 
+	float b = 3.3f;//bin size
+
 	VecPoint * sample = new VecPoint();
 	for (int i = 0; i < samplecount; i++) {
-		Point p;
-		p.x = xrand(gen);
-		p.y = yrand(gen);
-
-		if (!this->cSpace->isCollision(p))
-			sample->push_back( new Node<Point>(p, new VecPoint()) );
-		//else
-		//	i--;
+		for (float x = -10+b/2; x < 10-b/2; x+=b) {
+			for (float y = -10+b/2; y < 10-b/2; y+=b) {
+				Point p;
+				p.x = std(gen)*b + x;
+				p.y = std(gen)*b + y;
+				do {
+					p.x += std(gen)/5;
+					p.y += std(gen)/5;
+					p.x = std::min(std::max(p.x, -10.f), 10.f);
+					p.y = std::min(std::max(p.y, -10.f), 10.f);
+				} while (this->cSpace->isCollision(p));
+				sample->push_back(new Node<Point>(p, new VecPoint()));
+				//else
+				//	i--;
+			}
+		}
 	}
 
 	return sample;
@@ -32,7 +41,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 
 /* threshold search to find NNs */
 VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
-	int threshold = 3.0f; // METERS
+	int threshold = 3.5f; // METERS
 
 	VecPoint * neighbours = new VecPoint();
 
@@ -479,20 +488,16 @@ bool axialLineSegLineSegCollision(Point pp1, Point pp2, float val, int axis, flo
 	//vertical
 	if (axis == 0) {// (1/val)*x + 0*y - 1 = 0 // x = val
 		float yint = (-l[0] * val - l[2]) / l[1];
-		//std::cout << "y" << pp1.x << " " << val << " " << pp2.x << " " << oValLo << " " << yint << " " << oValHi << std::endl;
 		if (((pp1.x <= val && val <= pp2.x) || (pp2.x <= val && val <= pp1.x))//val line hits lineseg
 			&& (oValLo <= yint && yint <= oValHi)) { //intersection on axial segment
-			//std::cout << "!" << std::endl;
 			return true;
 		}
 	}
 	//horizontal
 	else if (axis == 1) {// 0x + (1/val)*y - 1 = 0 // y =val
 		float xint = (-l[1] * val - l[2]) / l[0];
-		//std::cout << "y" << pp1.y << " " << val << " " << pp2.y << " " << oValLo << " " << xint << " " << oValHi << std::endl;
 		if (((pp1.y <= val && val <= pp2.y) || (pp2.y <= val && val <= pp1.y))//axis line hits lineseg
 			&& (oValLo <= xint && xint <= oValHi)) { //intersection on axial segment
-			//std::cout << "!" << std::endl;
 			return true;
 		}
 	}
@@ -501,15 +506,6 @@ bool axialLineSegLineSegCollision(Point pp1, Point pp2, float val, int axis, flo
 }
 
 /* detects if a line segment between Point a and Point b collides with the C-space 
-   method : projects the line (AC) onto (AB), determines if the projection is close 
-   enough to the segment and if the rejection is within the circle
-   I did this because it didn't involve any square roots. And I thought it was cool.
-   Oh, and I was tired/delusional.
-   Not even sure if it is more efficient than the classic ray-sphere, lol.
-   It seems like there are more dot products, but hey! No square roots!
-
-   If you want to play with it I made this:
-   https://www.desmos.com/calculator/fxgnyi8skw
  */
 bool Cspace_2D::lineOfSight(Point a, Point b) {
 	Point Lab;

@@ -24,7 +24,7 @@ int main() {
 	if (G::WIN_FULLSCREEN)
 		monitor = glfwGetPrimaryMonitor();
 	//Make a window
-	std::string title = "Dalton Hildreth ::: gg engine ::: OpenGL v3.3";
+	std::string title = "Dalton Hildreth ::: Homework 4";
     GLFWwindow* window = glfwCreateWindow(G::WIN_WIDTH, G::WIN_HEIGHT, title.c_str(), monitor, nullptr);
     if (window == nullptr) {
 		std::cerr << "Failed to create OpenGL Context" << std::endl;
@@ -163,108 +163,24 @@ int main() {
 	glBindTexture(GL_TEXTURE_2D, 1);
 
 	/* Path Planning */
-	Circle agentBounds;
-	Point start; start.x = -9.0f; start.y = -9.0f;
-	Point goal; goal.x = 9.0f; goal.y = 9.0f;
-	agentBounds.o = start;
-	agentBounds.r = 1.0f;
-	const int NR_OBST = 2;
-	Circle obstBounds[NR_OBST];
-	obstBounds[0].o.y = 0.0f;	obstBounds[0].o.x = 0.0f;	obstBounds[0].r = 2.0f;
-	obstBounds[1].o.y = -7.0f;	obstBounds[1].o.x = 6.0f;	obstBounds[1].r = 1.0f;
-	const int NR_RECT = 10;
-	Rect rectBounds[NR_RECT];
-	{
-		int NR = 0;
-		rectBounds[NR].o.y =  3.0f;  	rectBounds[NR].o.x =  8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-		rectBounds[NR].o.y = -7.25f;	rectBounds[NR].o.x = -1.0f;		rectBounds[NR].h = 5.5f;	rectBounds[NR].w = 0.1f; NR++;
-		rectBounds[NR].o.y =  3.0f;  	rectBounds[NR].o.x = -8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-		rectBounds[NR].o.y =  3.0f;  	rectBounds[NR].o.x =  0.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-		rectBounds[NR].o.y =  6.5f;  	rectBounds[NR].o.x = -2.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 8.0f; NR++;//
-		rectBounds[NR].o.y =  4.75f; 	rectBounds[NR].o.x =  2.0f;		rectBounds[NR].h = 3.5f;	rectBounds[NR].w = 0.1f; NR++;
-		rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 3.0f;	rectBounds[NR].w = 0.1f; NR++;
-		rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 3.0f; NR++;
-		rectBounds[NR].o.y =  0.0f; 	rectBounds[NR].o.x =  4.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-		rectBounds[NR].o.y = -3.0f;		rectBounds[NR].o.x =  6.0f;		rectBounds[NR].h = 6.0f;	rectBounds[NR].w = 0.1f; NR++; //
-	}
-
-	Cspace_2D * cspace = new Cspace_2D(obstBounds, NR_OBST, rectBounds, NR_RECT, &agentBounds, (Rect *)nullptr);
-	PRM * prm = new PRM(start, goal, cspace);
-	std::vector<Node<Point> *> * pathVec = prm->findPathAstar(5000.0f); //UCS before A*; 'tis simpler
-	std::unordered_set<Node<Point> *> * path = new std::unordered_set<Node<Point> *>();
-	for (int i = 0; i < pathVec->size(); i++)
-		path->insert((*pathVec)[i]);
-
-//	float epsilon = 0.000001;
+	init_planning();
+	replan();
 
 	//change properties for the path -- instantiate cube visualizations
-	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
-	obj::NR_CUBES = verts->size() + 1;
-	obj::cubePositions = new glm::vec3[obj::NR_CUBES];
-	obj::cubeScale = new float[obj::NR_CUBES];
-	obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
-	obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
-	
-	for (int i = 0; i < obj::NR_CUBES - 1; i++) {
-		Node<Point> * v = verts->at(i);
-		obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
-		if (i == 0) {
-			obj::cubeScale[i] = 1.0f;
-			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-		}
-		else if (i == 1) {
-			obj::cubeScale[i] = 1.0f;
-			obj::cubeDiffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-		}
-		else if (path->find(v) != path->end()) {
-			obj::cubeScale[i] = 0.75f;
-			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-		}
-		else {
-			obj::cubeScale[i] = 0.5f;
-			obj::cubeDiffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-		}
-	}
+	init_planning_vis();
 
-	// add ground
-	obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
-	obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
-	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
-	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
-
-	obj::NR_OBST = cylinder_res * NR_OBST;
-	obj::obstPositions = new glm::vec3[obj::NR_OBST];
-	obj::obstRotation = new glm::vec4[obj::NR_OBST];
-	obj::obstScale = new float[obj::NR_OBST];
-	for (int i = 0; i < obj::NR_OBST; i++) {
-		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i/cylinder_res].o.x, 0.0f - 0.001f*i, obstBounds[(int)i/cylinder_res].o.y);
-		obj::obstScale[i] = obstBounds[(int)i/cylinder_res].r * sqrt(2);
-		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_OBST * (i%cylinder_res)) );
-	}
-
-	obj::NR_RECT = NR_RECT;
-	obj::rectPositions = new glm::vec3[obj::NR_RECT];
-	obj::rectScale = new glm::vec2[obj::NR_RECT];
-	for (int i = 0; i < obj::NR_RECT; i++) {
-		obj::rectPositions[i] = glm::vec3(rectBounds[i].o.x, 0.0f, rectBounds[i].o.y);
-		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
-	}
-
-	obj::NR_AGENT = cylinder_res * 1;
-	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
-	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
-	obj::agentScale = new float[obj::NR_AGENT];
-	for (int i = 0; i < obj::NR_AGENT; i++) {
-		obj::agentPositions[i] = glm::vec3(-9.0f, 0.0f + 0.001f*i, -9.0f);
-		obj::agentScale[i] = 1.0f * sqrt(2);
-		obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / obj::NR_AGENT * (i%cylinder_res)) );
-	}
-
-	int completed_nodes = 0;
+	/* lighting */
+	glm::vec3 lightDiffuse = glm::vec3(0.5f, 0.5f, 0.5f); // Decrease the influence
+	glm::vec3 lightAmbient = glm::vec3(0.05f, 0.05f, 0.05f); // Low influence
+	glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+	glm::vec3 pointLightPositions[] = {
+		glm::vec3(-8.f,  1.5f,  -8.f),
+		glm::vec3(8.f,  1.5f, 8.f),
+		glm::vec3(0.f,  1.f, 4.f),
+		glm::vec3(5.f,  2.f, -5.f)
+	};
+	glm::vec3 dirLightDir = glm::vec3(-0.5f, 1.0f, -0.7f);
+	isFlashlightOn = true;
 
     /* Game Loop */
 	timer->tick();
@@ -282,20 +198,10 @@ int main() {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// shaders; pass uniforms; draw
 		glm::mat4 proj = glm::perspective(glm::radians(cam->fov), (GLfloat)G::WIN_WIDTH / (GLfloat)G::WIN_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = cam->getView();
 		glm::mat4 model;
-
-		glm::vec3 lightDiffuse = glm::vec3(0.5f, 0.5f, 0.5f); // Decrease the influence
-		glm::vec3 lightAmbient = glm::vec3(0.05f, 0.05f, 0.05f); // Low influence
-		glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
-		glm::vec3 pointLightPositions[] = {
-			glm::vec3(-8.f,  1.5f,  -8.f),
-			glm::vec3(8.f,  1.5f, 8.f),
-			glm::vec3(0.f,  1.f, 4.f),
-			glm::vec3(5.f,  2.f, -5.f)
-		};
-		glm::vec3 dirLightDir = glm::vec3(-0.5f, 1.0f, -0.7f);
 
 		cubeShader->use();
 		glActiveTexture(GL_TEXTURE0);
@@ -326,9 +232,9 @@ int main() {
 
 		glUniform3f(cubeShader->Uni("spotLight.position"), cam->pos.x, cam->pos.y, cam->pos.z);
 		glUniform3f(cubeShader->Uni("spotLight.direction"), cam->dir.x, cam->dir.y, cam->dir.z);
-		glUniform3f(cubeShader->Uni("spotLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
-		glUniform3f(cubeShader->Uni("spotLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-		glUniform3f(cubeShader->Uni("spotLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		glUniform3f(cubeShader->Uni("spotLight.ambient"), lightAmbient.x*isFlashlightOn, lightAmbient.y*isFlashlightOn, lightAmbient.z*isFlashlightOn);
+		glUniform3f(cubeShader->Uni("spotLight.diffuse"), lightDiffuse.x*isFlashlightOn, lightDiffuse.y*isFlashlightOn, lightDiffuse.z*isFlashlightOn);
+		glUniform3f(cubeShader->Uni("spotLight.specular"), lightSpecular.x*isFlashlightOn, lightSpecular.y*isFlashlightOn, lightSpecular.z*isFlashlightOn);
 		glUniform1f(cubeShader->Uni("spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
 		glUniform1f(cubeShader->Uni("spotLight.fadeOff"), glm::cos(glm::radians(17.5f)));
 		glUniform1f(cubeShader->Uni("spotLight.constant"), 1.0f);
@@ -343,8 +249,8 @@ int main() {
 		for (GLuint i = 0; i < obj::NR_OBST; i++) {
 			model = glm::mat4();
 			model = glm::translate(model, obj::obstPositions[i]);
-			model = glm::scale(model, glm::vec3(obj::obstScale[i]));
 			model = glm::rotate(model, obj::obstRotation[i].w, glm::vec3(obj::obstRotation[i].x, obj::obstRotation[i].y, obj::obstRotation[i].z));
+			model = glm::scale(model, glm::vec3(obj::obstScale[i]));
 			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
 
@@ -364,12 +270,40 @@ int main() {
 		for (GLuint i = 0; i < obj::NR_AGENT; i++) {
 			model = glm::mat4();
 			model = glm::translate(model, obj::agentPositions[i]);
-			model = glm::scale(model, glm::vec3(obj::agentScale[i]));
 			model = glm::rotate(model, obj::agentRotation[i].w, glm::vec3(obj::agentRotation[i].x, obj::agentRotation[i].y, obj::agentRotation[i].z));
+			model = glm::scale(model, glm::vec3(obj::agentScale[i]));
 			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		switch (cur_mode) {
+		case 0:
+			if (cur_cob != nullptr) {
+				for (int i = 0; i < cylinder_res; i++) {
+					model = glm::mat4();
+					model = glm::translate(model, glm::vec3(cur_cob->o.x, 0.0f - 0.001f*i, cur_cob->o.y));
+					model = glm::scale(model, glm::vec3(cur_cob->r*sqrt(2)));
+					model = glm::rotate(model, glm::radians(360.0f / cylinder_res*i), glm::vec3(0.f, 1.f, 0.f));
+					glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
+					glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
+
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				}
+			}
+			break;
+		case 1:
+			if (cur_rob != nullptr) {
+				model = glm::mat4();
+				model = glm::translate(model, glm::vec3(cur_rob->o.x, 0.0f, cur_rob->o.y));
+				model = glm::scale(model, glm::vec3(cur_rob->w, 1.0f, cur_rob->h));
+				glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
+				glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
+
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			break;
 		}
 		/* end cube shaders */
 
@@ -395,9 +329,9 @@ int main() {
 
 		glUniform3f(flatShader->Uni( "spotLight.position"), cam->pos.x, cam->pos.y, cam->pos.z);
 		glUniform3f(flatShader->Uni( "spotLight.direction"), cam->dir.x, cam->dir.y, cam->dir.z);
-		glUniform3f(flatShader->Uni( "spotLight.ambient"), lightAmbient.x, lightAmbient.y, lightAmbient.z);
-		glUniform3f(flatShader->Uni( "spotLight.diffuse"), lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-		glUniform3f(flatShader->Uni( "spotLight.specular"), lightSpecular.x, lightSpecular.y, lightSpecular.z);
+		glUniform3f(flatShader->Uni( "spotLight.ambient"), lightAmbient.x*isFlashlightOn, lightAmbient.y*isFlashlightOn, lightAmbient.z*isFlashlightOn);
+		glUniform3f(flatShader->Uni( "spotLight.diffuse"), lightDiffuse.x*isFlashlightOn, lightDiffuse.y*isFlashlightOn, lightDiffuse.z*isFlashlightOn);
+		glUniform3f(flatShader->Uni( "spotLight.specular"), lightSpecular.x*isFlashlightOn, lightSpecular.y*isFlashlightOn, lightSpecular.z*isFlashlightOn);
 		glUniform1f(flatShader->Uni( "spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
 		glUniform1f(flatShader->Uni( "spotLight.fadeOff"), glm::cos(glm::radians(17.5f)));
 		glUniform1f(flatShader->Uni( "spotLight.constant"), 1.0f);
@@ -496,6 +430,49 @@ void do_movement() {
 		cam->translateCamera(G::CAMERA::LEFT, timer->getDelta());
 	if (keys[GLFW_KEY_D])
 		cam->translateCamera(G::CAMERA::RIGHT, timer->getDelta());
+
+	if (keys[GLFW_KEY_P]) {
+		keys[GLFW_KEY_P] = false;
+		replan();
+		init_planning_vis();
+	}
+	if (keys[GLFW_KEY_O]) {
+		keys[GLFW_KEY_O] = false;
+		placeObst(cam->pos);
+	}
+	if (keys[GLFW_KEY_G]) {
+		keys[GLFW_KEY_G] = false;
+		placeGoalNode(cam->pos);
+	}
+	if (keys[GLFW_KEY_T]) {
+		keys[GLFW_KEY_T] = false;
+		placeStartNode(cam->pos);
+	}
+	if (keys[GLFW_KEY_M]) {
+		keys[GLFW_KEY_M] = false;
+		modeToggleCurrentObstacle();
+	}
+	if (keys[GLFW_KEY_I])
+		scaleCurrentObstacle(1.f, 1.1f, timer->getDelta());
+	if (keys[GLFW_KEY_K])
+		scaleCurrentObstacle(1.f, 1/1.1f, timer->getDelta());
+	if (keys[GLFW_KEY_J])
+		scaleCurrentObstacle(1 / 1.1f, 1.f, timer->getDelta());
+	if (keys[GLFW_KEY_L])
+		scaleCurrentObstacle(1.1f, 1.f, timer->getDelta());
+	if (keys[GLFW_KEY_UP])
+		moveCurrentObstacle( 0.f,  1.f, timer->getDelta());
+	if (keys[GLFW_KEY_DOWN])
+		moveCurrentObstacle( 0.f, -1.f, timer->getDelta());
+	if (keys[GLFW_KEY_LEFT])
+		moveCurrentObstacle(-1.f,  0.f, timer->getDelta());
+	if (keys[GLFW_KEY_RIGHT])
+		moveCurrentObstacle( 1.f,  0.f, timer->getDelta());
+
+	if (keys[GLFW_KEY_F]) {
+		keys[GLFW_KEY_F] = false;
+		toggleFlashlight();
+	}
 }
 
 int DIE(int retVal) {
@@ -542,5 +519,253 @@ void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * compl
 		for (int i = 0; i < obj::NR_AGENT; i++) {
 			obj::agentPositions[i] += glm::vec3(motion.x, 0.0f, motion.y);
 		}
+	}
+}
+
+void init_planning() {
+	cur_cob = nullptr;
+	cur_rob = nullptr;
+	cspace = nullptr;
+	prm = nullptr;
+	ragentBound = new Rect();// nullptr;
+	cagentBound = nullptr;//new Circle();
+	pathVec = nullptr;
+	path = nullptr;
+
+	startPoint.x = -9.0f; startPoint.y = -9.0f;
+	goalPoint.x = 9.0f; goalPoint.y = 9.0f;
+
+	//cagentBound->r = 1.0f;
+	ragentBound->w = 1.0f;
+	ragentBound->h = 1.0f;
+
+	obstBounds = std::vector<Circle>(2);
+	obstBounds[0].o.y = 0.0f;	obstBounds[0].o.x = 0.0f;	obstBounds[0].r = 2.0f;
+	obstBounds[1].o.y = -7.0f;	obstBounds[1].o.x = 6.0f;	obstBounds[1].r = 1.0f;
+
+	rectBounds = std::vector<Rect>(10);
+	{int NR = 0;
+	rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+	rectBounds[NR].o.y = -7.25f;	rectBounds[NR].o.x = -1.0f;		rectBounds[NR].h = 5.5f;	rectBounds[NR].w = 0.1f; NR++;
+	rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = -8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+	rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 0.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+	rectBounds[NR].o.y = 6.5f;  	rectBounds[NR].o.x = -2.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 8.0f; NR++;//
+	rectBounds[NR].o.y = 4.75f; 	rectBounds[NR].o.x = 2.0f;		rectBounds[NR].h = 3.5f;	rectBounds[NR].w = 0.1f; NR++;
+	rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 3.0f;	rectBounds[NR].w = 0.1f; NR++;
+	rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 3.0f; NR++;
+	rectBounds[NR].o.y = 0.0f; 		rectBounds[NR].o.x = 4.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
+	rectBounds[NR].o.y = -3.0f;		rectBounds[NR].o.x = 6.0f;		rectBounds[NR].h = 6.0f;	rectBounds[NR].w = 0.1f; NR++; }//
+}
+
+void init_planning_vis() {
+	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
+	obj::NR_CUBES = verts->size() + 1;
+	obj::cubePositions = new glm::vec3[obj::NR_CUBES];
+	obj::cubeScale = new float[obj::NR_CUBES];
+	obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
+	obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
+
+	for (int i = 0; i < obj::NR_CUBES - 1; i++) {
+		Node<Point> * v = verts->at(i);
+		obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
+		if (i == 0) {
+			obj::cubeScale[i] = 1.0f;
+			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+			obj::cubePositions[i] = glm::vec3(startPoint.x, - 2.0f, startPoint.y);
+		}
+		else if (i == 1) {
+			obj::cubeScale[i] = 1.0f;
+			obj::cubeDiffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+			obj::cubePositions[i] = glm::vec3(goalPoint.x, - 2.0f, goalPoint.y);
+		}
+		else if (path->find(v) != path->end()) {
+			obj::cubeScale[i] = 0.75f;
+			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+		}
+		else {
+			obj::cubeScale[i] = 0.5f;
+			obj::cubeDiffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
+			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+		}
+	}
+
+	// add ground
+	obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
+	obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
+	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
+	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
+
+	obj::NR_OBST = cylinder_res * obstBounds.size();
+	obj::obstPositions = new glm::vec3[obj::NR_OBST];
+	obj::obstRotation = new glm::vec4[obj::NR_OBST];
+	obj::obstScale = new float[obj::NR_OBST];
+	for (int i = 0; i < obj::NR_OBST; i++) {
+		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res].o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res].o.y);
+		obj::obstScale[i] = obstBounds[(int)i / cylinder_res].r * sqrt(2);
+		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
+	}
+
+	obj::NR_RECT = rectBounds.size();
+	obj::rectPositions = new glm::vec3[obj::NR_RECT];
+	obj::rectScale = new glm::vec2[obj::NR_RECT];
+	for (int i = 0; i < obj::NR_RECT; i++) {
+		obj::rectPositions[i] = glm::vec3(rectBounds[i].o.x, 0.0f, rectBounds[i].o.y);
+		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
+	}
+
+	obj::NR_AGENT = cylinder_res * 1;
+	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
+	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
+	obj::agentScale = new float[obj::NR_AGENT];
+	for (int i = 0; i < obj::NR_AGENT; i++) {
+		if (cagentBound != nullptr) {
+			obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f + 0.001f*i, startPoint.y);
+			obj::agentScale[i] = cagentBound->r * sqrt(2);
+			obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
+		}
+		else {
+			obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f + 0.001f*i, startPoint.y);
+			obj::agentScale[i] = ragentBound->w;
+			obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, 0);
+
+		}
+	}
+}
+
+
+void replan() {
+	switch (cur_mode) {
+	case 0:
+		if (cur_cob != nullptr) {
+			obstBounds.push_back(*cur_cob);
+			delete cur_cob;
+			cur_cob = nullptr;
+		}
+		break;
+	case 1:
+		if (cur_rob != nullptr) {
+			rectBounds.push_back(*cur_rob);
+			delete cur_rob;
+			cur_rob = nullptr;
+		}
+		break;
+	}
+	ragentBound->o = startPoint;
+	for (int i = 0; i < obj::NR_AGENT; i++)
+		obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f, startPoint.y);
+
+	if (prm != nullptr)
+		init_planning_vis();
+	cspace = new Cspace_2D(obstBounds, rectBounds, cagentBound, ragentBound);
+	prm = new PRM(startPoint, goalPoint, cspace);
+
+	/* PATH PLANNING METHOD */
+	pathVec = prm->findPathUCS(); //new std::vector<Node<Point> *>(); //even this is slow //
+	path = new std::unordered_set<Node<Point> *>();
+	for (int i = 0; i < pathVec->size(); i++)
+		path->insert((*pathVec)[i]);
+
+	completed_nodes = 0;
+}
+
+void toggleFlashlight() {
+	isFlashlightOn = !isFlashlightOn;
+}
+
+void placeObst(glm::vec3 pos) {
+	switch (cur_mode) {
+	case 0:
+		if (cur_cob != nullptr) {
+			obstBounds.push_back(*cur_cob);
+			init_planning_vis();
+			delete cur_cob;
+		}
+		cur_cob = new Circle();
+		cur_cob->o.x = pos.x;
+		cur_cob->o.y = pos.z;
+		cur_cob->r = 1.0f;
+		break;
+	case 1:
+		if (cur_rob != nullptr) {
+			rectBounds.push_back(*cur_rob);
+			init_planning_vis();
+			delete cur_rob;
+		}
+		cur_rob = new Rect();
+		cur_rob->o.x = pos.x;
+		cur_rob->o.y = pos.z;
+		cur_rob->w = 1.0f;
+		cur_rob->h = 1.0f;
+		break;
+	}
+}
+
+void placeGoalNode(glm::vec3 pos) {
+	goalPoint.x = pos.x; goalPoint.y = pos.z;
+	init_planning_vis();
+}
+
+void placeStartNode(glm::vec3 pos) {
+	startPoint.x = pos.x; startPoint.y = pos.z;
+	init_planning_vis();
+}
+
+void modeToggleCurrentObstacle() {
+	switch (cur_mode) {
+	case 0:
+		if (cur_cob != nullptr) {
+			glm::vec3 pos = glm::vec3(cur_cob->o.x, 0.0f, cur_cob->o.y);
+			delete cur_cob;
+			cur_cob = nullptr;
+			cur_mode = 1 - cur_mode;
+			placeObst(pos);
+		}
+		break;
+	case 1:
+		if (cur_rob != nullptr) {
+			glm::vec3 pos = glm::vec3(cur_rob->o.x, 0.0f, cur_rob->o.y);
+			delete cur_rob;
+			cur_rob = nullptr;
+			cur_mode = 1 - cur_mode;
+			placeObst(pos);
+		}
+		break;
+	} 
+}
+
+void scaleCurrentObstacle(float xs, float ys, float dt) {
+	switch (cur_mode) {
+	case 0:
+		//1 - dt is a lerp
+		if (cur_cob != nullptr) {
+			cur_cob->r *= (xs == 1.f ? ys : xs)*dt + (1 - dt);
+		}
+		break;
+	case 1:
+		if (cur_rob != nullptr) {
+			cur_rob->w *= xs*dt + (1 - dt);
+			cur_rob->h *= ys*dt + (1 - dt);
+		}
+		break;
+	}
+}
+
+void moveCurrentObstacle(float dx, float dy, float dt) {
+	switch (cur_mode) {
+	case 0:
+		if (cur_cob != nullptr) {
+			cur_cob->o.x += dx*dt;
+			cur_cob->o.y += dy*dt;
+		}
+		break;
+	case 1:
+		if (cur_rob != nullptr) {
+			cur_rob->o.x += dx*dt;
+			cur_rob->o.y += dy*dt;
+		}
+		break;
 	}
 }

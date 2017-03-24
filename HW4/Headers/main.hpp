@@ -41,9 +41,9 @@
 
 /* Globals */
 namespace G {
-	const GLint WIN_WIDTH = 800;
-	const GLint WIN_HEIGHT = 680;
-	const GLboolean WIN_FULLSCREEN = GL_FALSE;
+	const GLint WIN_WIDTH = 1920;
+	const GLint WIN_HEIGHT = 1080;
+	const GLboolean WIN_FULLSCREEN = GL_TRUE;
 }
 namespace obj {//should be in G
 	GLfloat cube[] = {
@@ -121,6 +121,23 @@ Camera* cam;
 Timer* timer;
 const int cylinder_res = 11;
 
+Cspace_2D * cspace;
+PRM * prm;
+
+int cur_mode;
+Circle * cur_cob;
+Rect * cur_rob;
+
+Point startPoint, goalPoint;
+std::vector<Rect> rectBounds;
+Rect * ragentBound;
+std::vector<Circle> obstBounds;
+Circle * cagentBound;
+std::vector<Node<Point> *> * pathVec;
+std::unordered_set<Node<Point> *> * path;
+
+bool isFlashlightOn;
+int completed_nodes;
 
 /* UI prototypes */
 bool keys[1024];
@@ -129,36 +146,30 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void do_movement();
 
+void toggleFlashlight();
+
+void init_planning();
+void init_planning_vis();
+void replan();
+void placeObst(glm::vec3 pos);
+void placeGoalNode(glm::vec3 pos);
+void placeStartNode(glm::vec3 pos);
+void modeToggleCurrentObstacle();
+void scaleCurrentObstacle(float xs, float ys, float dt);
+void moveCurrentObstacle(float xs, float ys, float dt);
+
 /* Other Prototypes */
 int DIE(int retVal);
 void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * completed_nodes, float dt);
 /*
 TODO:
-100 (ish) points
-----
-Thin walls forming a maze (+5) -> just numbers and PRM tweaking
-	==> 1 hr
+115 points
 ----
 Videos (+5)
 	==> 2hr
 Write-up (including A* comparison) (+5)
 	==> .5hr
-Website
-	==> .5hr
 
-listeners
-p / g / s / o /  up / left / right / down / m / i / j / k / l
-press p to plan!
-UI select start and goal at run time (+5) ==> 1hr
-	press g (moves goal)
-	press s (moves start)
-UI add and move obstacles (+5) ==> 2hr
-	press o (spawns obstacle)
-	arrow keys to move it
-	m to change its type
-	ijkl to scale it
-
-==> 6 hr
 ----
 125 Points
 */
