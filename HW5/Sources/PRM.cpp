@@ -98,105 +98,7 @@ PRM::PRM(Point start, Point goal, Cspace_2D * cSpace) {
 simplifciation of A*. (h = 0)
 */
 VecPoint * PRM::findPathUCS() {
-	// maximum g-cost
-	const int maxi = std::numeric_limits<int>::max();
-
-	/* typedefs for readability */
-	typedef Node<Point> * Vert;
-	typedef std::unordered_set<Vert> Set;
-	typedef std::unordered_map<Vert, Vert> VertVert;
-	typedef std::unordered_map<Vert, float> VertFloat;
-
-	// parent tree
-	VertVert parents = VertVert();
-	VertFloat gcost = VertFloat();
-	
-	//initialize
-	VecPoint verts = *(this->roadmap->vertices);
-
-	Vert start = verts[0];
-	Vert target = verts[1];
-	gcost[start] = 0.0f;
-	parents[start] = nullptr;
-	
-	//skip start; i = 0
-	for (int i = 1; i < verts.size(); i++) {
-		Vert v = verts[i];
-		parents[v] = nullptr;
-		gcost[v] = static_cast<float>(maxi);
-	}
-
-	// closed set
-	Set closed = Set();
-
-	//create PQ
-	auto cmp = [gcost](Node<Point> * l, Node<Point> * r) { return gcost.at(l) > gcost.at(r); }; //normally <
-	std::priority_queue<Vert, std::vector<Vert>, decltype(cmp)> pq(cmp);
-	pq.push(verts[0]);
-
-	while (!pq.empty()) {
-		Vert u = pq.top();
-		pq.pop();
-
-		//add to closed
-		closed.insert(u);
-
-		for (int e = 0; e < u->edges->size(); e++) {
-			Vert adj = (*u->edges)[e];
-			if (closed.count(adj) > 0)
-				continue;
-			
-			float g_alt = gcost[u] + distP(adj->data, u->data);
-			if (g_alt < gcost[adj]) {
-				gcost[adj] = g_alt;
-				parents[adj] = u;
-
-				std::vector<Vert> pqvec = std::vector<Vert>();
-				//inefficient as hell; only way to fix is to write my own PQ; not in the mood to do that rn at 4 AM
-				// ACTUALLY; the best way to handle this would be to just maintain a secondary set, like closed.
-				//pull data out of the pq, but don't keep it off (immediately return to pq)
-				while (!pq.empty()) {
-					pqvec.push_back(pq.top());
-					pq.pop();
-				}
-				for (int i = 0; i < pqvec.size(); i++) {
-					pq.push(pqvec[i]);
-				}
-
-				// update adj if it is already on the PQ
-				if (std::any_of(pqvec.begin(), pqvec.end(), [adj](Vert v) {return v == adj; })) {
-					while (!pq.empty()) {
-						pq.pop();
-					}
-					while (pqvec.size() > 0) {
-						pq.push(pqvec.back());
-						pqvec.pop_back();
-					}
-				}
-				// add to PQ if not already on it
-				else {
-					pq.push(adj);
-				}
-			}
-		}
-		if (u == target)
-			break;
-	}
-		
-	// retrace path
-	VecPoint * path = new VecPoint();
-	Vert curr = target;
-	bool flag = false;
-	while (curr != nullptr) {
-		if (curr == start)
-			flag = true;
-		path->insert(path->begin(), curr);
-		curr = parents[curr];
-	}
-	if (flag)
-		return path;
-	else
-		return new VecPoint();
+    return findPathAstar(0);
 }
 
 /* custom A* search for a PRM Graph */
@@ -229,6 +131,7 @@ VecPoint * PRM::findPathAstar(float e) {
 		Vert v = verts[i];
 		parents[v] = nullptr;
 		gcost[v] = static_cast<float>(maxi);
+        //sadly squared distance is inadmissible
 		hcost[v] = distP(v->data, target->data);
 	}
 
