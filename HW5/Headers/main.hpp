@@ -90,23 +90,23 @@ namespace obj {//should be in G
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
-	int NR_CUBES = 0;
+	GLuint NR_CUBES = 0;
 	glm::vec3 * cubeSpecularColor;
 	glm::vec3 * cubeDiffuseColor;
-	float * cubeScale;
+	GLfloat * cubeScale;
 	glm::vec3 * cubePositions;
 
-	int NR_OBST = 0;
-	float * obstScale;
+	GLuint NR_OBST = 0;
+	GLfloat * obstScale;
 	glm::vec4 * obstRotation;
 	glm::vec3 * obstPositions;
 
-	int NR_RECT = 0;
+	GLuint NR_RECT = 0;
 	glm::vec2 * rectScale;
 	glm::vec3 * rectPositions;
 
-	int NR_AGENT = 0;
-	float * agentScale;
+	GLuint NR_AGENT = 0;
+	GLfloat * agentScale;
 	glm::vec4 * agentRotation;
 	glm::vec3 * agentPositions;
 }
@@ -119,12 +119,12 @@ namespace mouse {
 
 Camera* cam;
 Timer* timer;
-const int cylinder_res = 11;
+const GLuint cylinder_res = 11;
 
 Cspace_2D * cspace;
 PRM * prm;
 
-int cur_mode;
+GLuint cur_mode;
 Circle * cur_cob;
 Rect * cur_rob;
 
@@ -134,10 +134,10 @@ Rect * ragentBound;
 std::vector<Circle> obstBounds;
 Circle * cagentBound;
 std::vector<Node<Point> *> * pathVec;
-std::unordered_set<Node<Point> *> * path;
+std::unordered_set<Node<Point> *> * path_;
 
-bool isFlashlightOn;
-int completed_nodes;
+GLboolean isFlashlightOn;
+GLuint completed_nodes_;
 
 /* UI prototypes */
 bool keys[1024];
@@ -155,12 +155,12 @@ void placeObst(glm::vec3 pos);
 void placeGoalNode(glm::vec3 pos);
 void placeStartNode(glm::vec3 pos);
 void modeToggleCurrentObstacle();
-void scaleCurrentObstacle(float xs, float ys, float dt);
-void moveCurrentObstacle(float xs, float ys, float dt);
+void scaleCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
+void moveCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
 
 /* Other Prototypes */
 int DIE(int retVal);
-void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * completed_nodes, float dt);
+void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, GLuint * completed_nodes, GLfloat dt);
 /*
 TODO:
 115 points

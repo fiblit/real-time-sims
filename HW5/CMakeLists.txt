@@ -1,29 +1,31 @@
 cmake_minimum_required(VERSION 3.5)
-project(hw4_5611)
+project(hw5_5611)
 
 option(GLFW_BUILD_DOCS OFF)
 option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
 add_subdirectory(Libraries/glfw)
 
-#[[
+
 option(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 option(ASSIMP_BUILD_SAMPLES OFF)
 option(ASSIMP_BUILD_TESTS OFF)
 add_subdirectory(Libraries/assimp)
-]]
+
 
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+    ADD_COMPILE_OPTIONS(/W4)
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++14")
+    ADD_COMPILE_OPTIONS(-Wall -Wextra -Wpedantic -std=c++14)
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++14")
     if(NOT WIN32)
         set(GLAD_LIBRARIES dl)
     endif()
 endif()
 
 include_directories(Headers/
-                    #[[Libraries/assimp/include/]]
+                    Libraries/assimp/include/
                     Libraries/glad/include/
                     Libraries/glfw/include/
                     Libraries/glm/
@@ -55,7 +57,7 @@ add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
                                ${LIBRARY_SOURCES})
 
-target_link_libraries(${PROJECT_NAME} #[[assimp]] glfw
+target_link_libraries(${PROJECT_NAME} assimp glfw
                       ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})

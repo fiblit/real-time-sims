@@ -3,7 +3,7 @@
 /* uniformly samples the configuration space to generate nodes for the PRM;
    All sampled points will be non-colliding with the static environment 
 */
-VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
+VecPoint * PRM::sampleNodes(Cspace_2D * cSpace_) {
 	typedef std::chrono::high_resolution_clock hrclock;
 	hrclock::time_point first = hrclock::now();
 
@@ -12,9 +12,9 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 	const int samplecount = 5;//this does not work on all maps
 
 	hrclock::duration seed = hrclock::now() - first;
-	gen.seed(seed.count());
+	gen.seed(static_cast<unsigned int>(seed.count()));
 
-	float b = 3.3f;//bin size
+	float b = 2.8f;//bin size
 
 	VecPoint * sample = new VecPoint();
 	for (int i = 0; i < samplecount; i++) {
@@ -28,7 +28,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 					p.y += std(gen)/5;
 					p.x = std::min(std::max(p.x, -10.f), 10.f);
 					p.y = std::min(std::max(p.y, -10.f), 10.f);
-				} while (this->cSpace->isCollision(p));
+				} while (cSpace_->isCollision(p));
 				sample->push_back(new Node<Point>(p, new VecPoint()));
 				//else
 				//	i--;
@@ -41,7 +41,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace) {
 
 /* threshold search to find NNs */
 VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
-	int threshold = 3.5f; // METERS
+	float threshold = 3.f; // METERS
 
 	VecPoint * neighbours = new VecPoint();
 
@@ -123,7 +123,7 @@ VecPoint * PRM::findPathUCS() {
 	for (int i = 1; i < verts.size(); i++) {
 		Vert v = verts[i];
 		parents[v] = nullptr;
-		gcost[v] = maxi;
+		gcost[v] = static_cast<float>(maxi);
 	}
 
 	// closed set
@@ -228,7 +228,7 @@ VecPoint * PRM::findPathAstar(float e) {
 	for (int i = 1; i < verts.size(); i++) {
 		Vert v = verts[i];
 		parents[v] = nullptr;
-		gcost[v] = maxi;
+		gcost[v] = static_cast<float>(maxi);
 		hcost[v] = distP(v->data, target->data);
 	}
 
@@ -247,8 +247,8 @@ VecPoint * PRM::findPathAstar(float e) {
 		// we will never change u again, so it is closed
 		closed.insert(u);
 
-		for (int e = 0; e < u->edges->size(); e++) {
-			Vert adj = (*u->edges)[e];
+		for (int edge = 0; edge < u->edges->size(); edge++) {
+			Vert adj = (*u->edges)[edge];
 			if (closed.count(adj) > 0)
 				continue;
 
@@ -308,91 +308,91 @@ VecPoint * PRM::findPathAstar(float e) {
 }
 
 /* generates a configuartion space given a list of obstacles (circles-only) and agents (circle-only; 1-only) */
-Cspace_2D::Cspace_2D(std::vector<Circle> cobs, std::vector<Rect> robs, Circle * cagent, Rect * ragent) {
-	init(cobs.data(), cobs.size(), robs.data(), robs.size(), cagent, ragent);
+Cspace_2D::Cspace_2D(std::vector<Circle> cobs_, std::vector<Rect> robs_, Circle * cagent, Rect * ragent) {
+	init(cobs_.data(), static_cast<int>(cobs_.size()), robs_.data(), static_cast<unsigned int>(robs_.size()), cagent, ragent);
 }
 
-Cspace_2D::Cspace_2D(Circle * cobs, int cn, Rect * robs, int rn, Circle * cagent, Rect * ragent) {
-	init(cobs, cn, robs, rn, cagent, ragent);
+Cspace_2D::Cspace_2D(Circle * cobs_, int cn, Rect * robs_, int rn, Circle * cagent, Rect * ragent) {
+	init(cobs_, cn, robs_, rn, cagent, ragent);
 }
 
-void Cspace_2D::init(Circle * cobs, int cn, Rect * robs, int rn, Circle * cagent, Rect * ragent) {
+void Cspace_2D::init(Circle * cobs_, int cn, Rect * robs_, int rn, Circle * cagent, Rect * ragent) {
 	this->cobs = new std::vector<Circle>();
 	this->robs = new std::vector<Rect>();
 	for (int i = 0; i < cn; i++) {
 		if (cagent != nullptr) {
 			Circle c;
-			c.r = cobs[i].r + cagent->r;
-			c.o = cobs[i].o;
+			c.r = cobs_[i].r + cagent->r;
+			c.o = cobs_[i].o;
 			this->cobs->push_back(c);
 		}
 		else if (ragent != nullptr) {
 			// add robs
 			Rect r;
-			r.o = cobs[i].o;
+			r.o = cobs_[i].o;
 			r.w = ragent->w;
-			r.h = 2*cobs[i].r + ragent->h;
+			r.h = 2*cobs_[i].r + ragent->h;
 			this->robs->push_back(r);
-			r.w = 2*cobs[i].r + ragent->w;
+			r.w = 2*cobs_[i].r + ragent->w;
 			r.h = ragent->h;
 			this->robs->push_back(r);
 
 			// add cobs
 			Circle c;
-			c.r = cobs[i].r;
-			c.o.x = cobs[i].o.x + ragent->w / 2;
-			c.o.y = cobs[i].o.y + ragent->h / 2;
+			c.r = cobs_[i].r;
+			c.o.x = cobs_[i].o.x + ragent->w / 2;
+			c.o.y = cobs_[i].o.y + ragent->h / 2;
 			this->cobs->push_back(c);
 
-			c.o.x = cobs[i].o.x - ragent->w / 2;
-			c.o.y = cobs[i].o.y + ragent->h / 2;
+			c.o.x = cobs_[i].o.x - ragent->w / 2;
+			c.o.y = cobs_[i].o.y + ragent->h / 2;
 			this->cobs->push_back(c);
 
-			c.o.x = cobs[i].o.x + ragent->w / 2;
-			c.o.y = cobs[i].o.y - ragent->h / 2;
+			c.o.x = cobs_[i].o.x + ragent->w / 2;
+			c.o.y = cobs_[i].o.y - ragent->h / 2;
 			this->cobs->push_back(c);
 
-			c.o.x = cobs[i].o.x - ragent->w / 2;
-			c.o.y = cobs[i].o.y - ragent->h / 2;
+			c.o.x = cobs_[i].o.x - ragent->w / 2;
+			c.o.y = cobs_[i].o.y - ragent->h / 2;
 			this->cobs->push_back(c);
 		}
 	}
 	for (int i = 0; i < rn; i++) {
 		if (ragent != nullptr) {
 			Rect r;
-			r.w = robs[i].w + ragent->w;
-			r.h = robs[i].h + ragent->h;
-			r.o = robs[i].o;
+			r.w = robs_[i].w + ragent->w;
+			r.h = robs_[i].h + ragent->h;
+			r.o = robs_[i].o;
 			this->robs->push_back(r);
 		}
 		else if (cagent != nullptr) {
 			// add robs
 			Rect r;
-			r.o = robs[i].o;
-			r.w = robs[i].w;
-			r.h = 2 * cagent->r + robs[i].h;
+			r.o = robs_[i].o;
+			r.w = robs_[i].w;
+			r.h = 2 * cagent->r + robs_[i].h;
 			this->robs->push_back(r);
-			r.w = 2 * cagent->r + robs[i].w;
-			r.h = robs[i].h;
+			r.w = 2 * cagent->r + robs_[i].w;
+			r.h = robs_[i].h;
 			this->robs->push_back(r);
 
 			// add cobs
 			Circle c;
 			c.r = cagent->r;
-			c.o.x = robs[i].o.x + robs[i].w / 2;
-			c.o.y = robs[i].o.y + robs[i].h / 2;
+			c.o.x = robs_[i].o.x + robs_[i].w / 2;
+			c.o.y = robs_[i].o.y + robs_[i].h / 2;
 			this->cobs->push_back(c);
 
-			c.o.x = robs[i].o.x - robs[i].w / 2;
-			c.o.y = robs[i].o.y + robs[i].h / 2;
+			c.o.x = robs_[i].o.x - robs_[i].w / 2;
+			c.o.y = robs_[i].o.y + robs_[i].h / 2;
 			this->cobs->push_back(c);
 
-			c.o.x = robs[i].o.x + robs[i].w / 2;
-			c.o.y = robs[i].o.y - robs[i].h / 2;
+			c.o.x = robs_[i].o.x + robs_[i].w / 2;
+			c.o.y = robs_[i].o.y - robs_[i].h / 2;
 			this->cobs->push_back(c);
 
-			c.o.x = robs[i].o.x - robs[i].w / 2;
-			c.o.y = robs[i].o.y - robs[i].h / 2;
+			c.o.x = robs_[i].o.x - robs_[i].w / 2;
+			c.o.y = robs_[i].o.y - robs_[i].h / 2;
 			this->cobs->push_back(c);
 		}
 	}

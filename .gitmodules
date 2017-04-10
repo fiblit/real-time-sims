@@ -22,6 +22,7 @@
 [submodule "HW5/Libraries/glad"]
 	path = HW5/Libraries/glad
 	url = https://github.com/Dav1dde/glad.git
+	branch = c
 [submodule "HW5/Libraries/assimp"]
 	path = HW5/Libraries/assimp
 	url = https://github.com/assimp/assimp.git

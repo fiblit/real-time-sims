@@ -188,7 +188,7 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
-		animate_agent(cspace, pathVec, &completed_nodes, timer->getDelta());
+		animate_agent(cspace, pathVec, &completed_nodes_, timer->getDelta());
 
 		// Callbacks 
 		glfwPollEvents();
@@ -215,9 +215,9 @@ int main() {
 		glUniform1i(cubeShader->Uni("material.specular"), 1);
 
 		glUniform3f(cubeShader->Uni("dirLight.direction"), dirLightDir.x, -dirLightDir.y, dirLightDir.z);
-		glUniform3f(cubeShader->Uni("dirLight.ambient"), lightAmbient.x*0.1, lightAmbient.y*0.1, lightAmbient.z*0.1);
-		glUniform3f(cubeShader->Uni("dirLight.diffuse"), lightDiffuse.x*0.1, lightDiffuse.y*0.1, lightDiffuse.z*0.1);
-		glUniform3f(cubeShader->Uni("dirLight.specular"), lightSpecular.x*0.1, lightSpecular.y*0.1, lightSpecular.z*0.1);
+		glUniform3f(cubeShader->Uni("dirLight.ambient"), lightAmbient.x*0.1f, lightAmbient.y*0.1f, lightAmbient.z*0.1f);
+		glUniform3f(cubeShader->Uni("dirLight.diffuse"), lightDiffuse.x*0.1f, lightDiffuse.y*0.1f, lightDiffuse.z*0.1f);
+		glUniform3f(cubeShader->Uni("dirLight.specular"), lightSpecular.x*0.1f, lightSpecular.y*0.1f, lightSpecular.z*0.1f);
 
 		for (GLuint i = 0; i < 4; i++) {
 			std::string si = "pointLights[" + std::to_string(i) + "].";
@@ -246,7 +246,7 @@ int main() {
 
 		glBindVertexArray(VAO[0]);
 
-		for (GLuint i = 0; i < obj::NR_OBST; i++) {
+		for (GLuint i = 0; i <obj::NR_OBST; i++) {
 			model = glm::mat4();
 			model = glm::translate(model, obj::obstPositions[i]);
 			model = glm::rotate(model, obj::obstRotation[i].w, glm::vec3(obj::obstRotation[i].x, obj::obstRotation[i].y, obj::obstRotation[i].z));
@@ -284,7 +284,7 @@ int main() {
 				for (int i = 0; i < cylinder_res; i++) {
 					model = glm::mat4();
 					model = glm::translate(model, glm::vec3(cur_cob->o.x, 0.0f - 0.001f*i, cur_cob->o.y));
-					model = glm::scale(model, glm::vec3(cur_cob->r*sqrt(2)));
+					model = glm::scale(model, glm::vec3(cur_cob->r * static_cast<float>(sqrt(2))));
 					model = glm::rotate(model, glm::radians(360.0f / cylinder_res*i), glm::vec3(0.f, 1.f, 0.f));
 					glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
 					glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
@@ -312,9 +312,9 @@ int main() {
 		glUniform1f(flatShader->Uni("material.shine"), 32.0f);
 
 		glUniform3f(flatShader->Uni("dirLight.direction"), dirLightDir.x, dirLightDir.y, dirLightDir.z);
-		glUniform3f(flatShader->Uni("dirLight.ambient"), lightAmbient.x*0.1, lightAmbient.y*0.1, lightAmbient.z*0.1);
-		glUniform3f(flatShader->Uni("dirLight.diffuse"), lightDiffuse.x*0.1, lightDiffuse.y*0.1, lightDiffuse.z*0.1);
-		glUniform3f(flatShader->Uni("dirLight.specular"), lightSpecular.x*0.1, lightSpecular.y*0.1, lightSpecular.z*0.1);
+		glUniform3f(flatShader->Uni("dirLight.ambient"), lightAmbient.x*0.1f, lightAmbient.y*0.1f, lightAmbient.z*0.1f);
+		glUniform3f(flatShader->Uni("dirLight.diffuse"), lightDiffuse.x*0.1f, lightDiffuse.y*0.1f, lightDiffuse.z*0.1f);
+		glUniform3f(flatShader->Uni("dirLight.specular"), lightSpecular.x*0.1f, lightSpecular.y*0.1f, lightSpecular.z*0.1f);
 
 		for (GLuint i = 0; i < 4; i++) {
 			std::string si = "pointLights[" + std::to_string(i) + "].";
@@ -388,6 +388,8 @@ int main() {
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
+    UNUSED(window, scancode, mode);
+
 	//Press ESC to close Application
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
@@ -401,6 +403,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    UNUSED(window);
 	if (!mouse::focus) {
 		mouse::lastX = (GLfloat) xpos;
 		mouse::lastY = (GLfloat) ypos;
@@ -418,6 +421,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow * window, double xoffset, double yoffset) {
+    UNUSED(window, xoffset);
+
 	cam->scrollZoomCamera((GLfloat) yoffset);
 }
 
@@ -486,7 +491,7 @@ int DIE(int retVal) {
 }
 
 
-void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * completed_nodes, float dt) {
+void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, GLuint * completed_nodes, GLfloat dt) {
 	if ((*completed_nodes) < path->size()) {
 		float velocity = 1.0f; // x m/s
 		Point agentNow;
@@ -516,7 +521,7 @@ void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, int * compl
 		}
 
 		Point motion = scaleP(subP(nextNode, agentNow), velocity * dt / distP(nextNode, agentNow));
-		for (int i = 0; i < obj::NR_AGENT; i++) {
+		for (GLuint i = 0; i < obj::NR_AGENT; i++) {
 			obj::agentPositions[i] += glm::vec3(motion.x, 0.0f, motion.y);
 		}
 	}
@@ -530,7 +535,7 @@ void init_planning() {
 	ragentBound = new Rect();// nullptr;
 	cagentBound = nullptr;//new Circle();
 	pathVec = nullptr;
-	path = nullptr;
+	path_ = nullptr;
 
 	startPoint.x = -9.0f; startPoint.y = -9.0f;
 	goalPoint.x = 9.0f; goalPoint.y = 9.0f;
@@ -559,13 +564,13 @@ void init_planning() {
 
 void init_planning_vis() {
 	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
-	obj::NR_CUBES = verts->size() + 1;
+	obj::NR_CUBES = static_cast<GLuint>(verts->size() + 1);
 	obj::cubePositions = new glm::vec3[obj::NR_CUBES];
 	obj::cubeScale = new float[obj::NR_CUBES];
 	obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
 	obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
 
-	for (int i = 0; i < obj::NR_CUBES - 1; i++) {
+	for (GLuint i = 0; i < obj::NR_CUBES - 1; i++) {
 		Node<Point> * v = verts->at(i);
 		obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
 		if (i == 0) {
@@ -580,7 +585,7 @@ void init_planning_vis() {
 			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 			obj::cubePositions[i] = glm::vec3(goalPoint.x, - 2.0f, goalPoint.y);
 		}
-		else if (path->find(v) != path->end()) {
+		else if (path_->find(v) != path_->end()) {
 			obj::cubeScale[i] = 0.75f;
 			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
 			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -598,20 +603,20 @@ void init_planning_vis() {
 	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
 	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	obj::NR_OBST = cylinder_res * obstBounds.size();
+	obj::NR_OBST = static_cast<GLuint>(cylinder_res * obstBounds.size());
 	obj::obstPositions = new glm::vec3[obj::NR_OBST];
 	obj::obstRotation = new glm::vec4[obj::NR_OBST];
 	obj::obstScale = new float[obj::NR_OBST];
-	for (int i = 0; i < obj::NR_OBST; i++) {
+	for (GLuint i = 0; i < obj::NR_OBST; i++) {
 		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res].o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res].o.y);
-		obj::obstScale[i] = obstBounds[(int)i / cylinder_res].r * sqrt(2);
+		obj::obstScale[i] = obstBounds[(int)i / cylinder_res].r * static_cast<float>(sqrt(2));
 		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
 	}
 
-	obj::NR_RECT = rectBounds.size();
+	obj::NR_RECT = static_cast<GLuint>(rectBounds.size());
 	obj::rectPositions = new glm::vec3[obj::NR_RECT];
 	obj::rectScale = new glm::vec2[obj::NR_RECT];
-	for (int i = 0; i < obj::NR_RECT; i++) {
+	for (GLuint i = 0; i < obj::NR_RECT; i++) {
 		obj::rectPositions[i] = glm::vec3(rectBounds[i].o.x, 0.0f, rectBounds[i].o.y);
 		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
 	}
@@ -620,10 +625,10 @@ void init_planning_vis() {
 	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
 	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
 	obj::agentScale = new float[obj::NR_AGENT];
-	for (int i = 0; i < obj::NR_AGENT; i++) {
+	for (GLuint i = 0; i < obj::NR_AGENT; i++) {
 		if (cagentBound != nullptr) {
 			obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f + 0.001f*i, startPoint.y);
-			obj::agentScale[i] = cagentBound->r * sqrt(2);
+			obj::agentScale[i] = cagentBound->r * static_cast<float>(sqrt(2));
 			obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
 		}
 		else {
@@ -654,7 +659,7 @@ void replan() {
 		break;
 	}
 	ragentBound->o = startPoint;
-	for (int i = 0; i < obj::NR_AGENT; i++)
+	for (GLuint i = 0; i < obj::NR_AGENT; i++)
 		obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f, startPoint.y);
 
 	if (prm != nullptr)
@@ -664,11 +669,11 @@ void replan() {
 
 	/* PATH PLANNING METHOD */
 	pathVec = prm->findPathUCS(); //new std::vector<Node<Point> *>(); //even this is slow //
-	path = new std::unordered_set<Node<Point> *>();
+	path_ = new std::unordered_set<Node<Point> *>();
 	for (int i = 0; i < pathVec->size(); i++)
-		path->insert((*pathVec)[i]);
+		path_->insert((*pathVec)[i]);
 
-	completed_nodes = 0;
+	completed_nodes_ = 0;
 }
 
 void toggleFlashlight() {
@@ -736,7 +741,7 @@ void modeToggleCurrentObstacle() {
 	} 
 }
 
-void scaleCurrentObstacle(float xs, float ys, float dt) {
+void scaleCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt) {
 	switch (cur_mode) {
 	case 0:
 		//1 - dt is a lerp
@@ -753,7 +758,7 @@ void scaleCurrentObstacle(float xs, float ys, float dt) {
 	}
 }
 
-void moveCurrentObstacle(float dx, float dy, float dt) {
+void moveCurrentObstacle(GLfloat dx, GLfloat dy, GLfloat dt) {
 	switch (cur_mode) {
 	case 0:
 		if (cur_cob != nullptr) {
