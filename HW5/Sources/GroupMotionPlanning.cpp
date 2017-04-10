@@ -51,6 +51,9 @@ VecPoint * GMP::findPathAstar(float e, Graph<Point> * roadmap) {
             if (!gcost.count(adj) || g_alt < gcost[adj]) {
                 gcost[adj] = g_alt;
                 float fcost = g_alt + e * distP(goal->data, adj->data);
+                //it's okay if we get multiple nodes on the PQ with diff fcosts
+                //whichever has the lowest will show up first and the later ones will
+                //have no effect as they have the same gcost
                 pq.push(PQ_item(adj, fcost));
                 parent[adj] = cur_v;
             }
