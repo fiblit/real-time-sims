@@ -54,11 +54,11 @@ private:
 public:
 	Graph<Point> * roadmap;
 	PRM(Point start, Point goal, Cspace_2D * cSpace);
-	VecPoint * findPathUCS();
-	VecPoint * findPathAstar(float e);
+	//VecPoint * findPathUCS();
+	//VecPoint * findPathAstar(float e);
 };
 
-
+//wtf, why didn't I just use glm::Vec2???
 float dotP(Point a, Point b);
 float distP(Point a, Point b);
 Point subP(Point a, Point b);

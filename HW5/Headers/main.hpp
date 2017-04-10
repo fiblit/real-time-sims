@@ -11,6 +11,7 @@
 #include "Camera.hpp"
 #include "Timer.hpp"
 #include "PRM.hpp"
+#include "GlobalMotionPlanner.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad

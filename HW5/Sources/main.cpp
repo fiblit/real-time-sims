@@ -668,7 +668,7 @@ void replan() {
 	prm = new PRM(startPoint, goalPoint, cspace);
 
 	/* PATH PLANNING METHOD */
-	pathVec = prm->findPathUCS(); //new std::vector<Node<Point> *>(); //even this is slow //
+	pathVec = GMP::findPathUCS(prm->roadmap); //new std::vector<Node<Point> *>(); //even this is slow //
 	path_ = new std::unordered_set<Node<Point> *>();
 	for (int i = 0; i < pathVec->size(); i++)
 		path_->insert((*pathVec)[i]);
