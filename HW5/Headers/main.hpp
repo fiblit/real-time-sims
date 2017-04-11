@@ -126,16 +126,15 @@ Cspace_2D * cspace;
 PRM * prm;
 
 GLuint cur_mode;
-Circle * cur_cob;
-Rect * cur_rob;
+BoundingVolume * cur_ob;
 
-Point startPoint, goalPoint;
-std::vector<Rect> rectBounds;
+glm::vec2 startPoint, goalPoint;
+std::vector<Rect *> rectBounds;
 Rect * ragentBound;
-std::vector<Circle> obstBounds;
-Circle * cagentBound;
-std::vector<Node<Point> *> * pathVec;
-std::unordered_set<Node<Point> *> * path_;
+std::vector<Circ *> obstBounds;
+Circ * cagentBound;
+std::vector<Node<glm::vec2> *> * pathVec;
+std::unordered_set<Node<glm::vec2> *> * path_;
 
 GLboolean isFlashlightOn;
 GLuint completed_nodes_;
@@ -161,7 +160,7 @@ void moveCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
 
 /* Other Prototypes */
 int DIE(int retVal);
-void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, GLuint * completed_nodes, GLfloat dt);
+void animate_agent(Cspace_2D * c, std::vector<Node<glm::vec2> *> * path, GLuint * completed_nodes, GLfloat dt);
 /*
 TODO:
 115 points

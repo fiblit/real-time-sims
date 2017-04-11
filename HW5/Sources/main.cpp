@@ -83,13 +83,13 @@ int main() {
 
 	/* Objects */
 	// cubes
-	const GLuint numBuf = 1;
+	const GLuint numBuf = 2;
 	GLuint VAO[numBuf]; // should probably make this dynamically resizable... / managed
 	glGenVertexArrays(numBuf, VAO);
 	GLuint VBO[numBuf];
 	glGenBuffers(numBuf, VBO);
 
-	glBindVertexArray(VAO[0]);				// occasionally a crash here
+	glBindVertexArray(VAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(obj::cube), obj::cube, GL_STATIC_DRAW);
 	// Position attr
@@ -102,6 +102,14 @@ int main() {
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
+
+    glBindVertexArray(VAO[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    // Position attr
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 
 	// lamps
 	GLuint lightVAO;
@@ -280,7 +288,9 @@ int main() {
 
 		switch (cur_mode) {
 		case 0:
-			if (cur_cob != nullptr) {
+			if (cur_ob != nullptr) {
+                Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
+
 				for (int i = 0; i < cylinder_res; i++) {
 					model = glm::mat4();
 					model = glm::translate(model, glm::vec3(cur_cob->o.x, 0.0f - 0.001f*i, cur_cob->o.y));
@@ -294,7 +304,9 @@ int main() {
 			}
 			break;
 		case 1:
-			if (cur_rob != nullptr) {
+			if (cur_ob != nullptr) {
+                Rect * cur_rob = dynamic_cast<Rect *>(cur_ob);
+
 				model = glm::mat4();
 				model = glm::translate(model, glm::vec3(cur_rob->o.x, 0.0f, cur_rob->o.y));
 				model = glm::scale(model, glm::vec3(cur_rob->w, 1.0f, cur_rob->h));
@@ -491,14 +503,14 @@ int DIE(int retVal) {
 }
 
 
-void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, GLuint * completed_nodes, GLfloat dt) {
+void animate_agent(Cspace_2D * c, std::vector<Node<glm::vec2> *> * path, GLuint * completed_nodes, GLfloat dt) {
 	if ((*completed_nodes) < path->size()) {
 		float velocity = 1.0f; // x m/s
-		Point agentNow;
+		glm::vec2 agentNow;
 		agentNow.x = obj::agentPositions[0].x;
 		agentNow.y = obj::agentPositions[0].z;
 
-		Point nextNode;
+		glm::vec2 nextNode;
 		nextNode.x = (*path)[(*completed_nodes)]->data.x;
 		nextNode.y = (*path)[(*completed_nodes)]->data.y;
 
@@ -509,7 +521,7 @@ void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, GLuint * co
 			nextNode.y = (*path)[(*completed_nodes)]->data.y;
 		}
 
-		float dist = distP(nextNode, agentNow);
+		float dist = glm::distance(nextNode, agentNow);
 		if (dist < 0.1f) {
 			(*completed_nodes)++;
 			//not sure why I have this, as this will, like, never happen.
@@ -520,7 +532,7 @@ void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, GLuint * co
 			}
 		}
 
-		Point motion = scaleP(subP(nextNode, agentNow), velocity * dt / distP(nextNode, agentNow));
+		glm::vec2 motion = (nextNode - agentNow) * (velocity * dt / glm::distance(nextNode, agentNow));
 		for (GLuint i = 0; i < obj::NR_AGENT; i++) {
 			obj::agentPositions[i] += glm::vec3(motion.x, 0.0f, motion.y);
 		}
@@ -528,8 +540,7 @@ void animate_agent(Cspace_2D * c, std::vector<Node<Point> *> * path, GLuint * co
 }
 
 void init_planning() {
-	cur_cob = nullptr;
-	cur_rob = nullptr;
+	cur_ob = nullptr;
 	cspace = nullptr;
 	prm = nullptr;
 	ragentBound = new Rect();// nullptr;
@@ -544,26 +555,26 @@ void init_planning() {
 	ragentBound->w = 1.0f;
 	ragentBound->h = 1.0f;
 
-	obstBounds = std::vector<Circle>(2);
-	obstBounds[0].o.y = 0.0f;	obstBounds[0].o.x = 0.0f;	obstBounds[0].r = 2.0f;
-	obstBounds[1].o.y = -7.0f;	obstBounds[1].o.x = 6.0f;	obstBounds[1].r = 1.0f;
+	obstBounds = std::vector<Circ *>(2);
+	obstBounds[0]->o.y = 0.0f;	obstBounds[0]->o.x = 0.0f;	obstBounds[0]->r = 2.0f;
+	obstBounds[1]->o.y = -7.0f;	obstBounds[1]->o.x = 6.0f;	obstBounds[1]->r = 1.0f;
 
-	rectBounds = std::vector<Rect>(10);
+	rectBounds = std::vector<Rect *>(10);
 	{int NR = 0;
-	rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-	rectBounds[NR].o.y = -7.25f;	rectBounds[NR].o.x = -1.0f;		rectBounds[NR].h = 5.5f;	rectBounds[NR].w = 0.1f; NR++;
-	rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = -8.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-	rectBounds[NR].o.y = 3.0f;  	rectBounds[NR].o.x = 0.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-	rectBounds[NR].o.y = 6.5f;  	rectBounds[NR].o.x = -2.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 8.0f; NR++;//
-	rectBounds[NR].o.y = 4.75f; 	rectBounds[NR].o.x = 2.0f;		rectBounds[NR].h = 3.5f;	rectBounds[NR].w = 0.1f; NR++;
-	rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 3.0f;	rectBounds[NR].w = 0.1f; NR++;
-	rectBounds[NR].o.y = -5.0f; 	rectBounds[NR].o.x = -5.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 3.0f; NR++;
-	rectBounds[NR].o.y = 0.0f; 		rectBounds[NR].o.x = 4.0f;		rectBounds[NR].h = 0.1f;	rectBounds[NR].w = 4.0f; NR++;
-	rectBounds[NR].o.y = -3.0f;		rectBounds[NR].o.x = 6.0f;		rectBounds[NR].h = 6.0f;	rectBounds[NR].w = 0.1f; NR++; }//
+	rectBounds[NR]->o.y = 3.0f;  	rectBounds[NR]->o.x = 8.0f;		rectBounds[NR]->h = 0.1f;   rectBounds[NR]->w = 4.0f; NR++;
+	rectBounds[NR]->o.y = -7.25f;	rectBounds[NR]->o.x = -1.0f;	rectBounds[NR]->h = 5.5f;	rectBounds[NR]->w = 0.1f; NR++;
+	rectBounds[NR]->o.y = 3.0f;  	rectBounds[NR]->o.x = -8.0f;	rectBounds[NR]->h = 0.1f;	rectBounds[NR]->w = 4.0f; NR++;
+	rectBounds[NR]->o.y = 3.0f;  	rectBounds[NR]->o.x = 0.0f;		rectBounds[NR]->h = 0.1f;   rectBounds[NR]->w = 4.0f; NR++;
+	rectBounds[NR]->o.y = 6.5f;  	rectBounds[NR]->o.x = -2.0f;	rectBounds[NR]->h = 0.1f;	rectBounds[NR]->w = 8.0f; NR++;//
+	rectBounds[NR]->o.y = 4.75f; 	rectBounds[NR]->o.x = 2.0f;		rectBounds[NR]->h = 3.5f;   rectBounds[NR]->w = 0.1f; NR++;
+	rectBounds[NR]->o.y = -5.0f; 	rectBounds[NR]->o.x = -5.0f;	rectBounds[NR]->h = 3.0f;	rectBounds[NR]->w = 0.1f; NR++;
+	rectBounds[NR]->o.y = -5.0f; 	rectBounds[NR]->o.x = -5.0f;	rectBounds[NR]->h = 0.1f;	rectBounds[NR]->w = 3.0f; NR++;
+	rectBounds[NR]->o.y = 0.0f; 	rectBounds[NR]->o.x = 4.0f;		rectBounds[NR]->h = 0.1f;   rectBounds[NR]->w = 4.0f; NR++;
+	rectBounds[NR]->o.y = -3.0f;	rectBounds[NR]->o.x = 6.0f;		rectBounds[NR]->h = 6.0f;   rectBounds[NR]->w = 0.1f; NR++; }//
 }
 
 void init_planning_vis() {
-	std::vector<Node<Point> *> * verts = prm->roadmap->vertices;
+	std::vector<Node<glm::vec2> *> * verts = prm->roadmap->vertices;
 	obj::NR_CUBES = static_cast<GLuint>(verts->size() + 1);
 	obj::cubePositions = new glm::vec3[obj::NR_CUBES];
 	obj::cubeScale = new float[obj::NR_CUBES];
@@ -571,7 +582,7 @@ void init_planning_vis() {
 	obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
 
 	for (GLuint i = 0; i < obj::NR_CUBES - 1; i++) {
-		Node<Point> * v = verts->at(i);
+		Node<glm::vec2> * v = verts->at(i);
 		obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
 		if (i == 0) {
 			obj::cubeScale[i] = 1.0f;
@@ -597,30 +608,36 @@ void init_planning_vis() {
 		}
 	}
 
+    std::vector<std::pair<Node<glm::vec2> *, Node<glm::vec2> *>> * all_edges = prm->roadmap->all_edges;
+    //glBufferData(,,)
+
 	// add ground
 	obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
 	obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
 	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
 	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
 
+    //add circs
 	obj::NR_OBST = static_cast<GLuint>(cylinder_res * obstBounds.size());
 	obj::obstPositions = new glm::vec3[obj::NR_OBST];
 	obj::obstRotation = new glm::vec4[obj::NR_OBST];
 	obj::obstScale = new float[obj::NR_OBST];
 	for (GLuint i = 0; i < obj::NR_OBST; i++) {
-		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res].o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res].o.y);
-		obj::obstScale[i] = obstBounds[(int)i / cylinder_res].r * static_cast<float>(sqrt(2));
+		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res]->o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res]->o.y);
+		obj::obstScale[i] = obstBounds[(int)i / cylinder_res]->r * static_cast<float>(sqrt(2));
 		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
 	}
 
+    //add rects
 	obj::NR_RECT = static_cast<GLuint>(rectBounds.size());
 	obj::rectPositions = new glm::vec3[obj::NR_RECT];
 	obj::rectScale = new glm::vec2[obj::NR_RECT];
 	for (GLuint i = 0; i < obj::NR_RECT; i++) {
-		obj::rectPositions[i] = glm::vec3(rectBounds[i].o.x, 0.0f, rectBounds[i].o.y);
-		obj::rectScale[i] = glm::vec2(rectBounds[i].w, rectBounds[i].h);
+		obj::rectPositions[i] = glm::vec3(rectBounds[i]->o.x, 0.0f, rectBounds[i]->o.y);
+		obj::rectScale[i] = glm::vec2(rectBounds[i]->w, rectBounds[i]->h);
 	}
 
+    //add agents
 	obj::NR_AGENT = cylinder_res * 1;
 	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
 	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
@@ -644,15 +661,17 @@ void init_planning_vis() {
 void replan() {
 	switch (cur_mode) {
 	case 0:
-		if (cur_cob != nullptr) {
-			obstBounds.push_back(*cur_cob);
+		if (cur_ob != nullptr) {
+            Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
+			obstBounds.push_back(cur_cob);
 			delete cur_cob;
 			cur_cob = nullptr;
 		}
 		break;
 	case 1:
-		if (cur_rob != nullptr) {
-			rectBounds.push_back(*cur_rob);
+		if (cur_ob != nullptr) {
+            Rect * cur_rob = dynamic_cast<Rect *>(cur_ob);
+			rectBounds.push_back(cur_rob);
 			delete cur_rob;
 			cur_rob = nullptr;
 		}
@@ -664,12 +683,23 @@ void replan() {
 
 	if (prm != nullptr)
 		init_planning_vis();
-	cspace = new Cspace_2D(obstBounds, rectBounds, cagentBound, ragentBound);
+    BoundingVolume * agent;
+
+
+    if (cur_mode == 0)
+        cspace = new Cspace_2D(
+            obstBounds.insert(obstBounds.begin(), rectBounds.begin(), rectBounds.end()), 
+            cagentBound);
+    else
+        cspace = new Cspace_2D(
+            obstBounds.insert(obstBounds.begin(), rectBounds.begin(), rectBounds.end()), 
+            ragentBound);
+
 	prm = new PRM(startPoint, goalPoint, cspace);
 
 	/* PATH PLANNING METHOD */
-	pathVec = GMP::findPathUCS(prm->roadmap); //new std::vector<Node<Point> *>(); //even this is slow //
-	path_ = new std::unordered_set<Node<Point> *>();
+	pathVec = GMP::findPathUCS(prm->roadmap); //new std::vector<Node<glm::vec2> *>(); //even this is slow //
+	path_ = new std::unordered_set<Node<glm::vec2> *>();
 	for (int i = 0; i < pathVec->size(); i++)
 		path_->insert((*pathVec)[i]);
 
@@ -683,19 +713,21 @@ void toggleFlashlight() {
 void placeObst(glm::vec3 pos) {
 	switch (cur_mode) {
 	case 0:
-		if (cur_cob != nullptr) {
-			obstBounds.push_back(*cur_cob);
+        Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
+		if (cur_ob != nullptr) {
+			obstBounds.push_back(cur_cob);
 			init_planning_vis();
 			delete cur_cob;
 		}
-		cur_cob = new Circle();
+		cur_cob = new Circ();
 		cur_cob->o.x = pos.x;
 		cur_cob->o.y = pos.z;
 		cur_cob->r = 1.0f;
 		break;
 	case 1:
-		if (cur_rob != nullptr) {
-			rectBounds.push_back(*cur_rob);
+        Rect * cur_rob = dynamic_cast<Rect *>(cur_ob);
+		if (cur_ob != nullptr) {
+			rectBounds.push_back(cur_rob);
 			init_planning_vis();
 			delete cur_rob;
 		}
@@ -721,7 +753,8 @@ void placeStartNode(glm::vec3 pos) {
 void modeToggleCurrentObstacle() {
 	switch (cur_mode) {
 	case 0:
-		if (cur_cob != nullptr) {
+		if (cur_ob != nullptr) {
+            Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
 			glm::vec3 pos = glm::vec3(cur_cob->o.x, 0.0f, cur_cob->o.y);
 			delete cur_cob;
 			cur_cob = nullptr;
@@ -730,7 +763,8 @@ void modeToggleCurrentObstacle() {
 		}
 		break;
 	case 1:
-		if (cur_rob != nullptr) {
+		if (cur_ob != nullptr) {
+            Rect * cur_rob = dynamic_cast<Rect *>(cur_ob);
 			glm::vec3 pos = glm::vec3(cur_rob->o.x, 0.0f, cur_rob->o.y);
 			delete cur_rob;
 			cur_rob = nullptr;
@@ -745,12 +779,14 @@ void scaleCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt) {
 	switch (cur_mode) {
 	case 0:
 		//1 - dt is a lerp
-		if (cur_cob != nullptr) {
+		if (cur_ob != nullptr) {
+            Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
 			cur_cob->r *= (xs == 1.f ? ys : xs)*dt + (1 - dt);
 		}
 		break;
 	case 1:
-		if (cur_rob != nullptr) {
+		if (cur_ob != nullptr) {
+            Rect * cur_rob = dynamic_cast<Rect *>(cur_ob);
 			cur_rob->w *= xs*dt + (1 - dt);
 			cur_rob->h *= ys*dt + (1 - dt);
 		}
@@ -761,13 +797,15 @@ void scaleCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt) {
 void moveCurrentObstacle(GLfloat dx, GLfloat dy, GLfloat dt) {
 	switch (cur_mode) {
 	case 0:
-		if (cur_cob != nullptr) {
+		if (cur_ob != nullptr) {
+            Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
 			cur_cob->o.x += dx*dt;
 			cur_cob->o.y += dy*dt;
 		}
 		break;
 	case 1:
-		if (cur_rob != nullptr) {
+		if (cur_ob != nullptr) {
+            Rect * cur_rob = dynamic_cast<Rect *>(cur_ob);
 			cur_rob->o.x += dx*dt;
 			cur_rob->o.y += dy*dt;
 		}

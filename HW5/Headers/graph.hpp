@@ -18,6 +18,7 @@ template <class T>
 class Graph {
 private:
 public:
+    std::vector<std::pair<Node<T> *, Node<T> *>> * all_edges;//hack, just for the vis
 	/* TODO: change to unordered_set for fast lookup, yet easy  ---iteration--- <nope> */
 	std::vector<Node<T> *> * vertices;
     Graph();
@@ -50,6 +51,7 @@ inline void Graph<T>::addEdge(Node<T> * v, Node<T> * u) {
     //todo: check that u and v are in vertices
     this->addDirectedEdge(v, u);
     this->addDirectedEdge(u, v);
+    this->all_edges->push_back(std::pair<Node<T> *, Node<T> *>(u, v));
 }
 
 
