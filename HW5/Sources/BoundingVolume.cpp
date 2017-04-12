@@ -9,15 +9,25 @@ Circ::Circ(glm::vec2 o, float r) {
     this->o = o; this->r = r;
 }
 
-std::vector<BoundingVolume *> Circ::minkowskiSum(BoundingVolume * b) {
-    this->minkowskiSum(b);//I hope this goes to the specific ones...?
+std::vector<BoundingVolume *> Circ::minkowskiSum(BoundingVolume * bv) {
+    Circ* c = dynamic_cast<Circ*>(bv);
+    if (c != nullptr) {
+        return minkowskiSum_(c);
+    }
+    
+    Rect * r = dynamic_cast<Rect*>(bv);
+    if (r != nullptr) {
+        return minkowskiSum_(r);
+    }
+
+    return std::vector<BoundingVolume *>();
 }
-std::vector<BoundingVolume *> Circ::minkowskiSum(Circ * b) {
+std::vector<BoundingVolume *> Circ::minkowskiSum_(Circ * b) {
     std::vector<BoundingVolume *> bv = {
         new Circ(b->o, this->r + b->r) };
     return bv;
 }
-std::vector<BoundingVolume *> Circ::minkowskiSum(Rect * b) {
+std::vector<BoundingVolume *> Circ::minkowskiSum_(Rect * b) {
     std::vector<BoundingVolume *> bv = {
         new Rect(b->o, b->w, 2 * this->r + b->h),
         new Rect(b->o, 2 * this->r + b->w, b->h),
@@ -28,15 +38,26 @@ std::vector<BoundingVolume *> Circ::minkowskiSum(Rect * b) {
     };
     return bv;
 }
-std::vector<BoundingVolume *> Rect::minkowskiSum(BoundingVolume * b) {
-    this->minkowskiSum(b);//I hope this goes to the specific ones...?
+
+std::vector<BoundingVolume *> Rect::minkowskiSum(BoundingVolume * bv) {
+    Circ* c = dynamic_cast<Circ*>(bv);
+    if (c != nullptr) {
+        return minkowskiSum_(c);
+    }
+
+    Rect * r = dynamic_cast<Rect*>(bv);
+    if (r != nullptr) {
+        return minkowskiSum_(r);
+    }
+
+    return std::vector<BoundingVolume *>();
 }
-std::vector<BoundingVolume *> Rect::minkowskiSum(Rect * b) {
+std::vector<BoundingVolume *> Rect::minkowskiSum_(Rect * b) {
     std::vector<BoundingVolume *> bv = {
         new Rect(b->o, this->w + b->w, this->h + b->h) };
     return bv;
 }
-std::vector<BoundingVolume *> Rect::minkowskiSum(Circ * b) {
+std::vector<BoundingVolume *> Rect::minkowskiSum_(Circ * b) {
     std::vector<BoundingVolume *> bv = {
         new Rect(b->o, this->w, 2 * b->r + this->h),
         new Rect(b->o, 2 *b->r + this->w, this->h),
@@ -55,19 +76,19 @@ bool Circ::isCollision(glm::vec2 p) {
 }
 
 bool Circ::lineOfSight(glm::vec2 a, glm::vec2 b, glm::vec2 Lab, float len2) {
-    glm::vec2 L_o = this->o - b;
+    glm::vec2 Lbo = this->o - b;
     float r2 = this->r * this->r;
-    if (glm::dot(L_o, L_o) <= r2) //point b inside circle
+    if (glm::dot(Lbo, Lbo) <= r2) //point b inside circle
         return false; // HIT
 
-    glm::vec2 L_o = this->o - a;
+    glm::vec2 Lao = this->o - a;
     //we don't use isCollision because we use a lot of these values again
-    if (glm::dot(L_o, L_o) <= r2) //point a inside circle
+    if (glm::dot(Lao, Lao) <= r2) //point a inside circle
         return false; // HIT
 
-    float ang = glm::dot(Lab, L_o);
+    float ang = glm::dot(Lab, Lao);
     glm::vec2 proj = Lab * (ang / len2);
-    glm::vec2 rej = L_o - proj;
+    glm::vec2 rej = Lao - proj;
     float projlen2 = glm::dot(proj, proj);
 
     if (glm::dot(rej, rej) <= r2 //close enough tangentially
@@ -83,7 +104,7 @@ bool Rect::isCollision(glm::vec2 p) {
         && abs(p.y - this->o.y) <= this->h / 2;
 }
 
-bool Rect::lineOfSight(glm::vec2 a, glm::vec2 b, glm::vec2 Lab, float len2) {
+bool Rect::lineOfSight(glm::vec2 a, glm::vec2 b, glm::vec2, float) {
     float left = this->o.x - this->w / 2;
     float right = this->o.x + this->w / 2;
     float top = this->o.y + this->h / 2;
@@ -137,7 +158,7 @@ bool Rect::axialLineSegLineSegCollision(glm::vec2 pp1, glm::vec2 pp2, float val,
             && (oValLo <= yint && yint <= oValHi); //intersection on axial segment
     }
     //horizontal
-    else if (axis == 1) {// 0x + (1/val)*y - 1 = 0 // y =val
+    else {//if (axis == 1) {// 0x + (1/val)*y - 1 = 0 // y =val
         float xint = (-l[1] * val - l[2]) / l[0];
         return ((pp1.y <= val && val <= pp2.y) || (pp2.y <= val && val <= pp1.y))//axis line hits lineseg
             && (oValLo <= xint && xint <= oValHi); //intersection on axial segment

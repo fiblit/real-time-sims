@@ -556,21 +556,22 @@ void init_planning() {
 	ragentBound->h = 1.0f;
 
 	obstBounds = std::vector<Circ *>(2);
-	obstBounds[0]->o.y = 0.0f;	obstBounds[0]->o.x = 0.0f;	obstBounds[0]->r = 2.0f;
-	obstBounds[1]->o.y = -7.0f;	obstBounds[1]->o.x = 6.0f;	obstBounds[1]->r = 1.0f;
+    obstBounds[0] = new Circ(glm::vec2(0.0f, 0.0f), 2.0f);
+    obstBounds[1] = new Circ(glm::vec2(-7.0f, 6.0f), 1.0f);
 
 	rectBounds = std::vector<Rect *>(10);
-	{int NR = 0;
-	rectBounds[NR]->o.y = 3.0f;  	rectBounds[NR]->o.x = 8.0f;		rectBounds[NR]->h = 0.1f;   rectBounds[NR]->w = 4.0f; NR++;
-	rectBounds[NR]->o.y = -7.25f;	rectBounds[NR]->o.x = -1.0f;	rectBounds[NR]->h = 5.5f;	rectBounds[NR]->w = 0.1f; NR++;
-	rectBounds[NR]->o.y = 3.0f;  	rectBounds[NR]->o.x = -8.0f;	rectBounds[NR]->h = 0.1f;	rectBounds[NR]->w = 4.0f; NR++;
-	rectBounds[NR]->o.y = 3.0f;  	rectBounds[NR]->o.x = 0.0f;		rectBounds[NR]->h = 0.1f;   rectBounds[NR]->w = 4.0f; NR++;
-	rectBounds[NR]->o.y = 6.5f;  	rectBounds[NR]->o.x = -2.0f;	rectBounds[NR]->h = 0.1f;	rectBounds[NR]->w = 8.0f; NR++;//
-	rectBounds[NR]->o.y = 4.75f; 	rectBounds[NR]->o.x = 2.0f;		rectBounds[NR]->h = 3.5f;   rectBounds[NR]->w = 0.1f; NR++;
-	rectBounds[NR]->o.y = -5.0f; 	rectBounds[NR]->o.x = -5.0f;	rectBounds[NR]->h = 3.0f;	rectBounds[NR]->w = 0.1f; NR++;
-	rectBounds[NR]->o.y = -5.0f; 	rectBounds[NR]->o.x = -5.0f;	rectBounds[NR]->h = 0.1f;	rectBounds[NR]->w = 3.0f; NR++;
-	rectBounds[NR]->o.y = 0.0f; 	rectBounds[NR]->o.x = 4.0f;		rectBounds[NR]->h = 0.1f;   rectBounds[NR]->w = 4.0f; NR++;
-	rectBounds[NR]->o.y = -3.0f;	rectBounds[NR]->o.x = 6.0f;		rectBounds[NR]->h = 6.0f;   rectBounds[NR]->w = 0.1f; NR++; }//
+    {int NR = 0;
+        rectBounds[NR] = new Rect(glm::vec2( 3.0f,    8.0f),    0.1f,   4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-7.25f,  -1.0f),    5.5f,   0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2( 3.0f,   -8.0f),    0.1f,   4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2( 3.0f,    0.0f),    0.1f,   4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-6.5f,   -2.0f),    0.1f,   8.0f); NR++;//
+        rectBounds[NR] = new Rect(glm::vec2( 4.75f,   2.0f),    3.5f,   0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-5.0f,   -5.0f),    3.0f,   0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-5.0f,   -5.0f),    0.1f,   3.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2( 0.0f,    4.0f),    0.1f,   4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-3.0f,    6.0f),    6.0f,   0.1f); NR++;//
+    }
 }
 
 void init_planning_vis() {
@@ -637,7 +638,7 @@ void init_planning_vis() {
 		obj::rectScale[i] = glm::vec2(rectBounds[i]->w, rectBounds[i]->h);
 	}
 
-    //add agents
+    //add agent
 	obj::NR_AGENT = cylinder_res * 1;
 	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
 	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
@@ -683,17 +684,12 @@ void replan() {
 
 	if (prm != nullptr)
 		init_planning_vis();
-    BoundingVolume * agent;
 
-
-    if (cur_mode == 0)
-        cspace = new Cspace_2D(
-            obstBounds.insert(obstBounds.begin(), rectBounds.begin(), rectBounds.end()), 
-            cagentBound);
-    else
-        cspace = new Cspace_2D(
-            obstBounds.insert(obstBounds.begin(), rectBounds.begin(), rectBounds.end()), 
-            ragentBound);
+    std::vector<BoundingVolume *> bv;
+    bv.reserve(obstBounds.size() + rectBounds.size());
+    bv.insert(bv.end(), obstBounds.begin(), obstBounds.end());
+    bv.insert(bv.end(), rectBounds.begin(), rectBounds.end());
+    cspace = new Cspace_2D(bv, ragentBound);
 
 	prm = new PRM(startPoint, goalPoint, cspace);
 
@@ -713,30 +709,23 @@ void toggleFlashlight() {
 void placeObst(glm::vec3 pos) {
 	switch (cur_mode) {
 	case 0:
-        Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
 		if (cur_ob != nullptr) {
+            Circ * cur_cob = dynamic_cast<Circ *>(cur_ob);
 			obstBounds.push_back(cur_cob);
 			init_planning_vis();
 			delete cur_cob;
 		}
-		cur_cob = new Circ();
-		cur_cob->o.x = pos.x;
-		cur_cob->o.y = pos.z;
-		cur_cob->r = 1.0f;
+		cur_ob = new Circ(glm::vec2(pos.x, pos.z), 1.0f);
 		break;
 	case 1:
-        Rect * cur_rob = dynamic_cast<Rect *>(cur_ob);
-		if (cur_ob != nullptr) {
-			rectBounds.push_back(cur_rob);
-			init_planning_vis();
-			delete cur_rob;
-		}
-		cur_rob = new Rect();
-		cur_rob->o.x = pos.x;
-		cur_rob->o.y = pos.z;
-		cur_rob->w = 1.0f;
-		cur_rob->h = 1.0f;
-		break;
+        if (cur_ob != nullptr) {
+            Rect * cur_cob = dynamic_cast<Rect *>(cur_ob);
+            rectBounds.push_back(cur_cob);
+            init_planning_vis();
+            delete cur_cob;
+        }
+        cur_ob = new Rect(glm::vec2(pos.x, pos.z), 1.0f, 1.0f);
+        break;
 	}
 }
 

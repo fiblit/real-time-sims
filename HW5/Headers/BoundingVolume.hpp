@@ -4,14 +4,18 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+class Circ;
+class Rect;
+
 //either a cylindrical BV or an axis-aligned rectangular BV.
 class BoundingVolume {
 public:
     glm::vec2 o;//origin
     virtual bool isCollision(glm::vec2 p) =0;
     virtual bool lineOfSight(glm::vec2 a, glm::vec2 b, glm::vec2 Lab, float len2) =0;
-    virtual std::vector<BoundingVolume *> minkowskiSum(BoundingVolume * b) = 0;
+    virtual std::vector<BoundingVolume *> minkowskiSum(BoundingVolume *)=0;
 };
+
 
 class Rect : public BoundingVolume {
 public:
@@ -21,9 +25,9 @@ public:
     float h;//height
     bool isCollision(glm::vec2 p);
     bool lineOfSight(glm::vec2 a, glm::vec2 b, glm::vec2 Lab, float len2);
-    std::vector<BoundingVolume *> minkowskiSum(BoundingVolume * b);
-    std::vector<BoundingVolume *> minkowskiSum(Rect * b);
-    std::vector<BoundingVolume *> minkowskiSum(Circ * b);
+    std::vector<BoundingVolume *> minkowskiSum(BoundingVolume *);
+    std::vector<BoundingVolume *> minkowskiSum_(Rect * b);
+    std::vector<BoundingVolume *> minkowskiSum_(Circ * b);
 private:
     /* broken : but it asks if the lines cross */
     bool lineSegCollision(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4);
@@ -42,9 +46,9 @@ public:
     float r;//radius
     bool isCollision(glm::vec2 p);
     bool lineOfSight(glm::vec2 a, glm::vec2 b, glm::vec2 Lab, float len2);
-    std::vector<BoundingVolume *> minkowskiSum(BoundingVolume * b);
-    std::vector<BoundingVolume *> minkowskiSum(Rect * b);
-    std::vector<BoundingVolume *> minkowskiSum(Circ * b);
+    std::vector<BoundingVolume *> minkowskiSum(BoundingVolume *);
+    std::vector<BoundingVolume *> minkowskiSum_(Rect * b);
+    std::vector<BoundingVolume *> minkowskiSum_(Circ * b);
 };
 
 #endif//BOUNDING_VOLUME_H_GUARD

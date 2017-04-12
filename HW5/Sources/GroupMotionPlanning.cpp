@@ -3,7 +3,7 @@
 /* custom uniform cost search (aka Djikstra's search) for a PRM Graph
 simplifciation of A*. (h = 0)
 */
-VecPoint * GMP::findPathUCS(Graph<Point> * roadmap) {
+VecPoint * GMP::findPathUCS(Graph<glm::vec2> * roadmap) {
     return GMP::findPathAstar(0, roadmap);
 }
 
@@ -11,10 +11,10 @@ VecPoint * GMP::findPathUCS(Graph<Point> * roadmap) {
 
 /* custom A* search for a PRM Graph */
 //can't handle non-positive edges
-VecPoint * GMP::findPathAstar(float e, Graph<Point> * roadmap) {
+VecPoint * GMP::findPathAstar(float e, Graph<glm::vec2> * roadmap) {
     //for readability
     using namespace std;
-    typedef Node<Point> * Vert;
+    typedef Node<glm::vec2> * Vert;
     typedef pair<Vert, float> PQ_item;
     
     //init start/goal
@@ -43,14 +43,14 @@ VecPoint * GMP::findPathAstar(float e, Graph<Point> * roadmap) {
         if (cur_v == goal)
             break;
 
-        for (Node<Point> * adj : *(cur_v->edges)) {
+        for (Node<glm::vec2> * adj : *(cur_v->edges)) {
             //new potential path = path to here + edge to adjacent
-            float g_alt = gcost[cur_v] + distP(adj->data, cur_v->data);
+            float g_alt = gcost[cur_v] + glm::distance(adj->data, cur_v->data);
 
             //if new path is better than current path to adjacent
             if (!gcost.count(adj) || g_alt < gcost[adj]) {
                 gcost[adj] = g_alt;
-                float fcost = g_alt + e * distP(goal->data, adj->data);
+                float fcost = g_alt + e * glm::distance(goal->data, adj->data);
                 //it's okay if we get multiple nodes on the PQ with diff fcosts
                 //whichever has the lowest will show up first and the later ones will
                 //have no effect as they have the same gcost

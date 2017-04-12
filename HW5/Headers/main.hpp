@@ -128,6 +128,8 @@ PRM * prm;
 GLuint cur_mode;
 BoundingVolume * cur_ob;
 
+//ideally BoundingVolume * agent;
+
 glm::vec2 startPoint, goalPoint;
 std::vector<Rect *> rectBounds;
 Rect * ragentBound;
