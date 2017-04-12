@@ -556,11 +556,13 @@ void init_planning() {
 	ragentBound->h = 1.0f;
 
 	obstBounds = std::vector<Circ *>(2);
+    //fix these at some point
     obstBounds[0] = new Circ(glm::vec2(0.0f, 0.0f), 2.0f);
     obstBounds[1] = new Circ(glm::vec2(-7.0f, 6.0f), 1.0f);
 
 	rectBounds = std::vector<Rect *>(10);
     {int NR = 0;
+    //fix these at some point..
         rectBounds[NR] = new Rect(glm::vec2( 3.0f,    8.0f),    0.1f,   4.0f); NR++;
         rectBounds[NR] = new Rect(glm::vec2(-7.25f,  -1.0f),    5.5f,   0.1f); NR++;
         rectBounds[NR] = new Rect(glm::vec2( 3.0f,   -8.0f),    0.1f,   4.0f); NR++;
@@ -694,7 +696,7 @@ void replan() {
 	prm = new PRM(startPoint, goalPoint, cspace);
 
 	/* PATH PLANNING METHOD */
-	pathVec = GMP::findPathUCS(prm->roadmap); //new std::vector<Node<glm::vec2> *>(); //even this is slow //
+	pathVec = GMP::findPathUCS(prm->roadmap);
 	path_ = new std::unordered_set<Node<glm::vec2> *>();
 	for (int i = 0; i < pathVec->size(); i++)
 		path_->insert((*pathVec)[i]);

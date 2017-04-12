@@ -110,10 +110,10 @@ bool Rect::lineOfSight(glm::vec2 a, glm::vec2 b, glm::vec2, float) {
     float top = this->o.y + this->h / 2;
     float bottom = this->o.y - this->h / 2;
 
-    return axialLineSegLineSegCollision(a, b, left, 0, bottom, top)
+    return !(axialLineSegLineSegCollision(a, b, left, 0, bottom, top)
         || axialLineSegLineSegCollision(a, b, right, 0, bottom, top)
         || axialLineSegLineSegCollision(a, b, bottom, 1, left, right)
-        || axialLineSegLineSegCollision(a, b, top, 1, left, right);
+        || axialLineSegLineSegCollision(a, b, top, 1, left, right));
 }
 
 //TODO: fix, so I can rotate rects
