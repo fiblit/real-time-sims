@@ -24,7 +24,7 @@ int main() {
 	if (G::WIN_FULLSCREEN)
 		monitor = glfwGetPrimaryMonitor();
 	//Make a window
-	std::string title = "Dalton Hildreth ::: Homework 4";
+	std::string title = "Dalton Hildreth ::: Homework 5";
     GLFWwindow* window = glfwCreateWindow(G::WIN_WIDTH, G::WIN_HEIGHT, title.c_str(), monitor, nullptr);
     if (window == nullptr) {
 		std::cerr << "Failed to create OpenGL Context" << std::endl;
@@ -175,7 +175,7 @@ int main() {
 	replan();
 
 	//change properties for the path -- instantiate cube visualizations
-	init_planning_vis();
+	//init_planning_vis();
 
 	/* lighting */
 	glm::vec3 lightDiffuse = glm::vec3(0.5f, 0.5f, 0.5f); // Decrease the influence
@@ -196,7 +196,7 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
-		animate_agent(cspace, pathVec, &completed_nodes_, timer->getDelta());
+		animate_agents(agents, timer->getDelta());
 
 		// Callbacks 
 		glfwPollEvents();
@@ -254,11 +254,15 @@ int main() {
 
 		glBindVertexArray(VAO[0]);
 
-		for (GLuint i = 0; i <obj::NR_OBST; i++) {
+		for (GLuint i = 0; i <obj::NR_RECT_IN_CIRC; i++) {
 			model = glm::mat4();
-			model = glm::translate(model, obj::obstPositions[i]);
-			model = glm::rotate(model, obj::obstRotation[i].w, glm::vec3(obj::obstRotation[i].x, obj::obstRotation[i].y, obj::obstRotation[i].z));
-			model = glm::scale(model, glm::vec3(obj::obstScale[i]));
+			model = glm::translate(model, obj::rectInCircPositions[i]);
+			model = glm::rotate(model, 
+                obj::rectInCircRotation[i].w, 
+                glm::vec3(obj::rectInCircRotation[i].x, 
+                    obj::rectInCircRotation[i].y, 
+                    obj::rectInCircRotation[i].z));
+			model = glm::scale(model, glm::vec3(obj::rectInCircScale[i]));
 			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
 
@@ -275,10 +279,14 @@ int main() {
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		for (GLuint i = 0; i < obj::NR_AGENT; i++) {
+		for (GLuint i = 0; i < obj::NR_AGENT_TO_DRAW; i++) {
 			model = glm::mat4();
 			model = glm::translate(model, obj::agentPositions[i]);
-			model = glm::rotate(model, obj::agentRotation[i].w, glm::vec3(obj::agentRotation[i].x, obj::agentRotation[i].y, obj::agentRotation[i].z));
+			model = glm::rotate(model, 
+                obj::agentRotation[i].w, 
+                glm::vec3(obj::agentRotation[i].x, 
+                    obj::agentRotation[i].y,
+                    obj::agentRotation[i].z));
 			model = glm::scale(model, glm::vec3(obj::agentScale[i]));
 			glUniformMatrix4fv(cubeShader->Uni("model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(cubeShader->Uni("normalMat"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(view * model))));
@@ -457,14 +465,14 @@ void do_movement() {
 		keys[GLFW_KEY_O] = false;
 		placeObst(cam->pos);
 	}
-	if (keys[GLFW_KEY_G]) {
-		keys[GLFW_KEY_G] = false;
-		placeGoalNode(cam->pos);
-	}
-	if (keys[GLFW_KEY_T]) {
-		keys[GLFW_KEY_T] = false;
-		placeStartNode(cam->pos);
-	}
+	//if (keys[GLFW_KEY_G]) {
+	//	keys[GLFW_KEY_G] = false;
+	//	placeGoalNode(cam->pos);
+	//}
+	//if (keys[GLFW_KEY_T]) {
+	//	keys[GLFW_KEY_T] = false;
+	//	placeStartNode(cam->pos);
+	//}
 	if (keys[GLFW_KEY_M]) {
 		keys[GLFW_KEY_M] = false;
 		modeToggleCurrentObstacle();
@@ -503,57 +511,85 @@ int DIE(int retVal) {
 }
 
 
-void animate_agent(Cspace_2D * c, std::vector<Node<glm::vec2> *> * path, GLuint * completed_nodes, GLfloat dt) {
-	if ((*completed_nodes) < path->size()) {
-		float velocity = 1.0f; // x m/s
-		glm::vec2 agentNow;
-		agentNow.x = obj::agentPositions[0].x;
-		agentNow.y = obj::agentPositions[0].z;
+void animate_agents(std::vector<Agent *> agents, GLfloat dt) {
 
-		glm::vec2 nextNode;
-		nextNode.x = (*path)[(*completed_nodes)]->data.x;
-		nextNode.y = (*path)[(*completed_nodes)]->data.y;
+    int agent_mesh_drawn = 0;
 
-		while ((*completed_nodes) + 1 < path->size() 
-				&& c->lineOfSight(agentNow, (*path)[(*completed_nodes) + 1]->data)) {
-			(*completed_nodes)++;
-			nextNode.x = (*path)[(*completed_nodes)]->data.x;
-			nextNode.y = (*path)[(*completed_nodes)]->data.y;
-		}
+    for (Agent * a : agents) {
+        if (a->completed_nodes < a->plan->size()) {
+            float velocity = 1.0f; // x m/s
+            glm::vec2 agentNow = a->bv->o;
 
-		float dist = glm::distance(nextNode, agentNow);
-		if (dist < 0.1f) {
-			(*completed_nodes)++;
-			//not sure why I have this, as this will, like, never happen.
-			if (dist < dt*velocity) {
-				agentNow.x = nextNode.x;
-				agentNow.y = nextNode.y;
-				velocity -= dist / dt;
-			}
-		}
+            glm::vec2 nextNode = (*a->plan)[a->completed_nodes]->data;
 
-		glm::vec2 motion = (nextNode - agentNow) * (velocity * dt / glm::distance(nextNode, agentNow));
-		for (GLuint i = 0; i < obj::NR_AGENT; i++) {
-			obj::agentPositions[i] += glm::vec3(motion.x, 0.0f, motion.y);
-		}
-	}
+            while (a->completed_nodes + 1 < a->plan->size()
+                && a->cspace->lineOfSight(agentNow, (*a->plan)[a->completed_nodes + 1]->data)) {
+                a->completed_nodes++;
+                nextNode.x = (*a->plan)[a->completed_nodes]->data.x;
+                nextNode.y = (*a->plan)[a->completed_nodes]->data.y;
+            }
+
+            float dist = glm::distance(nextNode, agentNow);
+            if (dist < 0.1f) {
+                a->completed_nodes++;
+                //not sure why I have this, as this will, like, never happen.
+                if (dist < dt*velocity) {
+                    agentNow.x = nextNode.x;
+                    agentNow.y = nextNode.y;
+                    velocity -= dist / dt;
+                }
+            }
+
+            a->bv->o = (nextNode - agentNow) * (velocity * dt / glm::distance(nextNode, agentNow));
+
+            int step;
+            if (a->vt == agent::volume_type::RECT)
+                step = 1;
+            else
+                step = cylinder_res;
+
+            for (GLuint i = agent_mesh_drawn; i < agent_mesh_drawn + step; i++)
+                obj::agentPositions[i] += glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
+            agent_mesh_drawn += step;
+        }
+    }
 }
 
 void init_planning() {
+    std::cout << "PP start" << std::endl;
 	cur_ob = nullptr;
-	cspace = nullptr;
-	prm = nullptr;
-	ragentBound = new Rect();// nullptr;
-	cagentBound = nullptr;//new Circle();
-	pathVec = nullptr;
-	path_ = nullptr;
+	//cspace = nullptr;
+	//prm = nullptr;
+    //ragentBound = nullptr;//new Rect();//
+	//cagentBound = new Circ();//nullptr;//
+	//pathVec = nullptr;
+	//path_ = nullptr;
 
-	startPoint.x = -9.0f; startPoint.y = -9.0f;
-	goalPoint.x = 9.0f; goalPoint.y = 9.0f;
+    agents = std::vector<Agent *>(2);
+
+    agents[0] = new Agent(
+        new Circ(glm::vec2(-7.0f, -9.0f), 1.0f), 
+                 glm::vec2(9.0f, 9.0f));
+    agents[0]->vt = agent::volume_type::CIRC;
+    agents[0]->completed_nodes = 0;
+    agents[0]->plan = nullptr;
+    agents[0]->cspace = nullptr;
+    agents[0]->prm = nullptr;
+    agents[1] = new Agent(
+        new Rect(glm::vec2(7.0f, 9.0f), 1.0f, 1.0f),
+                 glm::vec2(7.0f, 7.0f));
+    agents[1]->vt = agent::volume_type::RECT;
+    agents[0]->completed_nodes = 0;
+    agents[1]->plan = nullptr;
+    agents[1]->cspace = nullptr;
+    agents[1]->prm = nullptr;
+
+	//startPoint.x = -9.0f; startPoint.y = -9.0f;
+	//goalPoint.x = 9.0f; goalPoint.y = 9.0f;
 
 	//cagentBound->r = 1.0f;
-	ragentBound->w = 1.0f;
-	ragentBound->h = 1.0f;
+	//ragentBound->w = 1.0f;
+	//ragentBound->h = 1.0f;
 
 	obstBounds = std::vector<Circ *>(2);
     //fix these at some point
@@ -577,58 +613,73 @@ void init_planning() {
 }
 
 void init_planning_vis() {
-	std::vector<Node<glm::vec2> *> * verts = prm->roadmap->vertices;
-	obj::NR_CUBES = static_cast<GLuint>(verts->size() + 1);
-	obj::cubePositions = new glm::vec3[obj::NR_CUBES];
-	obj::cubeScale = new float[obj::NR_CUBES];
-	obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
-	obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
+    std::cout << "PP vis" << std::endl;
+    //obj::NR_CUBES = 1;
+    //obj::cubePositions = new glm::vec3[obj::NR_CUBES];
+    //obj::cubeScale = new float[obj::NR_CUBES];
+    //obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
+    //obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
 
-	for (GLuint i = 0; i < obj::NR_CUBES - 1; i++) {
-		Node<glm::vec2> * v = verts->at(i);
-		obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
-		if (i == 0) {
-			obj::cubeScale[i] = 1.0f;
-			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-			obj::cubePositions[i] = glm::vec3(startPoint.x, - 2.0f, startPoint.y);
-		}
-		else if (i == 1) {
-			obj::cubeScale[i] = 1.0f;
-			obj::cubeDiffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-			obj::cubePositions[i] = glm::vec3(goalPoint.x, - 2.0f, goalPoint.y);
-		}
-		else if (path_->find(v) != path_->end()) {
-			obj::cubeScale[i] = 0.75f;
-			obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-		}
-		else {
-			obj::cubeScale[i] = 0.5f;
-			obj::cubeDiffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
-			obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
-		}
-	}
+    Agent * a = agents[1];
 
-    std::vector<std::pair<Node<glm::vec2> *, Node<glm::vec2> *>> * all_edges = prm->roadmap->all_edges;
-    //glBufferData(,,)
 
-	// add ground
-	obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
-	obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
-	obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
-	obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
+    if (a->prm != nullptr) {
+        std::vector<Node<glm::vec2> *> * verts = a->prm->roadmap->vertices;
+        obj::NR_CUBES = static_cast<GLuint>(verts->size() + 1);
+        obj::cubePositions = new glm::vec3[obj::NR_CUBES];
+        obj::cubeScale = new float[obj::NR_CUBES];
+        obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
+        obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
 
+        for (GLuint i = 0; i < obj::NR_CUBES - 1; i++) {
+            Node<glm::vec2> * v = verts->at(i);
+            obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
+            if (i == 0) {
+                obj::cubeScale[i] = 1.0f;
+                obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
+                obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+                obj::cubePositions[i] = glm::vec3(a->start.x, -2.0f, a->start.y);
+            }
+            else if (i == 1) {
+                obj::cubeScale[i] = 1.0f;
+                obj::cubeDiffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
+                obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+                obj::cubePositions[i] = glm::vec3(a->goal.x, -2.0f, a->goal.y);
+            }
+            else if (find(a->plan->begin(), a->plan->end(), v) != a->plan->end()) {
+                obj::cubeScale[i] = 0.75f;
+                obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 1.0f, 0.0f);
+                obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+            }
+            else {
+                obj::cubeScale[i] = 0.5f;
+                obj::cubeDiffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
+                obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+            }
+
+        }
+
+        //std::vector<std::pair<Node<glm::vec2> *, Node<glm::vec2> *>> * all_edges = prm->roadmap->all_edges;
+        //glBufferData(,,)
+
+
+        // add ground
+        obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
+        obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
+        obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
+        obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
+    }
+
+    // obstacles -- could be polymorphised :p
     //add circs
-	obj::NR_OBST = static_cast<GLuint>(cylinder_res * obstBounds.size());
-	obj::obstPositions = new glm::vec3[obj::NR_OBST];
-	obj::obstRotation = new glm::vec4[obj::NR_OBST];
-	obj::obstScale = new float[obj::NR_OBST];
-	for (GLuint i = 0; i < obj::NR_OBST; i++) {
-		obj::obstPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res]->o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res]->o.y);
-		obj::obstScale[i] = obstBounds[(int)i / cylinder_res]->r * static_cast<float>(sqrt(2));
-		obj::obstRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
+	obj::NR_RECT_IN_CIRC = static_cast<GLuint>(cylinder_res * obstBounds.size());
+	obj::rectInCircPositions = new glm::vec3[obj::NR_RECT_IN_CIRC];
+	obj::rectInCircRotation = new glm::vec4[obj::NR_RECT_IN_CIRC];
+	obj::rectInCircScale = new float[obj::NR_RECT_IN_CIRC];
+	for (GLuint i = 0; i < obj::NR_RECT_IN_CIRC; i++) {
+		obj::rectInCircPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res]->o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res]->o.y);
+		obj::rectInCircScale[i] = obstBounds[(int)i / cylinder_res]->r * static_cast<float>(sqrt(2));
+		obj::rectInCircRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
 	}
 
     //add rects
@@ -640,28 +691,53 @@ void init_planning_vis() {
 		obj::rectScale[i] = glm::vec2(rectBounds[i]->w, rectBounds[i]->h);
 	}
 
-    //add agent
-	obj::NR_AGENT = cylinder_res * 1;
-	obj::agentPositions = new glm::vec3[obj::NR_AGENT];
-	obj::agentRotation = new glm::vec4[obj::NR_AGENT];
-	obj::agentScale = new float[obj::NR_AGENT];
-	for (GLuint i = 0; i < obj::NR_AGENT; i++) {
-		if (cagentBound != nullptr) {
-			obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f + 0.001f*i, startPoint.y);
-			obj::agentScale[i] = cagentBound->r * static_cast<float>(sqrt(2));
-			obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
-		}
-		else {
-			obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f + 0.001f*i, startPoint.y);
-			obj::agentScale[i] = ragentBound->w;
-			obj::agentRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, 0);
+    //add agent -- could be polymorphised -- :P
+    obj::NR_AGENT_TO_DRAW = 0;
+    for (Agent * a : agents)
+        if (a->vt == agent::volume_type::RECT)
+            obj::NR_AGENT_TO_DRAW++;
+        else
+            obj::NR_AGENT_TO_DRAW += cylinder_res;
 
-		}
-	}
+    obj::agentPositions = new glm::vec3[obj::NR_AGENT_TO_DRAW]; 
+    obj::agentScale = new GLfloat[obj::NR_AGENT_TO_DRAW]; 
+    obj::agentRotation = new glm::vec4[obj::NR_AGENT_TO_DRAW];
+
+    int agent_mesh_drawn = 0;
+    for (Agent * a : agents) {
+        int step;
+        if (a->vt == agent::volume_type::RECT)
+            step = 1;
+        else
+            step = cylinder_res;
+
+        for (GLuint i = 0; i < step; i++) {
+            if (a->vt == agent::volume_type::CIRC) {
+                obj::agentPositions[i + agent_mesh_drawn] = 
+                    glm::vec3(a->start.x, 0.0f + 0.001f*i, a->start.y);
+                obj::agentScale[i + agent_mesh_drawn] =
+                    static_cast<Circ *>(a->bv)->r * static_cast<float>(sqrt(2));
+                obj::agentRotation[i + agent_mesh_drawn] =
+                    glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
+            }
+            else {
+                obj::agentPositions[i + agent_mesh_drawn] =
+                    glm::vec3(a->start.x, 0.0f + 0.001f*i, a->start.y);
+                obj::agentScale[i + agent_mesh_drawn] =
+                    static_cast<Rect *>(a->bv)->w;
+                obj::agentRotation[i + agent_mesh_drawn] =
+                    glm::vec4(0.0f, 1.0f, 0.0f, 0);
+            }
+
+        }
+
+        agent_mesh_drawn += step;
+    }
 }
 
 
 void replan() {
+    std::cout << "PP" << std::endl;
 	switch (cur_mode) {
 	case 0:
 		if (cur_ob != nullptr) {
@@ -680,28 +756,57 @@ void replan() {
 		}
 		break;
 	}
-	ragentBound->o = startPoint;
-	for (GLuint i = 0; i < obj::NR_AGENT; i++)
-		obj::agentPositions[i] = glm::vec3(startPoint.x, 0.0f, startPoint.y);
 
-	if (prm != nullptr)
+    //int positions_updated = 0;
+    for (Agent * a : agents) {
+        a->bv->o = a->start;
+
+        //int step;
+        //if (a->vt == agent::volume_type::RECT)
+        //    step = 1;
+        //else
+        //    step = cylinder_res;
+
+        //for (GLuint i = 0; i < step; i++)
+        //    obj::agentPositions[i + positions_updated] = glm::vec3(a->start.x, 0.0f, a->start.y);
+
+        //positions_updated += step;
+    }
+
+	//if (agents[0]->prm != nullptr)
 		init_planning_vis();
 
     std::vector<BoundingVolume *> bv;
-    bv.reserve(obstBounds.size() + rectBounds.size());
+    bv.reserve(obstBounds.size() + rectBounds.size() + 2*agents.size() - 2);
     bv.insert(bv.end(), obstBounds.begin(), obstBounds.end());
     bv.insert(bv.end(), rectBounds.begin(), rectBounds.end());
-    cspace = new Cspace_2D(bv, ragentBound);
+    for (Agent * a : agents) {
+        for (Agent * b : agents) {
+            if (a == b)
+                continue;
 
-	prm = new PRM(startPoint, goalPoint, cspace);
+            BoundingVolume * s = b->bv;
+            s->o = b->start;
+            BoundingVolume * g = b->bv;
+            g->o = b->goal;
+            bv.push_back(s);
+            bv.push_back(g);
+        }   
+
+        a->cspace = new Cspace_2D(bv, a->bv);
+        a->prm = new PRM(a->start, a->goal, a->cspace);
+    }
+
 
 	/* PATH PLANNING METHOD */
-	pathVec = GMP::findPathUCS(prm->roadmap);
-	path_ = new std::unordered_set<Node<glm::vec2> *>();
-	for (int i = 0; i < pathVec->size(); i++)
-		path_->insert((*pathVec)[i]);
+    for (Agent * a : agents) {
+        a->plan = GMP::findPathUCS(a->prm->roadmap);
+        //path_ = new std::unordered_set<Node<glm::vec2> *>();
+        //for (int i = 0; i < pathVec->size(); i++)
+        //    path_->insert((*pathVec)[i]);
 
-	completed_nodes_ = 0;
+        a->completed_nodes = 0;
+    }
 }
 
 void toggleFlashlight() {
@@ -732,12 +837,12 @@ void placeObst(glm::vec3 pos) {
 }
 
 void placeGoalNode(glm::vec3 pos) {
-	goalPoint.x = pos.x; goalPoint.y = pos.z;
+	agents[0]->goal.x = pos.x; agents[0]->goal.y = pos.z;
 	init_planning_vis();
 }
 
 void placeStartNode(glm::vec3 pos) {
-	startPoint.x = pos.x; startPoint.y = pos.z;
+    agents[0]->start.x = pos.x; agents[0]->start.y = pos.z;
 	init_planning_vis();
 }
 

@@ -12,6 +12,8 @@
 #include "Timer.hpp"
 #include "PRM.hpp"
 #include "GlobalMotionPlanner.hpp"
+#include "LocalMotionPlanner.hpp"
+#include "Agent.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad
@@ -42,8 +44,8 @@
 
 /* Globals */
 namespace G {
-	const GLint WIN_WIDTH = 1920;
-	const GLint WIN_HEIGHT = 1080;
+	const GLint WIN_WIDTH = 1200;
+	const GLint WIN_HEIGHT = 800;
 	const GLboolean WIN_FULLSCREEN = GL_FALSE;
 }
 namespace obj {//should be in G
@@ -97,16 +99,16 @@ namespace obj {//should be in G
 	GLfloat * cubeScale;
 	glm::vec3 * cubePositions;
 
-	GLuint NR_OBST = 0;
-	GLfloat * obstScale;
-	glm::vec4 * obstRotation;
-	glm::vec3 * obstPositions;
+	GLuint NR_RECT_IN_CIRC = 0;
+	GLfloat * rectInCircScale;
+	glm::vec4 * rectInCircRotation;
+	glm::vec3 * rectInCircPositions;
 
 	GLuint NR_RECT = 0;
 	glm::vec2 * rectScale;
 	glm::vec3 * rectPositions;
 
-	GLuint NR_AGENT = 0;
+	GLuint NR_AGENT_TO_DRAW = 0;
 	GLfloat * agentScale;
 	glm::vec4 * agentRotation;
 	glm::vec3 * agentPositions;
@@ -122,24 +124,26 @@ Camera* cam;
 Timer* timer;
 const GLuint cylinder_res = 11;
 
-Cspace_2D * cspace;
-PRM * prm;
+//Cspace_2D * cspace;
+//PRM * prm;
 
 GLuint cur_mode;
 BoundingVolume * cur_ob;
 
 //ideally BoundingVolume * agent;
+std::vector<Agent *> agents;
 
-glm::vec2 startPoint, goalPoint;
+//glm::vec2 startPoint, goalPoint;
 std::vector<Rect *> rectBounds;
-Rect * ragentBound;
+//Rect * ragentBound;
 std::vector<Circ *> obstBounds;
-Circ * cagentBound;
-std::vector<Node<glm::vec2> *> * pathVec;
-std::unordered_set<Node<glm::vec2> *> * path_;
+//Circ * cagentBound;
+//std::vector<Node<glm::vec2> *> * pathVec;
+//std::unordered_set<Node<glm::vec2> *> * path_;
+//GLuint completed_nodes_;
 
 GLboolean isFlashlightOn;
-GLuint completed_nodes_;
+
 
 /* UI prototypes */
 bool keys[1024];
@@ -162,7 +166,7 @@ void moveCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
 
 /* Other Prototypes */
 int DIE(int retVal);
-void animate_agent(Cspace_2D * c, std::vector<Node<glm::vec2> *> * path, GLuint * completed_nodes, GLfloat dt);
+void animate_agents(std::vector<Agent *> agents, GLfloat dt);
 /*
 TODO:
 115 points
