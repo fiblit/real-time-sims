@@ -20,19 +20,16 @@ public:
     //"Model" -- nope -- too much work RN 
     agent::volume_type vt;
     BoundingVolume * bv;
-    /*
-    Agent(agent::volume_type vt){///*, glm::vec2 start, glm::vec2 goal//) {
+    Agent(agent::volume_type vt, BoundingVolume * bv, glm::vec2 goal) {
         this->vt = vt;
-        if (vt == agent::volume_type::CIRC)
-            this->bv = new Circ();
-        else
-            this->bv = new Rect();
-    }
-    */
-    Agent(BoundingVolume * bv, glm::vec2 goal) {
+        //todo: add error check for vt =~= bv
         this->bv = bv;
         this->start = bv->o;
         this->goal = goal;
+        this->completed_nodes = 0;
+        this->plan = nullptr;
+        this->cspace = nullptr;
+        this->prm = nullptr;
     }
 };
 

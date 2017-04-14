@@ -166,7 +166,7 @@ void moveCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
 
 /* Other Prototypes */
 int DIE(int retVal);
-void animate_agents(std::vector<Agent *> agents, GLfloat dt);
+void animate_agents(GLfloat dt);
 /*
 TODO:
 115 points

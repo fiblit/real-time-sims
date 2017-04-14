@@ -196,7 +196,7 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		timer->tick();
 
-		animate_agents(agents, timer->getDelta());
+		animate_agents(timer->getDelta());
 
 		// Callbacks 
 		glfwPollEvents();
@@ -511,7 +511,7 @@ int DIE(int retVal) {
 }
 
 
-void animate_agents(std::vector<Agent *> agents, GLfloat dt) {
+void animate_agents(GLfloat dt) {
 
     int agent_mesh_drawn = 0;
 
@@ -525,8 +525,7 @@ void animate_agents(std::vector<Agent *> agents, GLfloat dt) {
             while (a->completed_nodes + 1 < a->plan->size()
                 && a->cspace->lineOfSight(agentNow, (*a->plan)[a->completed_nodes + 1]->data)) {
                 a->completed_nodes++;
-                nextNode.x = (*a->plan)[a->completed_nodes]->data.x;
-                nextNode.y = (*a->plan)[a->completed_nodes]->data.y;
+                nextNode = (*a->plan)[a->completed_nodes]->data;
             }
 
             float dist = glm::distance(nextNode, agentNow);
@@ -534,13 +533,12 @@ void animate_agents(std::vector<Agent *> agents, GLfloat dt) {
                 a->completed_nodes++;
                 //not sure why I have this, as this will, like, never happen.
                 if (dist < dt*velocity) {
-                    agentNow.x = nextNode.x;
-                    agentNow.y = nextNode.y;
+                    agentNow = nextNode;
                     velocity -= dist / dt;
                 }
             }
 
-            a->bv->o = (nextNode - agentNow) * (velocity * dt / glm::distance(nextNode, agentNow));
+            a->bv->o += (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (velocity * dt);
 
             int step;
             if (a->vt == agent::volume_type::RECT)
@@ -549,7 +547,7 @@ void animate_agents(std::vector<Agent *> agents, GLfloat dt) {
                 step = cylinder_res;
 
             for (GLuint i = agent_mesh_drawn; i < agent_mesh_drawn + step; i++)
-                obj::agentPositions[i] += glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
+                obj::agentPositions[i] = glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
             agent_mesh_drawn += step;
         }
     }
@@ -558,38 +556,16 @@ void animate_agents(std::vector<Agent *> agents, GLfloat dt) {
 void init_planning() {
     std::cout << "PP start" << std::endl;
 	cur_ob = nullptr;
-	//cspace = nullptr;
-	//prm = nullptr;
-    //ragentBound = nullptr;//new Rect();//
-	//cagentBound = new Circ();//nullptr;//
-	//pathVec = nullptr;
-	//path_ = nullptr;
 
     agents = std::vector<Agent *>(2);
 
-    agents[0] = new Agent(
+    agents[0] = new Agent(agent::volume_type::CIRC,
         new Circ(glm::vec2(-7.0f, -9.0f), 1.0f), 
                  glm::vec2(9.0f, 9.0f));
-    agents[0]->vt = agent::volume_type::CIRC;
-    agents[0]->completed_nodes = 0;
-    agents[0]->plan = nullptr;
-    agents[0]->cspace = nullptr;
-    agents[0]->prm = nullptr;
-    agents[1] = new Agent(
-        new Rect(glm::vec2(7.0f, 9.0f), 1.0f, 1.0f),
-                 glm::vec2(7.0f, 7.0f));
-    agents[1]->vt = agent::volume_type::RECT;
-    agents[0]->completed_nodes = 0;
-    agents[1]->plan = nullptr;
-    agents[1]->cspace = nullptr;
-    agents[1]->prm = nullptr;
 
-	//startPoint.x = -9.0f; startPoint.y = -9.0f;
-	//goalPoint.x = 9.0f; goalPoint.y = 9.0f;
-
-	//cagentBound->r = 1.0f;
-	//ragentBound->w = 1.0f;
-	//ragentBound->h = 1.0f;
+    agents[1] = new Agent(agent::volume_type::RECT,
+        new Rect(glm::vec2(7.0f, -9.0f), 1.0f, 1.0f),
+                 glm::vec2(-7.0f, -7.0f));
 
 	obstBounds = std::vector<Circ *>(2);
     //fix these at some point
@@ -622,7 +598,6 @@ void init_planning_vis() {
 
     Agent * a = agents[1];
 
-
     if (a->prm != nullptr) {
         std::vector<Node<glm::vec2> *> * verts = a->prm->roadmap->vertices;
         obj::NR_CUBES = static_cast<GLuint>(verts->size() + 1);
@@ -634,13 +609,13 @@ void init_planning_vis() {
         for (GLuint i = 0; i < obj::NR_CUBES - 1; i++) {
             Node<glm::vec2> * v = verts->at(i);
             obj::cubePositions[i] = glm::vec3(v->data.x, -2.0f, v->data.y);
-            if (i == 0) {
+            if (i == 0) {//start = blue
                 obj::cubeScale[i] = 1.0f;
                 obj::cubeDiffuseColor[i] = glm::vec3(0.0f, 0.0f, 1.0f);
                 obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
                 obj::cubePositions[i] = glm::vec3(a->start.x, -2.0f, a->start.y);
             }
-            else if (i == 1) {
+            else if (i == 1) {//goal = red
                 obj::cubeScale[i] = 1.0f;
                 obj::cubeDiffuseColor[i] = glm::vec3(1.0f, 0.0f, 0.0f);
                 obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -656,12 +631,10 @@ void init_planning_vis() {
                 obj::cubeDiffuseColor[i] = glm::vec3(0.4f, 0.4f, 0.4f);
                 obj::cubeSpecularColor[i] = glm::vec3(1.0f, 1.0f, 1.0f);
             }
-
         }
 
         //std::vector<std::pair<Node<glm::vec2> *, Node<glm::vec2> *>> * all_edges = prm->roadmap->all_edges;
         //glBufferData(,,)
-
 
         // add ground
         obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
@@ -776,24 +749,41 @@ void replan() {
 	//if (agents[0]->prm != nullptr)
 		init_planning_vis();
 
+
     std::vector<BoundingVolume *> bv;
-    bv.reserve(obstBounds.size() + rectBounds.size() + 2*agents.size() - 2);
+    bv.reserve(obstBounds.size() + rectBounds.size() + 2 * agents.size() - 2);
     bv.insert(bv.end(), obstBounds.begin(), obstBounds.end());
     bv.insert(bv.end(), rectBounds.begin(), rectBounds.end());
     for (Agent * a : agents) {
+        std::vector<BoundingVolume *> a_cspace_bvs = bv;
         for (Agent * b : agents) {
             if (a == b)
                 continue;
 
+            /*
+            //pointers were causing some aliasing issues must fix
             BoundingVolume * s = b->bv;
             s->o = b->start;
             BoundingVolume * g = b->bv;
             g->o = b->goal;
-            bv.push_back(s);
-            bv.push_back(g);
+            */
+            BoundingVolume * s, * g;
+            if (b->vt == agent::volume_type::RECT) {
+                Rect * r = static_cast<Rect *>(b->bv);
+                s = new Rect(b->start, r->w, r->h);
+                g = new Rect(b->goal, r->w, r->h);
+            }
+            else {
+                Circ * c = static_cast<Circ *>(b->bv);
+                s = new Circ(b->start, c->r);
+                g = new Circ(b->goal, c->r);
+            }
+
+            a_cspace_bvs.push_back(s);
+            a_cspace_bvs.push_back(g);
         }   
 
-        a->cspace = new Cspace_2D(bv, a->bv);
+        a->cspace = new Cspace_2D(a_cspace_bvs, a->bv);
         a->prm = new PRM(a->start, a->goal, a->cspace);
     }
 
