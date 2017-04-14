@@ -10,6 +10,7 @@ Circ::Circ(glm::vec2 o, float r) {
 }
 
 std::vector<BoundingVolume *> Circ::minkowskiSum(BoundingVolume * bv) {
+    //I wish there was a way I didn't have to check the types..
     Circ* c = dynamic_cast<Circ*>(bv);
     if (c != nullptr) {
         return minkowskiSum_(c);

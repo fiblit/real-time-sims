@@ -554,7 +554,6 @@ void animate_agents(GLfloat dt) {
 }
 
 void init_planning() {
-    std::cout << "PP start" << std::endl;
 	cur_ob = nullptr;
 
     agents = std::vector<Agent *>(2);
@@ -589,12 +588,6 @@ void init_planning() {
 }
 
 void init_planning_vis() {
-    std::cout << "PP vis" << std::endl;
-    //obj::NR_CUBES = 1;
-    //obj::cubePositions = new glm::vec3[obj::NR_CUBES];
-    //obj::cubeScale = new float[obj::NR_CUBES];
-    //obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
-    //obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
 
     Agent * a = agents[1];
 
@@ -635,13 +628,21 @@ void init_planning_vis() {
 
         //std::vector<std::pair<Node<glm::vec2> *, Node<glm::vec2> *>> * all_edges = prm->roadmap->all_edges;
         //glBufferData(,,)
-
-        // add ground
-        obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
-        obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
-        obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
-        obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
     }
+    else {
+        obj::NR_CUBES = 1;
+        obj::cubePositions = new glm::vec3[obj::NR_CUBES];
+        obj::cubeScale = new float[obj::NR_CUBES];
+        obj::cubeDiffuseColor = new glm::vec3[obj::NR_CUBES];
+        obj::cubeSpecularColor = new glm::vec3[obj::NR_CUBES];
+    }
+
+    // add ground
+    obj::cubeScale[obj::NR_CUBES - 1] = 20.0f;
+    obj::cubePositions[obj::NR_CUBES - 1] = glm::vec3(0.0f, -12.0f, 0.0f);
+    obj::cubeDiffuseColor[obj::NR_CUBES - 1] = glm::vec3(0.3f, 0.5f, 0.3f);
+    obj::cubeSpecularColor[obj::NR_CUBES - 1] = glm::vec3(1.0f, 1.0f, 1.0f);
+
 
     // obstacles -- could be polymorphised :p
     //add circs
@@ -695,7 +696,7 @@ void init_planning_vis() {
             }
             else {
                 obj::agentPositions[i + agent_mesh_drawn] =
-                    glm::vec3(a->start.x, 0.0f + 0.001f*i, a->start.y);
+                    glm::vec3(a->start.x, 0.0f, a->start.y);
                 obj::agentScale[i + agent_mesh_drawn] =
                     static_cast<Rect *>(a->bv)->w;
                 obj::agentRotation[i + agent_mesh_drawn] =
@@ -710,7 +711,6 @@ void init_planning_vis() {
 
 
 void replan() {
-    std::cout << "PP" << std::endl;
 	switch (cur_mode) {
 	case 0:
 		if (cur_ob != nullptr) {
