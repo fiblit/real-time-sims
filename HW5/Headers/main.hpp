@@ -130,6 +130,8 @@ const GLuint cylinder_res = 11;
 GLuint cur_mode;
 BoundingVolume * cur_ob;
 
+Circ * player;
+
 //ideally BoundingVolume * agent;
 std::vector<Agent *> agents;
 
@@ -163,6 +165,8 @@ void placeStartNode(glm::vec3 pos);
 void modeToggleCurrentObstacle();
 void scaleCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
 void moveCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
+
+void movePlayer(GLfloat dx, GLfloat dy, GLfloat dt);
 
 /* Other Prototypes */
 int DIE(int retVal);

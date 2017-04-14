@@ -489,15 +489,15 @@ void do_movement() {
 		scaleCurrentObstacle(1 / 1.1f, 1.f, timer->getDelta());
 	if (keys[GLFW_KEY_L])
 		scaleCurrentObstacle(1.1f, 1.f, timer->getDelta());
-	if (keys[GLFW_KEY_UP])
-		moveCurrentObstacle( 0.f,  1.f, timer->getDelta());
-	if (keys[GLFW_KEY_DOWN])
-		moveCurrentObstacle( 0.f, -1.f, timer->getDelta());
-	if (keys[GLFW_KEY_LEFT])
-		moveCurrentObstacle(-1.f,  0.f, timer->getDelta());
-	if (keys[GLFW_KEY_RIGHT])
-		moveCurrentObstacle( 1.f,  0.f, timer->getDelta());
     */
+	if (keys[GLFW_KEY_UP])
+		movePlayer( 0.f,  1.f, timer->getDelta());
+	if (keys[GLFW_KEY_DOWN])
+		movePlayer( 0.f, -1.f, timer->getDelta());
+	if (keys[GLFW_KEY_LEFT])
+		movePlayer(-1.f,  0.f, timer->getDelta());
+	if (keys[GLFW_KEY_RIGHT])
+		movePlayer( 1.f,  0.f, timer->getDelta());
 
 	if (keys[GLFW_KEY_F]) {
 		keys[GLFW_KEY_F] = false;
@@ -622,12 +622,13 @@ void animate_agents(GLfloat dt) {
 void init_planning() {
 	cur_ob = nullptr;
 
+    player = new Circ(glm::vec2(0.f), 1.f);
 
-    double agentSize = .1;
-    glm::vec2 spacing(.5, .5);
-    glm::vec2 groupSize(11, 11);
-    glm::vec2 offset(6, 6);
-    glm::vec2 start1(-7., -7.), start2(7., -7.), goal1(7., 7.), goal2(-7., 7.);
+    double agentSize = .05;
+    glm::vec2 spacing(.25, .25);
+    glm::vec2 groupSize(22, 22);
+    glm::vec2 offset(12, 12);
+    glm::vec2 start1(-7., -7.), start2(7., 7.), goal1(7., 7.), goal2(-7., -7.);
 
     agents = std::vector<Agent *>(2 * groupSize.x * groupSize.y);
     // ONLY CIRC PLEASE
@@ -655,12 +656,13 @@ void init_planning() {
                     goal2.x + spacing.x*(i - offset.x), 
                     goal2.y + spacing.y*(j - offset.y)));
 
-    /*
+    
 	obstBounds = std::vector<Circ *>(2);
     //fix these at some point
-    obstBounds[0] = new Circ(glm::vec2(0.0f, 0.0f), 2.0f);
+    obstBounds[0] = new Circ(glm::vec2(-3.0f, -3.0f), 2.0f);
     obstBounds[1] = new Circ(glm::vec2(-2.0f, 6.0f), 1.0f);
 
+    /*
 	rectBounds = std::vector<Rect *>(9);
     {int NR = 0;
     //fix these at some point..
@@ -676,7 +678,9 @@ void init_planning() {
         //rectBounds[NR] = new Rect(glm::vec2(-3.0f,    6.0f),    6.0f,   0.1f); NR++;//
     }
     */
-    obstBounds = std::vector<Circ *>();
+
+    //obstBounds = std::vector<Circ *>();
+    obstBounds.push_back(player);
     rectBounds = std::vector<Rect *>();
 }
 
@@ -980,6 +984,12 @@ void scaleCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt) {
 		}
 		break;
 	}
+}
+
+void movePlayer(GLfloat dx, GLfloat dy, GLfloat dt) {
+    player->o.x += dx*dt;
+    player->o.y += dy*dt;
+    init_planning_vis();//really I just need to reinit the circ obstacles :P
 }
 
 void moveCurrentObstacle(GLfloat dx, GLfloat dy, GLfloat dt) {

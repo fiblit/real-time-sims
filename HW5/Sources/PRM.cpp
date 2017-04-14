@@ -9,7 +9,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace_) {
 
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> std(-0.5f, 0.5f);
-	const int samplecount = 5;//this does not work on all maps
+	const int samplecount = 1;//this does not work on all maps
 
 	//hrclock::duration seed = hrclock::now() - first;
 	//gen.seed(static_cast<unsigned int>(seed.count()));
@@ -44,7 +44,7 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace_) {
 
 /* threshold search to find NNs */
 VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
-	float threshold = 3.f; // METERS
+	float threshold = 5.f; // METERS
 
 	VecPoint * neighbours = new VecPoint();
 
