@@ -15,6 +15,8 @@ public:
     Cspace_2D * cspace; //wish I could split this up into static/dynamic
     PRM * prm; //this seems wasteful...?
 
+    glm::vec2 vel;//hack for ttc
+
     std::vector<Node<glm::vec2> *> * plan;
     int completed_nodes;
     //"Model" -- nope -- too much work RN 

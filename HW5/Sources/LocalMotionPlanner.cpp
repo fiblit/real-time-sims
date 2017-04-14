@@ -1,6 +1,5 @@
 #include "LocalMotionPlanner.hpp"
-
-float ttc(BoundingVolume * i, glm::vec2 iv, BoundingVolume * j, glm::vec2 jv) {
+float LMP::ttc(BoundingVolume * i, glm::vec2 iv, BoundingVolume * j, glm::vec2 jv) {
     //I wish there was a way I didn't have to check the types..
     /*Circ* c = dynamic_cast<Circ*>(i);
     if (c != nullptr) {
@@ -26,10 +25,10 @@ float ttc(BoundingVolume * i, glm::vec2 iv, BoundingVolume * j, glm::vec2 jv) {
     }
     */
 
-    return 0;
+    return LMP::ttc_(static_cast<Circ *>(i), iv, static_cast<Circ *>(j), jv);
 }
 
-float ttc_(Circ * i, glm::vec2 iv, Circ * j, glm::vec2 jv) {
+float LMP::ttc_(Circ * i, glm::vec2 iv, Circ * j, glm::vec2 jv) {
     float r = i->r + j->r;
     glm::vec2 w = j->o - i->o;
     float c = glm::dot(w, w) - r * r;
@@ -46,10 +45,11 @@ float ttc_(Circ * i, glm::vec2 iv, Circ * j, glm::vec2 jv) {
     float tau = (b - sqrt(d)) / a;
     if (tau < 0)
         return std::numeric_limits<float>::max();
+    return tau;
 }
 
 //tbd
-float ttc_(Rect * i, glm::vec2 iv, Rect * j, glm::vec2 jv) {
+float LMP::ttc_(Rect * i, glm::vec2 iv, Rect * j, glm::vec2 jv) {
     glm::vec2 o = j->o - i->o;
     glm::vec2 v = iv - jv;
     float w = i->w / 2 + j->w / 2;
@@ -64,7 +64,7 @@ float ttc_(Rect * i, glm::vec2 iv, Rect * j, glm::vec2 jv) {
 }
 
 //tbd
-float ttc_(Circ * i, glm::vec2 iv, Rect * j, glm::vec2 jv) {
+float LMP::ttc_(Circ * i, glm::vec2 iv, Rect * j, glm::vec2 jv) {
     glm::vec2 o = j->o - i->o;
     glm::vec2 v = iv - jv;
     float w = i->r + j->w / 2;

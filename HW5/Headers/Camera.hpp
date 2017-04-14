@@ -46,7 +46,7 @@ public:
 
 	// Constructor with vectors
 	Camera(
-			glm::vec3 pos = glm::vec3(0.0f, 60.0f, 0.0f),
+			glm::vec3 pos = glm::vec3(0.0f, 20.0f, 0.0f),
 			glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
 			GLfloat yaw = G::CAMERA::YAW,
 			GLfloat pitch = G::CAMERA::PITCH):
