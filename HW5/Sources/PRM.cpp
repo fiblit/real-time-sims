@@ -11,14 +11,16 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace_) {
 	std::uniform_real_distribution<float> std(-0.5f, 0.5f);
 	const int samplecount = 5;//this does not work on all maps
 
-	hrclock::duration seed = hrclock::now() - first;
-	gen.seed(static_cast<unsigned int>(seed.count()));
+	//hrclock::duration seed = hrclock::now() - first;
+	//gen.seed(static_cast<unsigned int>(seed.count()));
 
 	float b = 2.8f;//bin size
 
 	VecPoint * sample = new VecPoint();
 	for (int i = 0; i < samplecount; i++) {
 		for (float x = -10+b/2; x < 10-b/2; x+=b) {
+            hrclock::duration seed = hrclock::now() - first;
+            gen.seed(static_cast<unsigned int>(seed.count()));
 			for (float y = -10+b/2; y < 10-b/2; y+=b) {
 				glm::vec2 p(
                     std(gen)*b + x,
