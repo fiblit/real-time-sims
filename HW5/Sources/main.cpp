@@ -465,14 +465,16 @@ void do_movement() {
 		keys[GLFW_KEY_O] = false;
 		placeObst(cam->pos);
 	}
-	//if (keys[GLFW_KEY_G]) {
-	//	keys[GLFW_KEY_G] = false;
-	//	placeGoalNode(cam->pos);
-	//}
-	//if (keys[GLFW_KEY_T]) {
-	//	keys[GLFW_KEY_T] = false;
-	//	placeStartNode(cam->pos);
-	//}
+	if (keys[GLFW_KEY_G]) {
+		keys[GLFW_KEY_G] = false;
+        selected_agent_debug = (selected_agent_debug + 1) % agents.size();
+        init_planning_vis();
+	}
+	if (keys[GLFW_KEY_T]) {
+		keys[GLFW_KEY_T] = false;
+        selected_agent_debug = (selected_agent_debug - 1) % agents.size();
+        init_planning_vis();
+	}
 	if (keys[GLFW_KEY_M]) {
 		keys[GLFW_KEY_M] = false;
 		modeToggleCurrentObstacle();
@@ -513,8 +515,6 @@ int DIE(int retVal) {
 
 void animate_agents(GLfloat dt) {
 
-    int agent_mesh_drawn = 0;
-
     for (Agent * a : agents) {
         if (a->completed_nodes < a->plan->size()) {
             float velocity = 1.0f; // x m/s
@@ -533,63 +533,71 @@ void animate_agents(GLfloat dt) {
                 a->completed_nodes++;
                 //not sure why I have this, as this will, like, never happen.
                 if (dist < dt*velocity) {
-                    agentNow = nextNode;
+                    agentNow = nextNode;//move to the node, but not past...
                     velocity -= dist / dt;
                 }
             }
 
-            a->bv->o += (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (velocity * dt);
-
-            int step;
-            if (a->vt == agent::volume_type::RECT)
-                step = 1;
-            else
-                step = cylinder_res;
-
-            for (GLuint i = agent_mesh_drawn; i < agent_mesh_drawn + step; i++)
-                obj::agentPositions[i] = glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
-            agent_mesh_drawn += step;
+            glm::vec2 motion = (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (velocity * dt);
+            a->bv->o += motion;
         }
+    }
+
+    int agent_mesh_drawn = 0;
+    for (Agent * a : agents) {
+        int step;
+        if (a->vt == agent::volume_type::RECT)
+            step = 1;
+        else
+            step = cylinder_res;
+
+        for (GLuint i = 0; i < step; i++)
+            obj::agentPositions[i + agent_mesh_drawn] = glm::vec3(a->bv->o.x, 0.0f + 0.001f*(i + agent_mesh_drawn), a->bv->o.y);
+        agent_mesh_drawn += step;
     }
 }
 
 void init_planning() {
 	cur_ob = nullptr;
 
-    agents = std::vector<Agent *>(2);
+    agents = std::vector<Agent *>(18);
+    // ONLY CIRC PLEASE
 
-    agents[0] = new Agent(agent::volume_type::CIRC,
-        new Circ(glm::vec2(-7.0f, -9.0f), 1.0f), 
-                 glm::vec2(9.0f, 9.0f));
-
-    agents[1] = new Agent(agent::volume_type::RECT,
-        new Rect(glm::vec2(7.0f, -9.0f), 1.0f, 1.0f),
-                 glm::vec2(-7.0f, -7.0f));
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            agents[3 * j + i] = new Agent(agent::volume_type::CIRC,
+                new Circ(glm::vec2(-7.0f + 1.f*(i - 1), -5.0f + 1.f*(j - 1)), 0.3f),
+                    glm::vec2(7.0f + 1.f*(j - 1), 7.0f + 1.f*(i - 1)));
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            agents[i + 3 * j + 9] = new Agent(agent::volume_type::CIRC,
+                new Circ(glm::vec2(8.0f + 1.f * (i - 1), -8.0f + 1.f *(j - 1)), 0.3f),
+                    glm::vec2(-4.0f + 1.f*(j - 1), 4.0f + 1.f*(i - 1)));
 
 	obstBounds = std::vector<Circ *>(2);
     //fix these at some point
     obstBounds[0] = new Circ(glm::vec2(0.0f, 0.0f), 2.0f);
     obstBounds[1] = new Circ(glm::vec2(-7.0f, 6.0f), 1.0f);
 
-	rectBounds = std::vector<Rect *>(10);
+	rectBounds = std::vector<Rect *>(9);
     {int NR = 0;
     //fix these at some point..
         rectBounds[NR] = new Rect(glm::vec2( 3.0f,    8.0f),    0.1f,   4.0f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-7.25f,  -1.0f),    5.5f,   0.1f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2( 3.0f,   -8.0f),    0.1f,   4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-5.0f,  -1.0f),     5.5f,   0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2( 3.0f,   -7.0f),    0.1f,   6.0f); NR++;
         rectBounds[NR] = new Rect(glm::vec2( 3.0f,    0.0f),    0.1f,   4.0f); NR++;
         rectBounds[NR] = new Rect(glm::vec2(-6.5f,   -2.0f),    0.1f,   8.0f); NR++;//
-        rectBounds[NR] = new Rect(glm::vec2( 4.75f,   2.0f),    3.5f,   0.1f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-5.0f,   -5.0f),    3.0f,   0.1f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-5.0f,   -5.0f),    0.1f,   3.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2( 6.0f,   2.0f),     6.0f,   0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-2.0f,   6.0f),    3.0f,   0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-2.0f,   6.0f),    0.1f,   3.0f); NR++;
         rectBounds[NR] = new Rect(glm::vec2( 0.0f,    4.0f),    0.1f,   4.0f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-3.0f,    6.0f),    6.0f,   0.1f); NR++;//
+        //rectBounds[NR] = new Rect(glm::vec2(-3.0f,    6.0f),    6.0f,   0.1f); NR++;//
     }
 }
 
 void init_planning_vis() {
 
-    Agent * a = agents[1];
+    Agent * a = agents[selected_agent_debug];
 
     if (a->prm != nullptr) {
         std::vector<Node<glm::vec2> *> * verts = a->prm->roadmap->vertices;
@@ -688,7 +696,7 @@ void init_planning_vis() {
         for (GLuint i = 0; i < step; i++) {
             if (a->vt == agent::volume_type::CIRC) {
                 obj::agentPositions[i + agent_mesh_drawn] = 
-                    glm::vec3(a->start.x, 0.0f + 0.001f*i, a->start.y);
+                    glm::vec3(a->bv->o.x, 0.0f + 0.001f*i, a->bv->o.y);
                 obj::agentScale[i + agent_mesh_drawn] =
                     static_cast<Circ *>(a->bv)->r * static_cast<float>(sqrt(2));
                 obj::agentRotation[i + agent_mesh_drawn] =
@@ -696,7 +704,7 @@ void init_planning_vis() {
             }
             else {
                 obj::agentPositions[i + agent_mesh_drawn] =
-                    glm::vec3(a->start.x, 0.0f, a->start.y);
+                    glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
                 obj::agentScale[i + agent_mesh_drawn] =
                     static_cast<Rect *>(a->bv)->w;
                 obj::agentRotation[i + agent_mesh_drawn] =
@@ -707,6 +715,8 @@ void init_planning_vis() {
 
         agent_mesh_drawn += step;
     }
+
+    
 }
 
 
@@ -746,8 +756,6 @@ void replan() {
         //positions_updated += step;
     }
 
-	//if (agents[0]->prm != nullptr)
-		init_planning_vis();
 
 
     std::vector<BoundingVolume *> bv;
@@ -779,10 +787,12 @@ void replan() {
                 g = new Circ(b->goal, c->r);
             }
 
-            a_cspace_bvs.push_back(s);
-            a_cspace_bvs.push_back(g);
+            //a_cspace_bvs.push_back(s);
+            //a_cspace_bvs.push_back(g);
         }   
 
+        //even when the agents are all the same the Cspaces must vary a bit, there's definitely a more
+        //efficient way of handling this though
         a->cspace = new Cspace_2D(a_cspace_bvs, a->bv);
         a->prm = new PRM(a->start, a->goal, a->cspace);
     }
@@ -797,6 +807,8 @@ void replan() {
 
         a->completed_nodes = 0;
     }
+
+    init_planning_vis();
 }
 
 void toggleFlashlight() {

@@ -143,7 +143,7 @@ std::vector<Circ *> obstBounds;
 //GLuint completed_nodes_;
 
 GLboolean isFlashlightOn;
-
+int selected_agent_debug = 0;
 
 /* UI prototypes */
 bool keys[1024];
