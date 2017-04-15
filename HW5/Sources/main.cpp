@@ -539,10 +539,32 @@ void lookahead(glm::vec2 * agentNow, glm::vec2 * nextNode, Agent * a, float * sp
         }
     }
     else
-        nextNode = (*a->plan)[a->plan->size() - 1]->data;
+        *nextNode = (*a->plan)[a->plan->size() - 1]->data;
 }
 
-void alternating_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Agent *> newGrid[100][100]) {
+void ttc_forces_(double ttc, glm::vec2 *FAVOID, glm::vec2 dir) {
+    dir /= glm::length(dir);
+
+    double t_h = 3.0;//seconds
+    double mag = 0;
+    if (ttc >= 0 && ttc <= t_h)
+        mag = (t_h - ttc) / (ttc + 0.001);
+    mag = mag > 20 ? 20 : mag;
+    *FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
+}
+void ttc_forces(Agent * a, Circ * b, double ttc, glm::vec2 * FAVOID) {
+    glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
+    glm::vec2 dir = (a->bv->o + V_dt - b->o);
+    ttc_forces_(ttc, FAVOID, dir);
+}
+void ttc_forces(Agent * a, Agent * b, double ttc, glm::vec2 * FAVOID) {
+    glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
+    glm::vec2 bV_dt(b->vel.x * ttc, b->vel.y * ttc);
+    glm::vec2 dir = (a->bv->o + V_dt - b->bv->o - bV_dt);
+    ttc_forces_(ttc, FAVOID, dir);
+}
+
+void ttc_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Agent *> newGrid[100][100]) {
     if (0 < a->plan->size()) {
         float speed = 1.0f; // x m/s
         glm::vec2 agentNow = a->bv->o;
@@ -558,7 +580,7 @@ void alternating_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::ve
 
         glm::vec2 FAVOID;
 
-        if (G::WITH_TTC_GRID) { //TODO: internals -> function
+        if (G::WITH_TTC_GRID) {
             for (int k = (0 < *i - 4) ? *i - 4 : 0; k < ((100 > *i + 4) ? *i + 4 : 100); k++) { // spatial search
                 for (int l = (0 < *j - 4) ? *j - 4 : 0; l < ((100 > *j + 4) ? *j + 4 : 100); l++) {
                     for (Agent * b : agents[k][l]) {
@@ -573,18 +595,7 @@ void alternating_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::ve
                         //suggestion to handle collisions
                         //float originalAr = static_cast<Circ *>(a->bv)->r;
                         //float originalBr = static_cast<Circ *>(b->bv)->r;
-
-                        glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
-                        glm::vec2 bV_dt(b->vel.x * ttc, b->vel.y * ttc);
-                        glm::vec2 dir = (a->bv->o + V_dt - b->bv->o - bV_dt);
-                        dir /= glm::length(dir);
-
-                        double t_h = 3.0;//seconds
-                        double mag = 0;
-                        if (ttc >= 0 && ttc <= t_h)
-                            mag = (t_h - ttc) / (ttc + 0.001);
-                        mag = mag > 20 ? 20 : mag;
-                        FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
+                        ttc_forces(a, b, ttc, &FAVOID);
                     }
                 }
             }
@@ -599,17 +610,7 @@ void alternating_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::ve
                 if (ttc > 10)
                     continue;
 
-                glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
-                glm::vec2 bV_dt(b->vel.x * ttc, b->vel.y * ttc);
-                glm::vec2 dir = (a->bv->o + V_dt - b->bv->o - bV_dt);
-                dir /= glm::length(dir);
-
-                double t_h = 3.0;//seconds
-                double mag = 0;
-                if (ttc >= 0 && ttc <= t_h)
-                    mag = (t_h - ttc) / (ttc + 0.001);
-                mag = mag > 20 ? 20 : mag;
-                FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
+                ttc_forces(a, b, ttc, &FAVOID);
             }
         }
 
@@ -619,16 +620,7 @@ void alternating_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::ve
             if (ttc > 10)
                 continue;
 
-            glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
-            glm::vec2 dir = (a->bv->o + V_dt - c->o);
-            dir /= glm::length(dir);
-
-            double t_h = 3.0;//seconds
-            double mag = 0;
-            if (ttc >= 0 && ttc <= t_h)
-                mag = (t_h - ttc) / (ttc + 0.001);
-            mag = mag > 20 ? 20 : mag;
-            FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
+            ttc_forces(a, c, ttc, &FAVOID);
         }
 
         FSUM += FAVOID;
@@ -659,10 +651,10 @@ void animate_agents(GLfloat dt) {
         for (int i = 0; i < 100; i++)
             for (int j = 0; j < 100; j++)
                 for (Agent * a : agents[i][j])
-                    alternating_animate_agents(dt, a, &i, &j, newGrid);
+                    ttc_animate_agents(dt, a, &i, &j, newGrid);
     else
         for (Agent * a : agents_old)
-            alternating_animate_agents(dt, a, nullptr, nullptr, nullptr);
+            ttc_animate_agents(dt, a, nullptr, nullptr, nullptr);
 
     if (G::WITH_TTC_GRID)
         for (int i = 0; i < 100; i++)
