@@ -132,7 +132,8 @@ BoundingVolume * cur_ob;
 
 Circ * player;
 
-//ideally BoundingVolume * agent;
+namespace G { const GLboolean WITH_TTC_GRID = GL_TRUE; }
+std::vector<Agent *> agents_old;
 int NUM_AGENTS = 0;
 std::vector<Agent *> agents[100][100];
 

@@ -14,6 +14,7 @@ private:
 	GLfloat time;
 	// Difference in time between this frame and the last frame
 	GLfloat delta;
+    GLfloat timerStop;
 public:
 	Timer() {
 		time = (GLfloat)glfwGetTime();
@@ -25,6 +26,13 @@ public:
 		time = (GLfloat)glfwGetTime();
 		delta = time - last;
 	};
+
+    void stopTimer() {
+        timerStop = (GLfloat)glfwGetTime();
+    }
+    void restartTimer() {
+        time += ((GLfloat)glfwGetTime() - timerStop);
+    }
 
 	GLfloat getDelta() {
 		return delta;

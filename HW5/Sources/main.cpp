@@ -462,18 +462,18 @@ void do_movement() {
 		init_planning_vis();
 	}
 
-    /*//deprecated for the uniform grid to work
-	if (keys[GLFW_KEY_G]) {
+    //deprecated for the uniform grid to work
+	if (!G::WITH_TTC_GRID && keys[GLFW_KEY_G]) {
 		keys[GLFW_KEY_G] = false;
         selected_agent_debug = (selected_agent_debug + 1) % NUM_AGENTS;
         init_planning_vis();
 	}
-	if (keys[GLFW_KEY_T]) {
+	if (!G::WITH_TTC_GRID && keys[GLFW_KEY_T]) {
 		keys[GLFW_KEY_T] = false;
         selected_agent_debug = (selected_agent_debug - 1) % NUM_AGENTS;
         init_planning_vis();
 	}
-    */
+    
 
     /*///the dynamic obstacle is buggy AF with multi-agents for some reason
     if (keys[GLFW_KEY_O]) {
@@ -518,91 +518,61 @@ int DIE(int retVal) {
 	return retVal;
 }
 
+void alternating_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Agent *> newGrid[100][100]) {
+    if (0 < a->plan->size()) {
+        float speed = 1.0f; // x m/s
+        glm::vec2 agentNow = a->bv->o;
+        glm::vec2 nextNode;
+        if (a->completed_nodes < a->plan->size()) {
+            nextNode = (*a->plan)[a->completed_nodes]->data;
 
-void animate_agents(GLfloat dt) {
+            while (a->completed_nodes + 1 < a->plan->size()
+                && a->cspace->lineOfSight(agentNow, (*a->plan)[a->completed_nodes + 1]->data)) {
+                a->completed_nodes++;
+                nextNode = (*a->plan)[a->completed_nodes]->data;
+            }
 
-
-    std::vector<Agent *> newGrid[100][100];
-    for (int i = 0; i < 100; i++) {
-        for (int j = 0; j < 100; j++) {
-            newGrid[i][j] = std::vector<Agent *>();
+            float dist = glm::distance(nextNode, agentNow);
+            if (dist < 0.1f) {
+                a->completed_nodes++;
+                //not sure why I have this, as this will, like, never happen.
+                if (dist < dt*speed) {//detects overshooting
+                    agentNow = nextNode;//move to the node, but not past...
+                    speed -= dist / dt;
+                }
+            }
         }
-    }
+        else
+            nextNode = (*a->plan)[a->plan->size() - 1]->data;
 
-    for (int i = 0; i < 100; i++) {
-        for (int j = 0; j < 100; j++) {
-            for (Agent * a : agents[i][j]) {
-                if (0 < a->plan->size()) {
-                    float speed = 1.0f; // x m/s
-                    glm::vec2 agentNow = a->bv->o;
-                    glm::vec2 nextNode;
-                    if (a->completed_nodes < a->plan->size()) {
-                        nextNode = (*a->plan)[a->completed_nodes]->data;
+        /* ttc - approximate */
+        glm::vec2 goalV = (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (speed /* * dt */);
 
-                        while (a->completed_nodes + 1 < a->plan->size()
-                            && a->cspace->lineOfSight(agentNow, (*a->plan)[a->completed_nodes + 1]->data)) {
-                            a->completed_nodes++;
-                            nextNode = (*a->plan)[a->completed_nodes]->data;
-                        }
+        glm::vec2 goalF = 2.0f*(goalV - a->vel);
 
-                        float dist = glm::distance(nextNode, agentNow);
-                        if (dist < 0.1f) {
-                            a->completed_nodes++;
-                            //not sure why I have this, as this will, like, never happen.
-                            if (dist < dt*speed) {//detects overshooting
-                                agentNow = nextNode;//move to the node, but not past...
-                                speed -= dist / dt;
-                            }
-                        }
-                    }
-                    else
-                        nextNode = (*a->plan)[a->plan->size() - 1]->data;
+        glm::vec2 FSUM = goalF;
 
-                    /* ttc - approximate */
-                    glm::vec2 goalV = (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (speed /* * dt */);
+        glm::vec2 FAVOID;
 
-                    glm::vec2 goalF = 2.0f*(goalV - a->vel);
+        if (G::WITH_TTC_GRID) { //TODO: internals -> function
+            for (int k = (0 < *i - 4) ? *i - 4 : 0; k < ((100 > *i + 4) ? *i + 4 : 100); k++) { // spatial search
+                for (int l = (0 < *j - 4) ? *j - 4 : 0; l < ((100 > *j + 4) ? *j + 4 : 100); l++) {
+                    for (Agent * b : agents[k][l]) {
+                        if (a == b)
+                            continue;
 
-                    glm::vec2 FSUM = goalF;
-
-                    glm::vec2 FAVOID;
-
-                    for (int k = (0 < i - 4) ? i - 4 : 0; k < ((100 > i + 4) ? i + 4: 100); k++) { // spatial search
-                        for (int l = (0 < j - 4) ? j - 4 : 0; l < ((100 > j + 4) ? j + 4 : 100); l++) {
-                            for (Agent * b : agents[k][l]) {
-                                if (a == b)
-                                    continue;
-
-                                double ttc = LMP::ttc(a->bv, a->vel, b->bv, b->vel);
-
-                                if (ttc > 10)
-                                    continue;
-
-                                //float originalAr = static_cast<Circ *>(a->bv)->r;
-                                //float originalBr = static_cast<Circ *>(b->bv)->r;
-
-                                glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
-                                glm::vec2 bV_dt(b->vel.x * ttc, b->vel.y * ttc);
-                                glm::vec2 dir = (a->bv->o + V_dt - b->bv->o - bV_dt);
-                                dir /= glm::length(dir);
-
-                                double t_h = 3.0;//seconds
-                                double mag = 0;
-                                if (ttc >= 0 && ttc <= t_h)
-                                    mag = (t_h - ttc) / (ttc + 0.001);
-                                mag = mag > 20 ? 20 : mag;
-                                FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
-                            }
-                        }
-                    }
-                    for (Circ * c : obstBounds) {
-                        double ttc = LMP::ttc(a->bv, a->vel, c, glm::vec2(0));
+                        double ttc = LMP::ttc(a->bv, a->vel, b->bv, b->vel);
 
                         if (ttc > 10)
                             continue;
 
+                        //suggestion to handle collisions
+                        //float originalAr = static_cast<Circ *>(a->bv)->r;
+                        //float originalBr = static_cast<Circ *>(b->bv)->r;
+
                         glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
-                        glm::vec2 dir = (a->bv->o + V_dt - c->o);
+                        glm::vec2 bV_dt(b->vel.x * ttc, b->vel.y * ttc);
+                        glm::vec2 dir = (a->bv->o + V_dt - b->bv->o - bV_dt);
                         dir /= glm::length(dir);
 
                         double t_h = 3.0;//seconds
@@ -612,33 +582,94 @@ void animate_agents(GLfloat dt) {
                         mag = mag > 20 ? 20 : mag;
                         FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
                     }
-
-                    FSUM += FAVOID;
-                    a->vel += FSUM * dt;
-                    a->bv->o += a->vel * dt;
                 }
+            }
+        }//with ttc grid
+        else {
+            for (Agent * b : agents_old) {
+                if (a == b)
+                    continue;
 
-                int x = static_cast<int>(a->bv->o.x * 5 + 50);
-                if (x < 0) x = 0;
-                if (x > 99) x = 99;
-                int y = static_cast<int>(a->bv->o.y * 5 + 50);
-                if (y < 0) y = 0;
-                if (y > 99) y = 99;
-                newGrid[x][y].push_back(a);
+                double ttc = LMP::ttc(a->bv, a->vel, b->bv, b->vel);
+
+                if (ttc > 10)
+                    continue;
+
+                glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
+                glm::vec2 bV_dt(b->vel.x * ttc, b->vel.y * ttc);
+                glm::vec2 dir = (a->bv->o + V_dt - b->bv->o - bV_dt);
+                dir /= glm::length(dir);
+
+                double t_h = 3.0;//seconds
+                double mag = 0;
+                if (ttc >= 0 && ttc <= t_h)
+                    mag = (t_h - ttc) / (ttc + 0.001);
+                mag = mag > 20 ? 20 : mag;
+                FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
             }
         }
-    }
 
+        for (Circ * c : obstBounds) {
+            double ttc = LMP::ttc(a->bv, a->vel, c, glm::vec2(0));
+
+            if (ttc > 10)
+                continue;
+
+            glm::vec2 V_dt(a->vel.x * ttc, a->vel.y * ttc);
+            glm::vec2 dir = (a->bv->o + V_dt - c->o);
+            dir /= glm::length(dir);
+
+            double t_h = 3.0;//seconds
+            double mag = 0;
+            if (ttc >= 0 && ttc <= t_h)
+                mag = (t_h - ttc) / (ttc + 0.001);
+            mag = mag > 20 ? 20 : mag;
+            FAVOID += glm::vec2(mag * dir.x, mag * dir.y);
+        }
+
+        FSUM += FAVOID;
+        a->vel += FSUM * dt;
+        a->bv->o += a->vel * dt;
+    }// 0 < a->plan->size()
+
+    if (G::WITH_TTC_GRID) {
+        int x = static_cast<int>(a->bv->o.x * 5 + 50);
+        if (x < 0) x = 0;
+        if (x > 99) x = 99;
+        int y = static_cast<int>(a->bv->o.y * 5 + 50);
+        if (y < 0) y = 0;
+        if (y > 99) y = 99;
+        (newGrid)[x][y].push_back(a);
+    }
+}
+
+void animate_agents(GLfloat dt) {
+    std::vector<Agent *> newGrid[100][100];
     for (int i = 0; i < 100; i++) {
         for (int j = 0; j < 100; j++) {
-            agents[i][j] = newGrid[i][j];
+            newGrid[i][j] = std::vector<Agent *>();
         }
     }
 
+    if (G::WITH_TTC_GRID)
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                for (Agent * a : agents[i][j])
+                    alternating_animate_agents(dt, a, &i, &j, newGrid);
+    else
+        for (Agent * a : agents_old)
+            alternating_animate_agents(dt, a, nullptr, nullptr, nullptr);
+
+    if (G::WITH_TTC_GRID)
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                agents[i][j] = newGrid[i][j];
+
     int agent_mesh_drawn = 0;
-    for (int i = 0; i < 100; i++) {
-        for (int j = 0; j < 100; j++) {
-            for (Agent * a : agents[i][j]) {
+    if (G::WITH_TTC_GRID) { //EVERY SINGLE ONE OF THESE COULD HAVE THEIR INTERNALS AS FUNCTIONS
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100; j++) {
+                for (Agent * a : agents[i][j]) {
                 int step;
                 if (a->vt == agent::volume_type::RECT)
                     step = 1;
@@ -648,7 +679,21 @@ void animate_agents(GLfloat dt) {
                 for (GLuint i = 0; i < step; i++)
                     obj::agentPositions[i + agent_mesh_drawn] = glm::vec3(a->bv->o.x, 0.0f + 0.001f*(i /*+ agent_mesh_drawn*/), a->bv->o.y);
                 agent_mesh_drawn += step;
+                }
             }
+        }
+    }
+    else {
+        for (Agent * a : agents_old) {
+            int step;
+            if (a->vt == agent::volume_type::RECT)
+                step = 1;
+            else
+                step = cylinder_res;
+
+            for (GLuint i = 0; i < step; i++)
+                obj::agentPositions[i + agent_mesh_drawn] = glm::vec3(a->bv->o.x, 0.0f + 0.001f*(i /*+ agent_mesh_drawn*/), a->bv->o.y);
+            agent_mesh_drawn += step;
         }
     }
 }
@@ -658,44 +703,67 @@ void init_planning() {
 
     player = new Circ(glm::vec2(0.f), 1.f);
 
+    /* PLAY WITH THESE */
     double agentSize = .05;
     glm::vec2 spacing(.25, .25);
     glm::vec2 groupSize(22, 22);
     glm::vec2 offset(12, 12);
     glm::vec2 start1(-7., -7.), start2(7., 7.), goal1(7., 7.), goal2(-7., -7.);
+    /* */
 
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            agents[i][j] = std::vector<Agent *>();
-    // ONLY CIRC PLEASE
+    if (G::WITH_TTC_GRID)
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                agents[i][j] = std::vector<Agent *>();
+    else
+        agents_old = std::vector<Agent *>(groupSize.x * groupSize.y * 2);
+    //only use circs since I did not expand ttc for my rects yet
 
     for (int i = 0; i < groupSize.x; i++) {
         for (int j = 0; j < groupSize.y; j++) {
             glm::vec2 o(start1.x + spacing.x * (i - offset.x), start1.y + spacing.y * (j - offset.y));
-            int x = static_cast<int>(o.x * 5 + 50);
-            int y = static_cast<int>(o.y * 5 + 50);
+            if (G::WITH_TTC_GRID) {
+                int x = static_cast<int>(o.x * 5 + 50);
+                int y = static_cast<int>(o.y * 5 + 50);
 
-            agents[x][y].push_back( new Agent(agent::volume_type::CIRC,
-                new Circ(o, agentSize),
-                glm::vec2(
-                    goal1.x + spacing.y*(i - offset.x),
-                    goal1.y + spacing.y*(j - offset.y))) );
-            NUM_AGENTS++;
+                agents[x][y].push_back(new Agent(agent::volume_type::CIRC,
+                    new Circ(o, agentSize),
+                    glm::vec2(
+                        goal1.x + spacing.y*(i - offset.x),
+                        goal1.y + spacing.y*(j - offset.y))));
+                NUM_AGENTS++;
+            }
+            else {
+                agents_old[i + groupSize.x * j] = new Agent(agent::volume_type::CIRC,
+                    new Circ(o, agentSize),
+                    glm::vec2(
+                        goal1.x + spacing.y*(i - offset.x),
+                        goal1.y + spacing.y*(j - offset.y)));
+            }
         }
     }
 
     for (int i = 0; i < groupSize.x; i++) {
         for (int j = 0; j < groupSize.y; j++) {
             glm::vec2 o(start2.x + spacing.x * (i - offset.x), start2.y + spacing.y * (j - offset.y));
-            int x = static_cast<int>(o.x * 5 + 50);
-            int y = static_cast<int>(o.y * 5 + 50);
+            if (G::WITH_TTC_GRID) {
+                int x = static_cast<int>(o.x * 5 + 50);
+                int y = static_cast<int>(o.y * 5 + 50);
 
-            agents[x][y].push_back( new Agent(agent::volume_type::CIRC,
-                new Circ(o, agentSize),
-                glm::vec2(
-                    goal2.x + spacing.x*(i - offset.x),
-                    goal2.y + spacing.y*(j - offset.y))) );
-            NUM_AGENTS++;
+                agents[x][y].push_back(new Agent(agent::volume_type::CIRC,
+                    new Circ(o, agentSize),
+                    glm::vec2(
+                        goal2.x + spacing.x*(i - offset.x),
+                        goal2.y + spacing.y*(j - offset.y))));
+                NUM_AGENTS++;
+            }
+            else {
+                agents_old[i + groupSize.x * j + groupSize.x * groupSize.y] = new Agent(agent::volume_type::CIRC,
+                    new Circ(o, agentSize),
+                    glm::vec2(
+                        goal2.x + spacing.x*(i - offset.x),
+                        goal2.y + spacing.y*(j - offset.y)));
+            }
         }
     }
     
@@ -728,19 +796,11 @@ void init_planning() {
 
 void init_planning_vis() {
     Agent * a;
-    /*
-    int count = 0;
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            for (Agent * b : agents[i][j])
-                if (count++ == selected_agent_debug) {
-                    a = b;
-                    break;
-                }
-                */
-    
+    if (!G::WITH_TTC_GRID)
+        a = agents_old[selected_agent_debug];
+
     //DEPRECATED for the sake of the uniform grid working :P
-    if (false && a->prm != nullptr) {
+    if (!G::WITH_TTC_GRID && a->prm != nullptr) {
         std::vector<Node<glm::vec2> *> * verts = a->prm->roadmap->vertices;
         obj::NR_CUBES = static_cast<GLuint>(verts->size() + 1);
         obj::cubePositions = new glm::vec3[obj::NR_CUBES];
@@ -795,77 +855,119 @@ void init_planning_vis() {
 
     // obstacles -- could be polymorphised :p
     //add circs
-	obj::NR_RECT_IN_CIRC = static_cast<GLuint>(cylinder_res * obstBounds.size());
-	obj::rectInCircPositions = new glm::vec3[obj::NR_RECT_IN_CIRC];
-	obj::rectInCircRotation = new glm::vec4[obj::NR_RECT_IN_CIRC];
-	obj::rectInCircScale = new float[obj::NR_RECT_IN_CIRC];
-	for (GLuint i = 0; i < obj::NR_RECT_IN_CIRC; i++) {
-		obj::rectInCircPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res]->o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res]->o.y);
-		obj::rectInCircScale[i] = obstBounds[(int)i / cylinder_res]->r * static_cast<float>(sqrt(2));
-		obj::rectInCircRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
-	}
+    obj::NR_RECT_IN_CIRC = static_cast<GLuint>(cylinder_res * obstBounds.size());
+    obj::rectInCircPositions = new glm::vec3[obj::NR_RECT_IN_CIRC];
+    obj::rectInCircRotation = new glm::vec4[obj::NR_RECT_IN_CIRC];
+    obj::rectInCircScale = new float[obj::NR_RECT_IN_CIRC];
+    for (GLuint i = 0; i < obj::NR_RECT_IN_CIRC; i++) {
+        obj::rectInCircPositions[i] = glm::vec3(obstBounds[(int)i / cylinder_res]->o.x, 0.0f - 0.001f*i, obstBounds[(int)i / cylinder_res]->o.y);
+        obj::rectInCircScale[i] = obstBounds[(int)i / cylinder_res]->r * static_cast<float>(sqrt(2));
+        obj::rectInCircRotation[i] = glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
+    }
 
     //add rects
-	obj::NR_RECT = static_cast<GLuint>(rectBounds.size());
-	obj::rectPositions = new glm::vec3[obj::NR_RECT];
-	obj::rectScale = new glm::vec2[obj::NR_RECT];
-	for (GLuint i = 0; i < obj::NR_RECT; i++) {
-		obj::rectPositions[i] = glm::vec3(rectBounds[i]->o.x, 0.0f, rectBounds[i]->o.y);
-		obj::rectScale[i] = glm::vec2(rectBounds[i]->w, rectBounds[i]->h);
-	}
+    obj::NR_RECT = static_cast<GLuint>(rectBounds.size());
+    obj::rectPositions = new glm::vec3[obj::NR_RECT];
+    obj::rectScale = new glm::vec2[obj::NR_RECT];
+    for (GLuint i = 0; i < obj::NR_RECT; i++) {
+        obj::rectPositions[i] = glm::vec3(rectBounds[i]->o.x, 0.0f, rectBounds[i]->o.y);
+        obj::rectScale[i] = glm::vec2(rectBounds[i]->w, rectBounds[i]->h);
+    }
 
     //add agent -- could be polymorphised -- :P
     obj::NR_AGENT_TO_DRAW = 0;
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            for (Agent * a : agents[i][j])
-                if (a->vt == agent::volume_type::RECT)
-                    obj::NR_AGENT_TO_DRAW++;
-                else
-                    obj::NR_AGENT_TO_DRAW += cylinder_res;
+    if (G::WITH_TTC_GRID) {//todo  internals -> function
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                for (Agent * a : agents[i][j])
+                    if (a->vt == agent::volume_type::RECT)
+                        obj::NR_AGENT_TO_DRAW++;
+                    else
+                        obj::NR_AGENT_TO_DRAW += cylinder_res;
+    }
+    else {
+        for (Agent * a : agents_old)
+            if (a->vt == agent::volume_type::RECT)
+                obj::NR_AGENT_TO_DRAW++;
+            else
+                obj::NR_AGENT_TO_DRAW += cylinder_res;
+    }
+    
 
     obj::agentPositions = new glm::vec3[obj::NR_AGENT_TO_DRAW]; 
     obj::agentScale = new GLfloat[obj::NR_AGENT_TO_DRAW]; 
     obj::agentRotation = new glm::vec4[obj::NR_AGENT_TO_DRAW];
 
     int agent_mesh_drawn = 0;
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            for (Agent * a : agents[i][j]) {
-                int step;
-                if (a->vt == agent::volume_type::RECT)
-                    step = 1;
-                else
-                    step = cylinder_res;
+    if (G::WITH_TTC_GRID) {//todo internals -> function / macro / preprocess
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                for (Agent * a : agents[i][j]) {
+                    int step;
+                    if (a->vt == agent::volume_type::RECT)
+                        step = 1;
+                    else
+                        step = cylinder_res;
 
-                for (GLuint i = 0; i < step; i++) {
-                    if (a->vt == agent::volume_type::CIRC) {
-                        obj::agentPositions[i + agent_mesh_drawn] = 
-                            glm::vec3(a->bv->o.x, 0.0f + 0.001f*i, a->bv->o.y);
-                        obj::agentScale[i + agent_mesh_drawn] =
-                            static_cast<Circ *>(a->bv)->r * static_cast<float>(sqrt(2));
-                        obj::agentRotation[i + agent_mesh_drawn] =
-                            glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
-                    }
-                    else {
-                        obj::agentPositions[i + agent_mesh_drawn] =
-                            glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
-                        obj::agentScale[i + agent_mesh_drawn] =
-                            static_cast<Rect *>(a->bv)->w;
-                        obj::agentRotation[i + agent_mesh_drawn] =
-                            glm::vec4(0.0f, 1.0f, 0.0f, 0);
+                    for (GLuint i = 0; i < step; i++) {
+                        if (a->vt == agent::volume_type::CIRC) {
+                            obj::agentPositions[i + agent_mesh_drawn] =
+                                glm::vec3(a->bv->o.x, 0.0f + 0.001f*i, a->bv->o.y);
+                            obj::agentScale[i + agent_mesh_drawn] =
+                                static_cast<Circ *>(a->bv)->r * static_cast<float>(sqrt(2));
+                            obj::agentRotation[i + agent_mesh_drawn] =
+                                glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
+                        }
+                        else {
+                            obj::agentPositions[i + agent_mesh_drawn] =
+                                glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
+                            obj::agentScale[i + agent_mesh_drawn] =
+                                static_cast<Rect *>(a->bv)->w;
+                            obj::agentRotation[i + agent_mesh_drawn] =
+                                glm::vec4(0.0f, 1.0f, 0.0f, 0);
+                        }
+
                     }
 
+                    agent_mesh_drawn += step;
+                }
+    }
+    else {
+        for (Agent * a : agents_old) {
+            int step;
+            if (a->vt == agent::volume_type::RECT)
+                step = 1;
+            else
+                step = cylinder_res;
+
+            for (GLuint i = 0; i < step; i++) {
+                if (a->vt == agent::volume_type::CIRC) {
+                    obj::agentPositions[i + agent_mesh_drawn] =
+                        glm::vec3(a->bv->o.x, 0.0f + 0.001f*i, a->bv->o.y);
+                    obj::agentScale[i + agent_mesh_drawn] =
+                        static_cast<Circ *>(a->bv)->r * static_cast<float>(sqrt(2));
+                    obj::agentRotation[i + agent_mesh_drawn] =
+                        glm::vec4(0.0f, 1.0f, 0.0f, glm::radians(360.0f / cylinder_res * (i%cylinder_res)));
+                }
+                else {
+                    obj::agentPositions[i + agent_mesh_drawn] =
+                        glm::vec3(a->bv->o.x, 0.0f, a->bv->o.y);
+                    obj::agentScale[i + agent_mesh_drawn] =
+                        static_cast<Rect *>(a->bv)->w;
+                    obj::agentRotation[i + agent_mesh_drawn] =
+                        glm::vec4(0.0f, 1.0f, 0.0f, 0);
                 }
 
-                agent_mesh_drawn += step;
             }
 
-    
+            agent_mesh_drawn += step;
+        }
+    }    
 }
 
 
 void replan() {
+    timer->stopTimer();
 	switch (cur_mode) {
 	case 0:
 		if (cur_ob != nullptr) {
@@ -887,23 +989,30 @@ void replan() {
 
     //int positions_updated = 0;
 
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            for (Agent * a : agents[i][j]) {
-                a->bv->o = a->start;
-                a->vel = glm::vec2(0, 0);
+    if (G::WITH_TTC_GRID)
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                for (Agent * a : agents[i][j]) {
+                    a->bv->o = a->start;
+                    a->vel = glm::vec2(0, 0);
 
-                //int step;
-                //if (a->vt == agent::volume_type::RECT)
-                //    step = 1;
-                //else
-                //    step = cylinder_res;
+                    //int step;
+                    //if (a->vt == agent::volume_type::RECT)
+                    //    step = 1;
+                    //else
+                    //    step = cylinder_res;
 
-                //for (GLuint i = 0; i < step; i++)
-                //    obj::agentPositions[i + positions_updated] = glm::vec3(a->start.x, 0.0f, a->start.y);
+                    //for (GLuint i = 0; i < step; i++)
+                    //    obj::agentPositions[i + positions_updated] = glm::vec3(a->start.x, 0.0f, a->start.y);
 
-                //positions_updated += step;
-            }
+                    //positions_updated += step;
+                }
+    else {
+        for (Agent * a : agents_old) {
+            a->bv->o = a->start;
+            a->vel = glm::vec2(0, 0);
+        }
+    }
 
 
 
@@ -912,60 +1021,84 @@ void replan() {
     bv.insert(bv.end(), obstBounds.begin(), obstBounds.end());
     bv.insert(bv.end(), rectBounds.begin(), rectBounds.end());
 
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            for (Agent * a : agents[i][j]) {
-                /*
-                std::vector<BoundingVolume *> a_cspace_bvs = bv;
+    if (G::WITH_TTC_GRID) {
 
-                for (Agent * b : agents) {
-                    if (a == b)
-                        continue;
-
+        Cspace_2D * std_cspace = nullptr;
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                for (Agent * a : agents[i][j]) {
                     /*
-                    //pointers were causing some aliasing issues must fix
-                    BoundingVolume * s = b->bv;
-                    s->o = b->start;
-                    BoundingVolume * g = b->bv;
-                    g->o = b->goal;
-                    /
-                    BoundingVolume * s, * g;
-                    if (b->vt == agent::volume_type::RECT) {
-                        Rect * r = static_cast<Rect *>(b->bv);
-                        s = new Rect(b->start, r->w, r->h);
-                        g = new Rect(b->goal, r->w, r->h);
+                    std::vector<BoundingVolume *> a_cspace_bvs = bv;
+
+                    for (Agent * b : agents) {
+                        if (a == b)
+                            continue;
+
+                        /*
+                        //pointers were causing some aliasing issues must fix
+                        BoundingVolume * s = b->bv;
+                        s->o = b->start;
+                        BoundingVolume * g = b->bv;
+                        g->o = b->goal;
+                        /
+                        BoundingVolume * s, * g;
+                        if (b->vt == agent::volume_type::RECT) {
+                            Rect * r = static_cast<Rect *>(b->bv);
+                            s = new Rect(b->start, r->w, r->h);
+                            g = new Rect(b->goal, r->w, r->h);
+                        }
+                        else {
+                            Circ * c = static_cast<Circ *>(b->bv);
+                            s = new Circ(b->start, c->r);
+                            g = new Circ(b->goal, c->r);
+                        }
+
+                        //a_cspace_bvs.push_back(s);
+                        //a_cspace_bvs.push_back(g);
                     }
-                    else {
-                        Circ * c = static_cast<Circ *>(b->bv);
-                        s = new Circ(b->start, c->r);
-                        g = new Circ(b->goal, c->r);
+                    */
+                    //even when the agents are all the same the Cspaces must vary a bit, there's definitely a more
+                    //efficient way of handling this though
+                    if (std_cspace == nullptr) {
+                        std_cspace = new Cspace_2D(bv/*a_cspace_bvs*/, a->bv);
                     }
 
-                    //a_cspace_bvs.push_back(s);
-                    //a_cspace_bvs.push_back(g);
-                }   
-                */
-                //even when the agents are all the same the Cspaces must vary a bit, there's definitely a more
-                //efficient way of handling this though
-                a->cspace = new Cspace_2D(bv/*a_cspace_bvs*/, a->bv);
-                a->prm = new PRM(a->start, a->goal, a->cspace);
-            }
+                    a->cspace = std_cspace;
+                    a->prm = new PRM(a->start, a->goal, a->cspace);
+                }
+    }
+    else {
+        Cspace_2D * std_cspace = new Cspace_2D(bv, agents_old[0]->bv);
+        for (Agent * a : agents_old) {
+            a->cspace = std_cspace;
+            a->prm = new PRM(a->start, a->goal, a->cspace);
+        }
+    }
 
 
 	/* PATH PLANNING METHOD */
 
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            for (Agent * a : agents[i][j]) {
-                a->plan = GMP::findPathUCS(a->prm->roadmap);
-                //path_ = new std::unordered_set<Node<glm::vec2> *>();
-                //for (int i = 0; i < pathVec->size(); i++)
-                //    path_->insert((*pathVec)[i]);
+    if (G::WITH_TTC_GRID) {
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                for (Agent * a : agents[i][j]) {
+                    a->plan = GMP::findPathUCS(a->prm->roadmap);
+                    //path_ = new std::unordered_set<Node<glm::vec2> *>();
+                    //for (int i = 0; i < pathVec->size(); i++)
+                    //    path_->insert((*pathVec)[i]);
 
-                a->completed_nodes = 0;
-            }
+                    a->completed_nodes = 0;
+                }
+    }
+    else {
+        for (Agent * a : agents_old) {
+            a->plan = GMP::findPathUCS(a->prm->roadmap);
+            a->completed_nodes = 0;
+        }
+    }
 
     init_planning_vis();
+    timer->restartTimer();
 }
 
 void toggleFlashlight() {
@@ -999,13 +1132,13 @@ void placeObst(glm::vec3 pos) {
 
 //deprecated
 void placeGoalNode(glm::vec3 pos) {
-	//agents[0]->goal.x = pos.x; agents[0]->goal.y = pos.z;
+	agents_old[0]->goal.x = pos.x; agents_old[0]->goal.y = pos.z;
 	init_planning_vis();
 }
 
 //deprecated
 void placeStartNode(glm::vec3 pos) {
-    //agents[0]->start.x = pos.x; agents[0]->start.y = pos.z;
+    agents_old[0]->start.x = pos.x; agents_old[0]->start.y = pos.z;
 	init_planning_vis();
 }
 
