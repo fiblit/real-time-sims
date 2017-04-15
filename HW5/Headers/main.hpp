@@ -131,6 +131,7 @@ GLuint cur_mode;
 BoundingVolume * cur_ob;
 
 Circ * player;
+std::vector<Agent *> boidlings;
 
 namespace G { const GLboolean WITH_TTC_GRID = GL_TRUE; }
 std::vector<Agent *> agents_old;

@@ -16,6 +16,7 @@ public:
     PRM * prm; //this seems wasteful...?
 
     glm::vec2 vel;//hack for ttc
+    bool boid;//hack for boids
 
     std::vector<Node<glm::vec2> *> * plan;
     int completed_nodes;
@@ -32,6 +33,8 @@ public:
         this->plan = nullptr;
         this->cspace = nullptr;
         this->prm = nullptr;
+
+        this->boid = false;
     }
 };
 

@@ -564,6 +564,54 @@ void ttc_forces(Agent * a, Agent * b, double ttc, glm::vec2 * FAVOID) {
     ttc_forces_(ttc, FAVOID, dir);
 }
 
+void boid_forces(Agent * a, glm::vec2 * FBOID) {
+    glm::vec2 avg_vel(0, 0), avg_pos(0, 0), avg_dir(0, 0);
+    GLfloat cohes_r_look = 1.5f, align_r_look = 1.5f, separ_r_look = .75f;//limit to search for forces for boidlings
+    GLfloat ff0_r = 1.5f;//radius of following force of 0
+    GLfloat ff1_r = 1.7f;//radius of following force of 1 towards leader
+    glm::vec2 FALIGN, FCOHES, FFOLOW, FSEPAR;
+
+    for (int i = 0; i < boidlings.size(); i++) {
+        Agent * boid = boidlings[i];
+        glm::vec2 dist = boid->bv->o - a->bv->o;
+        if (glm::dot(dist, dist) < align_r_look * align_r_look)
+            avg_vel = (avg_vel * static_cast<float>(i) + boid->vel) / static_cast<float>(i + 1);
+        if (glm::dot(dist, dist) < cohes_r_look * cohes_r_look)
+            avg_pos = (avg_pos * static_cast<float>(i) + boid->bv->o) / static_cast<float>(i + 1);
+    }
+
+    /* alignnment force */
+    //average velocity; pull towards that
+    avg_vel /= glm::length(avg_vel);
+    FALIGN = avg_vel - a->vel;
+
+    /* cohesion force */
+    //average cohesion; pull towards that
+    FCOHES = avg_pos - a->bv->o;
+
+    /* follow force */
+    //distance to leader, weak close, strong far
+    glm::vec2 toLeader = player->o - a->bv->o;
+    float dist2 = glm::dot(toLeader, toLeader);
+    if (dist2 < ff0_r * ff0_r)
+        FFOLOW = glm::vec2(0);
+    else
+        FFOLOW = toLeader * (dist2 - ff0_r) / (ff1_r - ff0_r);
+
+
+    /* separation force */
+    //force from inverted direction of nearest neighbours
+    for (int i = 0; i < boidlings.size(); i++) {
+        Agent * boid = boidlings[i];
+        glm::vec2 toBoid = boid->bv->o - a->bv->o;
+        float dist2 = glm::dot(toBoid, toBoid);
+
+        FSEPAR += -toBoid / dist2 ;
+    }
+
+    (*FBOID) += FALIGN + FCOHES + FFOLOW + FSEPAR;
+}
+
 void ttc_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Agent *> newGrid[100][100]) {
     if (0 < a->plan->size()) {
         float speed = 1.0f; // x m/s
@@ -578,7 +626,7 @@ void ttc_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Age
 
         glm::vec2 FSUM = goalF;
 
-        glm::vec2 FAVOID;
+        glm::vec2 FAVOID(0), FBOID(0);
 
         if (G::WITH_TTC_GRID) {
             for (int k = (0 < *i - 4) ? *i - 4 : 0; k < ((100 > *i + 4) ? *i + 4 : 100); k++) { // spatial search
@@ -623,7 +671,11 @@ void ttc_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Age
             ttc_forces(a, c, ttc, &FAVOID);
         }
 
-        FSUM += FAVOID;
+        if (a->boid) {
+            boid_forces(a, &FBOID);
+        }
+
+        FSUM += FAVOID + FBOID;
         a->vel += FSUM * dt;
         a->bv->o += a->vel * dt;
     }// 0 < a->plan->size()
