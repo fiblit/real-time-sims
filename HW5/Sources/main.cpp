@@ -769,22 +769,73 @@ void animate_agents(GLfloat dt) {
 
 void init_planning() {
 	cur_ob = nullptr;
+    switch (G::SCENARIO) {
+    case G::SCENE::DEFAULT:
+    case G::SCENE::DEADEND:
+    case G::SCENE::NO_BOID:
+    case G::SCENE::MAZE:
+        player = new Circ(glm::vec2(0.f), .5f);
+        break;
+    case G::SCENE::WALL:
+        player = new Circ(glm::vec2(5.f, 0.f), .5f);
+        break;
+    }
 
-    player = new Circ(glm::vec2(0.f), .5f);
+    double boidlingSize;
+    glm::vec2 boidspawn, boidlingRanks, boidlingOffset, boidlingSpacing;
+    double agentSize;
+    glm::vec2 spacing, groupSize, offset, start1, start2, goal1, goal2;
 
-    /* PLAY WITH THESE */
-    double agentSize = .05;
-    glm::vec2 spacing(.25, .25);
-    glm::vec2 groupSize(21, 21);
-    glm::vec2 offset(21./2. - .5, 21./2. - .5);
-    glm::vec2 start1(-7., -7.), start2(7., 7.), goal1(7., 7.), goal2(-7., -7.);
+    switch (G::SCENARIO) {
+    case G::SCENE::DEFAULT:
+    case G::SCENE::DEADEND:
+    case G::SCENE::MAZE:
+        /* PLAY WITH THESE */
+        agentSize = .05;
+        spacing = glm::vec2(.25, .25);
+        groupSize = glm::vec2(21, 21);
+        offset = glm::vec2(21. / 2. - .5, 21. / 2. - .5);
+        start1 = glm::vec2(-7., -7.);
+        start2 = glm::vec2(7., 7.);
+        goal1 = glm::vec2(7., 7.);
+        goal2 = glm::vec2(-7., -7.);
 
-    double boidlingSize = .05;
-    glm::vec2 boidspawn(-2.0f, 0.0f);
-    glm::vec2 boidlingRanks(9, 9);
-    glm::vec2 boidlingOffset(5./2. - .5, 5./2. - .5);
-    glm::vec2 boidlingSpacing(.3f, .3f);
-    /* */
+        boidlingSize = .05;
+        boidspawn = glm::vec2(-2.0f, 0.0f);
+        boidlingRanks = glm::vec2(9, 9);
+        boidlingOffset = glm::vec2(5. / 2. - .5, 5. / 2. - .5);
+        boidlingSpacing = glm::vec2(.3f, .3f);
+        /* */
+        break;
+    case G::SCENE::WALL:
+        agentSize = .05;
+        spacing = glm::vec2(.25, .25);
+        groupSize = glm::vec2(21, 21);
+        offset = glm::vec2(21. / 2. - .5, 21. / 2. - .5);
+        start1 = glm::vec2(-7., -7.);
+        start2 = glm::vec2(7., 7.);
+        goal1 = glm::vec2(7., 7.);
+        goal2 = glm::vec2(-7., -7.);
+
+        boidlingSize = .05;
+        boidspawn = glm::vec2(6.0f, 0.0f);
+        boidlingRanks = glm::vec2(9, 9);
+        boidlingOffset = glm::vec2(5. / 2. - .5, 5. / 2. - .5);
+        boidlingSpacing = glm::vec2(.3f, .3f);
+        break;
+    case G::SCENE::NO_BOID:
+        agentSize = .05;
+        spacing = glm::vec2(.25, .25);
+        groupSize = glm::vec2(21, 21);
+        offset = glm::vec2(21. / 2. - .5, 21. / 2. - .5);
+        start1 = glm::vec2(-7., -7.);
+        start2 = glm::vec2(-7., 7.);
+        goal1 = glm::vec2(7., 7.);
+        goal2 = glm::vec2(7., -7.);
+
+        boidlingRanks = glm::vec2(0, 0);
+        break;
+    }
 
     if (G::WITH_TTC_GRID)
         for (int i = 0; i < 100; i++)
@@ -857,32 +908,54 @@ void init_planning() {
         }
     }
     
-    
-	obstBounds = std::vector<Circ *>(2);
-    //fix these at some point
-    obstBounds[0] = new Circ(glm::vec2(-3.0f, -3.0f), 2.0f);
-    obstBounds[1] = new Circ(glm::vec2(-2.0f, 6.0f), 1.0f);
+    switch (G::SCENARIO) {
+    case G::SCENE::DEFAULT:
+    case G::SCENE::NO_BOID:
+        obstBounds = std::vector<Circ *>(2);
+        obstBounds[0] = new Circ(glm::vec2(-3.0f, -3.0f), 2.0f);
+        obstBounds[1] = new Circ(glm::vec2(-2.0f, 6.0f), 1.0f);
+        rectBounds = std::vector<Rect *>();
+        obstBounds.push_back(player);
+        break;
+    case G::SCENE::DEADEND:
+        obstBounds = std::vector<Circ *>(9);
+        for (int i = 0; i < 5; i++)
+            obstBounds[i] = new Circ(glm::vec2(-3.5f, i - 7.5), .49f);
+        for (int i = 0; i < 4; i++)
+            obstBounds[i + 5] = new Circ(glm::vec2(i - 7.5, -3.5f), .49f);
 
-    /*
-	rectBounds = std::vector<Rect *>(9);
-    {int NR = 0;
-    //fix these at some point..
-        rectBounds[NR] = new Rect(glm::vec2( 3.0f,    8.0f),    0.1f,   4.0f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-5.0f,  -1.0f),     5.5f,   0.1f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2( 3.0f,   -7.0f),    0.1f,   6.0f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2( 3.0f,    0.0f),    0.1f,   4.0f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-6.5f,   -2.0f),    0.1f,   8.0f); NR++;//
-        rectBounds[NR] = new Rect(glm::vec2( 6.0f,   2.0f),     6.0f,   0.1f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-6.0f,   6.0f),    3.0f,   0.1f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2(-6.0f,   6.0f),    0.1f,   3.0f); NR++;
-        rectBounds[NR] = new Rect(glm::vec2( 0.0f,    4.0f),    0.1f,   4.0f); NR++;
-        //rectBounds[NR] = new Rect(glm::vec2(-3.0f,    6.0f),    6.0f,   0.1f); NR++;//
+        rectBounds = std::vector<Rect *>();
+        obstBounds.push_back(player);
+        break;
+    case G::SCENE::WALL:
+        obstBounds = std::vector<Circ *>(36);
+        for (int sign = -1; sign < 2; sign += 2)
+            for (float i = 0; i < 18; i++)
+                obstBounds[i + ((1+sign)/2)*18 ] = new Circ(glm::vec2(-sign * (i / 2.f + 1.f), sign * (i / 2.f + 1.f)), .5f);
+        rectBounds = std::vector<Rect *>();
+        obstBounds.push_back(player);
+        break;
+    case G::SCENE::MAZE:
+        obstBounds = std::vector<Circ *>(2);
+        obstBounds[0] = new Circ(glm::vec2(-3.0f, -3.0f), 2.0f);
+        obstBounds[1] = new Circ(glm::vec2(-2.0f, 6.0f), 1.0f);
+        rectBounds = std::vector<Rect *>(10);
+        {int NR = 0;
+        //fix these at some point..
+        rectBounds[NR] = new Rect(glm::vec2(3.0f, 8.0f), 0.1f, 4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-5.0f, -1.0f), 5.5f, 0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(3.0f, -7.0f), 0.1f, 6.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(3.0f, 0.0f), 0.1f, 4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-6.5f, -2.0f), 0.1f, 8.0f); NR++;//
+        rectBounds[NR] = new Rect(glm::vec2(6.0f, 2.0f), 6.0f, 0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-6.0f, 6.0f), 3.0f, 0.1f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-6.0f, 6.0f), 0.1f, 3.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(0.0f, 4.0f), 0.1f, 4.0f); NR++;
+        rectBounds[NR] = new Rect(glm::vec2(-3.0f,    6.0f),    6.0f,   0.1f); NR++;//
+        }
+        obstBounds.push_back(player);
+        break;
     }
-    */
-
-    //obstBounds = std::vector<Circ *>();
-    obstBounds.push_back(player);
-    rectBounds = std::vector<Rect *>();
 }
 
 void init_planning_vis() {

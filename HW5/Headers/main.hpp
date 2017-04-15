@@ -14,6 +14,7 @@
 #include "GlobalMotionPlanner.hpp"
 #include "LocalMotionPlanner.hpp"
 #include "Agent.hpp"
+#include "Scenario.hpp"
 
 /* GL */
 // glad: an OpenGL function loader: https://github.com/Dav1dde/glad

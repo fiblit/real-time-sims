@@ -1,4 +1,5 @@
 #include "PRM.hpp"
+#include "Scenario.hpp"
 
 /* uniformly samples the configuration space to generate nodes for the PRM;
    All sampled points will be non-colliding with the static environment 
@@ -9,12 +10,25 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace_) {
 
 	std::default_random_engine gen;
 	std::uniform_real_distribution<float> std(-0.5f, 0.5f);
-	const int samplecount = 1;//this does not work on all maps
 
-	//hrclock::duration seed = hrclock::now() - first;
-	//gen.seed(static_cast<unsigned int>(seed.count()));
-
-	float b = 2.8f;//bin size
+    int samplecount;
+    float b;
+    switch (G::SCENARIO) {
+    case G::SCENE::DEFAULT:
+    case G::SCENE::NO_BOID:
+        samplecount = 1;//this does not work on all maps
+        b = 2.8f;
+        break;
+    case G::SCENE::WALL:
+    case G::SCENE::DEADEND:
+        samplecount = 4;
+        b = 2.8f;
+        break;
+    case G::SCENE::MAZE:
+        samplecount = 5;
+        b = 2.8f;
+        break;
+    }
 
 	VecPoint * sample = new VecPoint();
 	for (int i = 0; i < samplecount; i++) {
@@ -44,7 +58,18 @@ VecPoint * PRM::sampleNodes(Cspace_2D * cSpace_) {
 
 /* threshold search to find NNs */
 VecPoint * PRM::findNearestNeighbours(VecPoint * nodes, int targetIdx) {
-	float threshold = 5.f; // METERS
+    float threshold; // meters
+    switch (G::SCENARIO) {
+    case G::SCENE::DEFAULT:
+    case G::SCENE::NO_BOID:
+    case G::SCENE::MAZE:
+        threshold = 5.f;
+        break;
+    case G::SCENE::DEADEND:
+    case G::SCENE::WALL:
+        threshold = 3.3f;
+        break;
+    }
 
 	VecPoint * neighbours = new VecPoint();
 
