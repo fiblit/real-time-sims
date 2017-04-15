@@ -7,10 +7,10 @@ option(GLFW_BUILD_TESTS OFF)
 add_subdirectory(Libraries/glfw)
 
 
-option(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-option(ASSIMP_BUILD_SAMPLES OFF)
-option(ASSIMP_BUILD_TESTS OFF)
-add_subdirectory(Libraries/assimp)
+#option(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+#option(ASSIMP_BUILD_SAMPLES OFF)
+#option(ASSIMP_BUILD_TESTS OFF)
+#add_subdirectory(Libraries/assimp)
 
 
 if(MSVC)
@@ -25,7 +25,7 @@ else()
 endif()
 
 include_directories(Headers/
-                    Libraries/assimp/include/
+                    #[[Libraries/assimp/include/]]
                     Libraries/glad/include/
                     Libraries/glfw/include/
                     Libraries/glm/
@@ -57,7 +57,7 @@ add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
                                ${LIBRARY_SOURCES})
 
-target_link_libraries(${PROJECT_NAME} assimp glfw
+target_link_libraries(${PROJECT_NAME} #[[assimp]] glfw
                       ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
