@@ -518,32 +518,36 @@ int DIE(int retVal) {
 	return retVal;
 }
 
+void lookahead(glm::vec2 * agentNow, glm::vec2 * nextNode, Agent * a, float * speed, float dt) {
+    if (a->completed_nodes < a->plan->size()) {
+        *nextNode = (*a->plan)[a->completed_nodes]->data;
+
+        while (a->completed_nodes + 1 < a->plan->size()
+            && a->cspace->lineOfSight(*agentNow, (*a->plan)[a->completed_nodes + 1]->data)) {
+            a->completed_nodes++;
+            *nextNode = (*a->plan)[a->completed_nodes]->data;
+        }
+
+        float dist = glm::distance(*nextNode, *agentNow);
+        if (dist < 0.1f) {
+            a->completed_nodes++;
+            //not sure why I have this, as this will, like, never happen.
+            if (dist < dt*(*speed)) {//detects overshooting
+                *agentNow = *nextNode;//move to the node, but not past...
+                *speed -= dist / dt;
+            }
+        }
+    }
+    else
+        nextNode = (*a->plan)[a->plan->size() - 1]->data;
+}
+
 void alternating_animate_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Agent *> newGrid[100][100]) {
     if (0 < a->plan->size()) {
         float speed = 1.0f; // x m/s
         glm::vec2 agentNow = a->bv->o;
         glm::vec2 nextNode;
-        if (a->completed_nodes < a->plan->size()) {
-            nextNode = (*a->plan)[a->completed_nodes]->data;
-
-            while (a->completed_nodes + 1 < a->plan->size()
-                && a->cspace->lineOfSight(agentNow, (*a->plan)[a->completed_nodes + 1]->data)) {
-                a->completed_nodes++;
-                nextNode = (*a->plan)[a->completed_nodes]->data;
-            }
-
-            float dist = glm::distance(nextNode, agentNow);
-            if (dist < 0.1f) {
-                a->completed_nodes++;
-                //not sure why I have this, as this will, like, never happen.
-                if (dist < dt*speed) {//detects overshooting
-                    agentNow = nextNode;//move to the node, but not past...
-                    speed -= dist / dt;
-                }
-            }
-        }
-        else
-            nextNode = (*a->plan)[a->plan->size() - 1]->data;
+        lookahead(&agentNow, &nextNode, a, &speed, dt);
 
         /* ttc - approximate */
         glm::vec2 goalV = (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (speed /* * dt */);
