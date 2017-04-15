@@ -35,6 +35,7 @@ public:
         this->prm = nullptr;
 
         this->boid = false;
+        this->vel = glm::vec2(0);
     }
 };
 

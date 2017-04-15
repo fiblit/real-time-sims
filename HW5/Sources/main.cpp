@@ -494,13 +494,13 @@ void do_movement() {
 		scaleCurrentObstacle(1.1f, 1.f, timer->getDelta());
     */
 	if (keys[GLFW_KEY_UP])
-		movePlayer( 0.f,  1.f, timer->getDelta());
+		movePlayer( 0.f,  1.3f, timer->getDelta());
 	if (keys[GLFW_KEY_DOWN])
-		movePlayer( 0.f, -1.f, timer->getDelta());
+		movePlayer( 0.f, -1.3f, timer->getDelta());
 	if (keys[GLFW_KEY_LEFT])
-		movePlayer(-1.f,  0.f, timer->getDelta());
+		movePlayer(-1.3f,  0.f, timer->getDelta());
 	if (keys[GLFW_KEY_RIGHT])
-		movePlayer( 1.f,  0.f, timer->getDelta());
+		movePlayer( 1.3f,  0.f, timer->getDelta());
 
 	if (keys[GLFW_KEY_F]) {
 		keys[GLFW_KEY_F] = false;
@@ -565,14 +565,18 @@ void ttc_forces(Agent * a, Agent * b, double ttc, glm::vec2 * FAVOID) {
 }
 
 void boid_forces(Agent * a, glm::vec2 * FBOID) {
+    const float boid_speed = 1.2f;
+
     glm::vec2 avg_vel(0, 0), avg_pos(0, 0), avg_dir(0, 0);
-    GLfloat cohes_r_look = 1.5f, align_r_look = 1.5f, separ_r_look = .75f;//limit to search for forces for boidlings
-    GLfloat ff0_r = 1.5f;//radius of following force of 0
-    GLfloat ff1_r = 1.7f;//radius of following force of 1 towards leader
+    GLfloat cohes_r_look = 1.0f, align_r_look = 1.0f, separ_r_look = .5f;//limit to search for forces for boidlings
+    GLfloat ff0_r = 2.0f;//radius of following force of 0
+    GLfloat ff1_r = 10.0f;//radius of following force of 1 towards leader
     glm::vec2 FALIGN, FCOHES, FFOLOW, FSEPAR;
 
     for (int i = 0; i < boidlings.size(); i++) {
         Agent * boid = boidlings[i];
+        if (boid == a)
+            continue;
         glm::vec2 dist = boid->bv->o - a->bv->o;
         if (glm::dot(dist, dist) < align_r_look * align_r_look)
             avg_vel = (avg_vel * static_cast<float>(i) + boid->vel) / static_cast<float>(i + 1);
@@ -582,8 +586,10 @@ void boid_forces(Agent * a, glm::vec2 * FBOID) {
 
     /* alignnment force */
     //average velocity; pull towards that
-    avg_vel /= glm::length(avg_vel);
-    FALIGN = avg_vel - a->vel;
+    float norm = glm::length(avg_vel);
+    if (norm != 0)
+        avg_vel /= norm;
+    FALIGN = (avg_vel - a->vel) * boid_speed;
 
     /* cohesion force */
     //average cohesion; pull towards that
@@ -598,18 +604,20 @@ void boid_forces(Agent * a, glm::vec2 * FBOID) {
     else
         FFOLOW = toLeader * (dist2 - ff0_r) / (ff1_r - ff0_r);
 
-
     /* separation force */
     //force from inverted direction of nearest neighbours
     for (int i = 0; i < boidlings.size(); i++) {
         Agent * boid = boidlings[i];
+        if (boid == a)
+            continue;
         glm::vec2 toBoid = boid->bv->o - a->bv->o;
         float dist2 = glm::dot(toBoid, toBoid);
 
-        FSEPAR += -toBoid / dist2 ;
+        if (dist2 < separ_r_look * separ_r_look)
+            FSEPAR += -toBoid / (10*sqrt(dist2));
     }
 
-    (*FBOID) += FALIGN + FCOHES + FFOLOW + FSEPAR;
+    (*FBOID) += FALIGN + FCOHES + FFOLOW+ FSEPAR;
     if (glm::dot(*FBOID, *FBOID) > 20 * 20) {
         *FBOID /= glm::length(*FBOID);
         *FBOID *= 20.f;
@@ -617,72 +625,81 @@ void boid_forces(Agent * a, glm::vec2 * FBOID) {
 }
 
 void force_agents(GLfloat dt, Agent * a, int * i, int * j, std::vector<Agent *> newGrid[100][100]) {
-    if (0 < a->plan->size()) {
-        float speed = 1.0f; // x m/s
-        glm::vec2 agentNow = a->bv->o;
-        glm::vec2 nextNode;
+    
+    float speed = 1.0f; // x m/s
+    glm::vec2 agentNow = a->bv->o;
+    glm::vec2 nextNode;
+    glm::vec2 goalV;
+    if (a->plan != nullptr && 0 < a->plan->size()) {
         lookahead(&agentNow, &nextNode, a, &speed, dt);
+        goalV = (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (speed /* * dt */);
+    }
+    else {
+        nextNode = agentNow;
+        goalV = glm::vec2(0);
+    }
 
-        /* ttc - approximate */
-        glm::vec2 goalV = (nextNode - agentNow) / glm::distance(nextNode, agentNow) * (speed /* * dt */);
+    /* ttc - approximate */
+    glm::vec2 goalF;
+    if (a->boid)
+        goalF = glm::vec2(0);
+    else
+        goalF = 2.0f*(goalV - a->vel);
 
-        glm::vec2 goalF = 2.0f*(goalV - a->vel);
+    glm::vec2 FSUM = goalF;
 
-        glm::vec2 FSUM = goalF;
+    glm::vec2 FAVOID(0), FBOID(0);
 
-        glm::vec2 FAVOID(0), FBOID(0);
+    if (G::WITH_TTC_GRID) {
+        for (int k = (0 < *i - 4) ? *i - 4 : 0; k < ((100 > *i + 4) ? *i + 4 : 100); k++) { // spatial search
+            for (int l = (0 < *j - 4) ? *j - 4 : 0; l < ((100 > *j + 4) ? *j + 4 : 100); l++) {
+                for (Agent * b : agents[k][l]) {
+                    if (a == b)
+                        continue;
 
-        if (G::WITH_TTC_GRID) {
-            for (int k = (0 < *i - 4) ? *i - 4 : 0; k < ((100 > *i + 4) ? *i + 4 : 100); k++) { // spatial search
-                for (int l = (0 < *j - 4) ? *j - 4 : 0; l < ((100 > *j + 4) ? *j + 4 : 100); l++) {
-                    for (Agent * b : agents[k][l]) {
-                        if (a == b)
-                            continue;
+                    double ttc = LMP::ttc(a->bv, a->vel, b->bv, b->vel);
 
-                        double ttc = LMP::ttc(a->bv, a->vel, b->bv, b->vel);
+                    if (ttc > 10)
+                        continue;
 
-                        if (ttc > 10)
-                            continue;
-
-                        //suggestion to handle collisions
-                        //float originalAr = static_cast<Circ *>(a->bv)->r;
-                        //float originalBr = static_cast<Circ *>(b->bv)->r;
-                        ttc_forces(a, b, ttc, &FAVOID);
-                    }
+                    //suggestion to handle collisions
+                    //float originalAr = static_cast<Circ *>(a->bv)->r;
+                    //float originalBr = static_cast<Circ *>(b->bv)->r;
+                    ttc_forces(a, b, ttc, &FAVOID);
                 }
             }
-        }//with ttc grid
-        else {
-            for (Agent * b : agents_old) {
-                if (a == b)
-                    continue;
-
-                double ttc = LMP::ttc(a->bv, a->vel, b->bv, b->vel);
-
-                if (ttc > 10)
-                    continue;
-
-                ttc_forces(a, b, ttc, &FAVOID);
-            }
         }
+    }//with ttc grid
+    else {
+        for (Agent * b : agents_old) {
+            if (a == b)
+                continue;
 
-        for (Circ * c : obstBounds) {
-            double ttc = LMP::ttc(a->bv, a->vel, c, glm::vec2(0));
+            double ttc = LMP::ttc(a->bv, a->vel, b->bv, b->vel);
 
             if (ttc > 10)
                 continue;
 
-            ttc_forces(a, c, ttc, &FAVOID);
+            ttc_forces(a, b, ttc, &FAVOID);
         }
+    }
 
-        if (a->boid) {
-            boid_forces(a, &FBOID);
-        }
+    for (Circ * c : obstBounds) {
+        double ttc = LMP::ttc(a->bv, a->vel, c, glm::vec2(0));
 
-        FSUM += FAVOID + FBOID;
-        a->vel += FSUM * dt;
-        a->bv->o += a->vel * dt;
-    }// 0 < a->plan->size()
+        if (ttc > 10)
+            continue;
+
+        ttc_forces(a, c, ttc, &FAVOID);
+    }
+
+    if (a->boid) {
+        boid_forces(a, &FBOID);
+    }
+
+    FSUM += FAVOID + FBOID;
+    a->vel += FSUM * dt;
+    a->bv->o += a->vel * dt;
 
     if (G::WITH_TTC_GRID) {
         int x = static_cast<int>(a->bv->o.x * 5 + 50);
@@ -753,7 +770,7 @@ void animate_agents(GLfloat dt) {
 void init_planning() {
 	cur_ob = nullptr;
 
-    player = new Circ(glm::vec2(0.f), 1.f);
+    player = new Circ(glm::vec2(0.f), .5f);
 
     /* PLAY WITH THESE */
     double agentSize = .05;
@@ -762,11 +779,11 @@ void init_planning() {
     glm::vec2 offset(21./2. - .5, 21./2. - .5);
     glm::vec2 start1(-7., -7.), start2(7., 7.), goal1(7., 7.), goal2(-7., -7.);
 
-    double boidlingSize = .15;
+    double boidlingSize = .05;
     glm::vec2 boidspawn(-2.0f, 0.0f);
-    glm::vec2 boidlingRanks(5, 5);
+    glm::vec2 boidlingRanks(9, 9);
     glm::vec2 boidlingOffset(5./2. - .5, 5./2. - .5);
-    glm::vec2 boidlingSpacing(.4f, .4f);
+    glm::vec2 boidlingSpacing(.3f, .3f);
     /* */
 
     if (G::WITH_TTC_GRID)
@@ -822,7 +839,7 @@ void init_planning() {
     for (int i = 0; i < boidlingRanks.x; i++) {
         for (int j = 0; j < boidlingRanks.y; j++) {
             glm::vec2 o(boidspawn.x + boidlingSpacing.x * (i - boidlingOffset.x), boidspawn.y + boidlingSpacing.y * (j - boidlingOffset.y));
-            Agent * a = new Agent(agent::volume_type::CIRC, new Circ(o, agentSize), glm::vec2(0));
+            Agent * a = new Agent(agent::volume_type::CIRC, new Circ(o, boidlingSize), glm::vec2(0));
             a->boid = true;
 
             if (G::WITH_TTC_GRID) {
