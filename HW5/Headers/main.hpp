@@ -133,7 +133,8 @@ BoundingVolume * cur_ob;
 Circ * player;
 
 //ideally BoundingVolume * agent;
-std::vector<Agent *> agents;
+int NUM_AGENTS = 0;
+std::vector<Agent *> agents[100][100];
 
 //glm::vec2 startPoint, goalPoint;
 std::vector<Rect *> rectBounds;
@@ -167,6 +168,7 @@ void scaleCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
 void moveCurrentObstacle(GLfloat xs, GLfloat ys, GLfloat dt);
 
 void movePlayer(GLfloat dx, GLfloat dy, GLfloat dt);
+
 
 /* Other Prototypes */
 int DIE(int retVal);
